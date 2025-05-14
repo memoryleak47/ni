@@ -54,7 +54,19 @@ fn assemble_atomic_expr(toks: &[Token]) -> Result<(Expr, &[Token]), String> {
 }
 
 fn assemble_stmt(toks: &[Token]) -> Result<(Stmt, &[Token]), String> {
-	or(assemble_stmt_base, or(assemble_def_stmt, assemble_expr_stmt))(toks)
+	or(assemble_stmt_base, or(assemble_def_stmt, or(assemble_expr_stmt, assemble_branch_stmt)))(toks)
+}
+
+fn assemble_branch_stmt(toks: &[Token]) -> Result<(Stmt, &[Token]), String> {
+	let f = match toks.get(0) {
+		Some(Token::If) => Stmt::If,
+		Some(Token::While) => Stmt::While,
+		_ => return Err(String::new()),
+	};
+	let toks = &toks[1..];
+	let (expr, toks) = assemble_expr(toks)?;
+	let (body, toks) = assemble_indented_ast(toks)?;
+	Ok((f(expr, body), toks))
 }
 
 fn assemble_stmt_base(toks: &[Token]) -> Result<(Stmt, &[Token]), String> {
@@ -77,6 +89,20 @@ fn assemble_expr_stmt(toks: &[Token]) -> Result<(Stmt, &[Token]), String> {
 	} else {
 		Ok((Stmt::Expr(expr), toks))
 	}
+}
+
+fn assemble_indented_ast(toks: &[Token]) -> Result<(AST, &[Token]), String> {
+	let Some(Token::Colon) = toks.get(0) else { return Err(String::new()) };
+	let toks = &toks[1..];
+	let Some(Token::Indent) = toks.get(0) else { return Err(String::new()) };
+	let toks = &toks[1..];
+
+	let (body, toks) = assemble_ast(toks)?;
+
+	let Some(Token::Unindent) = toks.get(0) else { return Err(String::new()) };
+	let toks = &toks[1..];
+
+	Ok((body, toks))
 }
 
 
