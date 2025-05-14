@@ -8,6 +8,7 @@ pub enum Stmt {
 	While(Expr, AST),
 	Break,
 	Continue,
+	Return,
 	Expr(Expr),
 }
 

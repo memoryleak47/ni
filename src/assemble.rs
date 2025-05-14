@@ -73,12 +73,31 @@ fn assemble_stmt_base(toks: &[Token]) -> Result<(Stmt, &[Token]), String> {
 	match toks.get(0) {
 		Some(Token::Break) => Ok((Stmt::Break, &toks[1..])),
 		Some(Token::Continue) => Ok((Stmt::Continue, &toks[1..])),
+		Some(Token::Return) => Ok((Stmt::Return, &toks[1..])),
 		_ => Err(String::new()),
 	}
 }
 
+fn assemble_ident(toks: &[Token]) -> Result<(String, &[Token]), String> {
+	let Some(Token::Ident(ident_name)) = toks.get(0) else { return Err(String::new()) };
+	let toks = &toks[1..];
+	Ok((ident_name.to_string(), toks))
+}
+
+fn assemble_token(t: Token) -> impl Assembler<()> {
+	let opt = Some(t);
+	move |toks| {
+		if opt.as_ref() == toks.get(0) { Ok(((), &toks[1..])) }
+		else { Err(String::new()) }
+	}
+}
+
 fn assemble_def_stmt(toks: &[Token]) -> Result<(Stmt, &[Token]), String> {
-	Err(String::new())
+	let ((), toks) = assemble_token(Token::Def)(toks)?;
+	let (fn_name, toks) = assemble_ident(toks)?;
+	let (children, toks) = assemble_paren_list(assemble_ident)(toks)?;
+	let (body, toks) = assemble_indented_ast(toks)?;
+	Ok((Stmt::Def(fn_name, children, body), toks))
 }
 
 fn assemble_expr_stmt(toks: &[Token]) -> Result<(Stmt, &[Token]), String> {
@@ -92,15 +111,10 @@ fn assemble_expr_stmt(toks: &[Token]) -> Result<(Stmt, &[Token]), String> {
 }
 
 fn assemble_indented_ast(toks: &[Token]) -> Result<(AST, &[Token]), String> {
-	let Some(Token::Colon) = toks.get(0) else { return Err(String::new()) };
-	let toks = &toks[1..];
-	let Some(Token::Indent) = toks.get(0) else { return Err(String::new()) };
-	let toks = &toks[1..];
-
+	let ((), toks) = assemble_token(Token::Colon)(toks)?;
+	let ((), toks) = assemble_token(Token::Indent)(toks)?;
 	let (body, toks) = assemble_ast(toks)?;
-
-	let Some(Token::Unindent) = toks.get(0) else { return Err(String::new()) };
-	let toks = &toks[1..];
+	let ((), toks) = assemble_token(Token::Unindent)(toks)?;
 
 	Ok((body, toks))
 }
