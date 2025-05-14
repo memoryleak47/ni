@@ -16,9 +16,34 @@ fn assemble_ast(mut toks: &[Token]) -> Result<(AST, &[Token]), String> {
 	Ok((stmts, toks))
 }
 
+// (t1, t2, t3, ...)
+fn assemble_paren_list<T>(sub: impl Assembler<T>) -> impl Assembler<Vec<T>> {
+	move |toks| {
+		if toks[0] != Token::LParen { return Err(String::new()); }
+		if toks[1] == Token::RParen { return Ok((Vec::new(), &toks[2..])); }
+		let toks = &toks[1..];
+
+		let (first, mut toks) = sub(toks)?;
+		let mut children = vec![first];
+
+		while toks[0] == Token::Comma {
+			toks = &toks[1..];
+			let (c, rst) = sub(toks)?;
+			toks = rst;
+			children.push(c);
+		}
+		if toks[0] != Token::RParen { return Err(String::new()) };
+		let toks = &toks[1..];
+		Ok((children, toks))
+	}
+}
+
 fn assemble_expr(toks: &[Token]) -> Result<(Expr, &[Token]), String> {
-	assemble_atomic_expr(toks)
-	// TODO calls
+	let (expr, toks) = assemble_atomic_expr(toks)?;
+	if toks[0] == Token::LParen {
+		let (children, toks) = assemble_paren_list(assemble_expr)(toks)?;
+		Ok((Expr::FnCall(Box::new(expr), children), toks))
+	} else { Ok((expr, toks)) }
 }
 
 fn assemble_atomic_expr(toks: &[Token]) -> Result<(Expr, &[Token]), String> {
@@ -46,7 +71,7 @@ fn assemble_def_stmt(toks: &[Token]) -> Result<(Stmt, &[Token]), String> {
 
 fn assemble_expr_stmt(toks: &[Token]) -> Result<(Stmt, &[Token]), String> {
 	let (expr, toks) = assemble_expr(toks)?;
-	if toks[0] == Token::Equals {
+	if let Some(Token::Equals) = toks.get(0) {
 		let (rhs, toks) = assemble_expr(&toks[1..])?;
 		Ok((Stmt::Assign(expr, rhs), toks))
 	} else {
