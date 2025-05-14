@@ -40,7 +40,7 @@ fn assemble_paren_list<T>(sub: impl Assembler<T>) -> impl Assembler<Vec<T>> {
 
 fn assemble_expr(toks: &[Token]) -> Result<(Expr, &[Token]), String> {
 	let (expr, toks) = assemble_atomic_expr(toks)?;
-	if toks[0] == Token::LParen {
+	if let Some(Token::LParen) = &toks.get(0) {
 		let (children, toks) = assemble_paren_list(assemble_expr)(toks)?;
 		Ok((Expr::FnCall(Box::new(expr), children), toks))
 	} else { Ok((expr, toks)) }

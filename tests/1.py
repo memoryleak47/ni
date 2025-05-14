@@ -1,1 +1,3 @@
-print(4)
+print(x)
+print(x)
+x = 4
