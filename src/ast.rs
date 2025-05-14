@@ -1,5 +1,6 @@
 pub type AST = Vec<Stmt>;
 
+#[derive(Debug)]
 pub enum Stmt {
 	Assign(Expr, Expr),
 	Def(/*fn name*/ String, /*args*/ Vec<String>, /*body*/ AST),
@@ -10,6 +11,7 @@ pub enum Stmt {
 	Expr(Expr),
 }
 
+#[derive(Debug)]
 pub enum Expr {
 	Var(String),
 	ConstNum(f64),

@@ -1,7 +1,7 @@
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Token {
 	Ident(String), Num(f64),
-	Colon, LParen, RParen, Comma,
+	Colon, LParen, RParen, Comma, Equals,
 	If, While, Return, Break, Continue, Def,
 	Newline, Indent, Unindent,
 }
@@ -54,6 +54,7 @@ pub fn tokenize(s: &str) -> Vec<Token> {
 					'(' => { tokens.push(Token::LParen); i += 1; },
 					')' => { tokens.push(Token::RParen); i += 1; },
 					',' => { tokens.push(Token::Comma); i += 1; },
+					'=' => { tokens.push(Token::Equals); i += 1; },
 					' ' => { i += 1; },
 					_ if ident_char(c) => { state = TokenizerState::InStr(c.to_string()); i += 1; },
 					_ => panic!("unknown char '{c}'"),
