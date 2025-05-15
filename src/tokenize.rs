@@ -2,7 +2,7 @@
 pub enum Token {
 	Ident(String), Num(f64),
 	Colon, LParen, RParen, Comma, Equals,
-	If, While, Return, Break, Continue, Def,
+	If, While, Return, Break, Continue, Def, Class,
 	Newline, Indent, Unindent,
 }
 
@@ -35,6 +35,9 @@ pub fn tokenize(s: &str) -> Vec<Token> {
 			TokenizerState::CountingIndents(n) => {
 				if c == '\t' {
 					state = TokenizerState::CountingIndents(n+1);
+					i += 1;
+				} else if c == '\n' { // this ignores empty lines.
+					state = TokenizerState::CountingIndents(0);
 					i += 1;
 				} else {
 					state = TokenizerState::InLine;
@@ -73,6 +76,7 @@ pub fn tokenize(s: &str) -> Vec<Token> {
 						"break" => Token::Break,
 						"continue" => Token::Continue,
 						"def" => Token::Def,
+						"class" => Token::Class,
 						_ => Token::Ident(s),
 					});
 					state = TokenizerState::InLine;

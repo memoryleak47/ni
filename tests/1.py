@@ -1,3 +1,8 @@
+class Foo():
+	def __init__(self, x):
+		print(ok)
+	y = 4
+
 def foo(x, y):
 	print(4)
 	return

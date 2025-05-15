@@ -2,7 +2,7 @@ use crate::*;
 
 pub fn assemble(toks: &[Token]) -> AST {
 	let (ast, toks) = assemble_ast(toks).unwrap();
-	assert!(toks.is_empty());
+	assert!(toks.is_empty(), "{:?}", toks);
 
 	ast
 }
@@ -54,7 +54,7 @@ fn assemble_atomic_expr(toks: &[Token]) -> Result<(Expr, &[Token]), String> {
 }
 
 fn assemble_stmt(toks: &[Token]) -> Result<(Stmt, &[Token]), String> {
-	or(assemble_stmt_base, or(assemble_def_stmt, or(assemble_expr_stmt, assemble_branch_stmt)))(toks)
+	or(assemble_stmt_base, or(assemble_def_stmt, or(assemble_class_stmt, or(assemble_expr_stmt, assemble_branch_stmt))))(toks)
 }
 
 fn assemble_branch_stmt(toks: &[Token]) -> Result<(Stmt, &[Token]), String> {
@@ -98,6 +98,18 @@ fn assemble_def_stmt(toks: &[Token]) -> Result<(Stmt, &[Token]), String> {
 	let (children, toks) = assemble_paren_list(assemble_ident)(toks)?;
 	let (body, toks) = assemble_indented_ast(toks)?;
 	Ok((Stmt::Def(fn_name, children, body), toks))
+}
+
+fn assemble_class_stmt(toks: &[Token]) -> Result<(Stmt, &[Token]), String> {
+	let ((), toks) = assemble_token(Token::Class)(toks)?;
+	let (class_name, toks) = assemble_ident(toks)?;
+	let (children, toks) = if let Some(Token::LParen) = toks.get(0) {
+		assemble_paren_list(assemble_ident)(toks)?
+	} else {
+		(Vec::new(), toks)
+	};
+	let (body, toks) = assemble_indented_ast(toks)?;
+	Ok((Stmt::Class(class_name, children, body), toks))
 }
 
 fn assemble_expr_stmt(toks: &[Token]) -> Result<(Stmt, &[Token]), String> {
