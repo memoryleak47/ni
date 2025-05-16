@@ -250,7 +250,8 @@ fn step_stmt(stmt: &Statement, ctxt: &mut Ctxt) -> Option<()> {
             let val = &ctxt.fcx().nodes[n];
             match val {
                 Value::Nil => println!("nil"),
-                Value::Bool(b) => println!("{}", b),
+                Value::Bool(true) => println!("True"),
+                Value::Bool(false) => println!("False"),
                 Value::Str(s) => println!("{}", s),
                 Value::TablePtr(ptr) => println!("table: {}", ptr),
                 Value::Function(fid) => println!("function: {}", fid),
