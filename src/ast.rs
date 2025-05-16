@@ -18,6 +18,7 @@ pub enum ASTStatement {
 #[derive(Debug)]
 pub enum ASTExpr {
 	Var(String),
+	Str(String),
 	Int(i64),
 	FnCall(Box<ASTExpr>, Vec<ASTExpr>),
 	BinOp(BinOpKind, Box<ASTExpr>, Box<ASTExpr>)

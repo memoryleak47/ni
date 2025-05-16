@@ -7,6 +7,11 @@ fn lower_expr(expr: &ASTExpr, block: &mut Block, ctxt: &mut Ctxt) -> Node {
 			block.push(Statement::Compute(n, Expr::Num(r64(*i as f64))));
 			n
 		},
+		ASTExpr::Str(s) => {
+			let n = ctxt.node_ctr; ctxt.node_ctr += 1;
+			block.push(Statement::Compute(n, Expr::Str(s.to_string())));
+			n
+		},
 		ASTExpr::BinOp(op, lhs, rhs) => {
 			let lhs = lower_expr(lhs, block, ctxt);
 			let rhs = lower_expr(rhs, block, ctxt);

@@ -4,6 +4,7 @@ use crate::*;
 pub enum Token {
 	Ident(String),
 	Int(i64),
+	Str(String),
 	Colon, LParen, RParen, Comma, Equals,
 	If, While, Return, Break, Continue, Def, Class,
 	Newline, Indent, Unindent,
@@ -22,7 +23,8 @@ enum TokenizerState {
 	CountingIndents(usize),
 	InLine,
 	InInt(String),
-	InStr(String),
+	InStr(char, String),
+	InIdent(String),
 	InComment, // #
 }
 
@@ -73,6 +75,8 @@ pub fn tokenize(s: &str) -> Vec<Token> {
 					['<', ..] => { tokens.push(Token::BinOp(BinOpKind::Lt)); i += 1; },
 					['>', ..] => { tokens.push(Token::BinOp(BinOpKind::Gt)); i += 1; },
 
+					['"', ..] => { state = TokenizerState::InStr('"', String::new()); i += 1; },
+					['\'', ..] => { state = TokenizerState::InStr('\'', String::new()); i += 1; },
 					['\n', ..] => { state = TokenizerState::CountingIndents(0); i += 1; },
 					['#', ..] => { state = TokenizerState::InComment; i += 1; },
 					[':', ..] => { tokens.push(Token::Colon); i += 1; },
@@ -84,14 +88,24 @@ pub fn tokenize(s: &str) -> Vec<Token> {
 
 					[' ', ..] => { i += 1; },
 					_ if int_char(c) => { state = TokenizerState::InInt(c.to_string()); i += 1; },
-					_ if ident_char(c) => { state = TokenizerState::InStr(c.to_string()); i += 1; },
+					_ if ident_char(c) => { state = TokenizerState::InIdent(c.to_string()); i += 1; },
 					_ => panic!("unknown char '{c}'"),
 				}
 			},
-			TokenizerState::InStr(mut s) => {
+			TokenizerState::InStr(delim, mut s) => {
+				if c == delim {
+					tokens.push(Token::Str(s));
+					state = TokenizerState::InLine;
+				} else {
+					s.push(c);
+					state = TokenizerState::InStr(delim, s);
+				}
+				i += 1;
+			},
+			TokenizerState::InIdent(mut s) => {
 				if ident_char(c) {
 					s.push(c);
-					state = TokenizerState::InStr(s);
+					state = TokenizerState::InIdent(s);
 					i += 1;
 				} else {
 					tokens.push(match &*s {
