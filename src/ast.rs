@@ -16,7 +16,7 @@ pub enum ASTStatement {
 #[derive(Debug)]
 pub enum ASTExpr {
 	Var(String),
-	ConstNum(f64),
+	Int(i64),
 	Add(Box<ASTExpr>, Box<ASTExpr>),
 	FnCall(Box<ASTExpr>, Vec<ASTExpr>),
 }

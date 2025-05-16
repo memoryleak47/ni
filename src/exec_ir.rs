@@ -271,6 +271,8 @@ fn step_stmt(stmt: &Statement, ctxt: &mut Ctxt) -> Option<()> {
 
 fn step(ctxt: &mut Ctxt) -> Option<()> {
     let l: &FnCtxt = ctxt.stack.last().unwrap();
-    let stmt = ctxt.hir.fns[&l.fn_id].blocks[&l.block_id].get(l.statement_idx).unwrap();
+    let stmt = ctxt.hir.fns[&l.fn_id]
+			.blocks[&l.block_id]
+			.get(l.statement_idx).unwrap();
     step_stmt(stmt, ctxt)
 }

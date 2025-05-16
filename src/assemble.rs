@@ -50,6 +50,7 @@ fn assemble_expr(toks: &[Token]) -> Result<(ASTExpr, &[Token]), String> {
 fn assemble_atomic_expr(toks: &[Token]) -> Result<(ASTExpr, &[Token]), String> {
 	match toks.get(0) {
 		Some(Token::Ident(x)) => Ok((ASTExpr::Var(x.clone()), &toks[1..])),
+		Some(Token::Int(x)) => Ok((ASTExpr::Int(*x), &toks[1..])),
 		_ => Err(String::new()),
 	}
 }

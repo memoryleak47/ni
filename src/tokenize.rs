@@ -1,6 +1,9 @@
+use crate::*;
+
 #[derive(Debug, PartialEq)]
 pub enum Token {
-	Ident(String), Num(f64),
+	Ident(String),
+	Int(i64),
 	Colon, LParen, RParen, Comma, Equals,
 	If, While, Return, Break, Continue, Def, Class,
 	Newline, Indent, Unindent,
@@ -10,9 +13,14 @@ fn ident_char(c: char) -> bool {
 	('0'..='9').contains(&c) || ('a'..='z').contains(&c) || ('A'..='Z').contains(&c) || c == '_'
 }
 
+fn int_char(c: char) -> bool {
+	('0'..='9').contains(&c)
+}
+
 enum TokenizerState {
 	CountingIndents(usize),
 	InLine,
+	InInt(String),
 	InStr(String),
 	InComment, // #
 }
@@ -59,6 +67,7 @@ pub fn tokenize(s: &str) -> Vec<Token> {
 					',' => { tokens.push(Token::Comma); i += 1; },
 					'=' => { tokens.push(Token::Equals); i += 1; },
 					' ' => { i += 1; },
+					_ if int_char(c) => { state = TokenizerState::InInt(c.to_string()); i += 1; },
 					_ if ident_char(c) => { state = TokenizerState::InStr(c.to_string()); i += 1; },
 					_ => panic!("unknown char '{c}'"),
 				}
@@ -79,6 +88,17 @@ pub fn tokenize(s: &str) -> Vec<Token> {
 						"class" => Token::Class,
 						_ => Token::Ident(s),
 					});
+					state = TokenizerState::InLine;
+				}
+			},
+			TokenizerState::InInt(mut s) => {
+				if int_char(c) {
+					s.push(c);
+					state = TokenizerState::InInt(s);
+					i += 1;
+				} else {
+					let int = s.parse().expect("Can't parse int!");
+					tokens.push(Token::Int(int));
 					state = TokenizerState::InLine;
 				}
 			},

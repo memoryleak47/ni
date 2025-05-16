@@ -9,7 +9,7 @@ do
     echo "========="
     echo
 
-    res1=$(cargo r --release "tests/${i}.py")
+    res1=$(RUSTFLAGS=-Awarnings cargo r --release -q "tests/${i}.py")
     if [[ ! "$?" == 0 ]]; then
         echo error!
         exit
