@@ -5,6 +5,9 @@ fn lower_expr(expr: &ASTExpr, ctxt: &mut Ctxt) -> Node {
 		ASTExpr::Int(i) => {
 			ctxt.push_compute(Expr::Num(r64(*i as f64)))
 		},
+		ASTExpr::Bool(b) => {
+			ctxt.push_compute(Expr::Bool(*b))
+		},
 		ASTExpr::Str(s) => {
 			ctxt.push_compute(Expr::Str(s.to_string()))
 		},
@@ -63,16 +66,30 @@ impl Ctxt {
 	fn push_statement(&mut self, stmt: Statement) {
 		self.ir.fns.get_mut(&self.current_fn).unwrap().blocks.get_mut(&self.current_blk).unwrap().push(stmt);
 	}
+
+	fn push_goto(&mut self, b: BlockId) {
+		let true_ = lower_expr(&ASTExpr::Bool(true), self);
+		self.push_statement(Statement::If(true_, b, b));
+	}
+
+	fn alloc_blk(&mut self) -> BlockId {
+		let f = self.ir.fns.get_mut(&self.current_fn).unwrap();
+		let n = f.blocks.len();
+		f.blocks.insert(n, Vec::new());
+		n
+	}
+
+	fn focus_blk(&mut self, b: BlockId) {
+		self.current_blk = b;
+	}
 }
 
-pub fn lower(ast: &AST) -> IR {
-	let mut ctxt = Ctxt::new();
-
+fn lower_ast(ast: &AST, ctxt: &mut Ctxt) {
 	for stmt in ast {
 		match stmt {
 			ASTStatement::Expr(ASTExpr::FnCall(f, args)) => {
 				if let ASTExpr::Var(fn_name) = &**f && fn_name == "print" {
-					let n = lower_expr(&args[0], &mut ctxt);
+					let n = lower_expr(&args[0], ctxt);
 					ctxt.push_statement(Statement::Print(n));
 				}
 			},
@@ -82,13 +99,32 @@ pub fn lower(ast: &AST) -> IR {
 					ctxt.varmap.insert(v.clone(), n);
 				}
 				let var = ctxt.varmap[&**v];
-				let idx = lower_expr(&ASTExpr::Int(0), &mut ctxt);
-				let val = lower_expr(rhs, &mut ctxt);
+				let idx = lower_expr(&ASTExpr::Int(0), ctxt);
+				let val = lower_expr(rhs, ctxt);
 				ctxt.push_statement(Statement::Store(var, idx, val));
+			},
+			ASTStatement::If(cond, then) => {
+				let cond = lower_expr(cond, ctxt);
+				let b = ctxt.alloc_blk();
+				let post = ctxt.alloc_blk();
+				ctxt.push_statement(Statement::If(cond, b, post));
+
+				ctxt.focus_blk(b);
+				lower_ast(then, ctxt);
+				ctxt.push_goto(post);
+
+				ctxt.focus_blk(post);
 			},
 			_ => todo!(),
 		}
 	}
+
+}
+
+pub fn lower(ast: &AST) -> IR {
+	let mut ctxt = Ctxt::new();
+
+	lower_ast(ast, &mut ctxt);
 
 	ctxt.push_statement(Statement::Return);
 	ctxt.ir
