@@ -19,18 +19,27 @@ fn lower_expr(expr: &ASTExpr, block: &mut Block, ctxt: &mut Ctxt) -> Node {
 			block.push(Statement::Compute(n, Expr::BinOp(*op, lhs, rhs)));
 			n
 		},
+		ASTExpr::Var(v) => {
+			let v = ctxt.varmap[v];
+			let n = ctxt.node_ctr; ctxt.node_ctr += 1;
+			let idx = lower_expr(&ASTExpr::Int(0), block, ctxt);
+			block.push(Statement::Compute(n, Expr::Index(v, idx)));
+			n
+		},
 		_ => todo!("{:?}", expr)
 	}
 }
 
 struct Ctxt {
 	node_ctr: usize,
+	varmap: Map<String, Node>,
 }
 
 pub fn lower(ast: &AST) -> IR {
 	let mut block = Vec::new();
 	let mut ctxt = Ctxt {
 		node_ctr: 0,
+		varmap: Map::new(),
 	};
 
 	for stmt in ast {
@@ -40,6 +49,17 @@ pub fn lower(ast: &AST) -> IR {
 					let n = lower_expr(&args[0], &mut block, &mut ctxt);
 					block.push(Statement::Print(n));
 				}
+			},
+			ASTStatement::Assign(ASTExpr::Var(v), rhs) => {
+				if !ctxt.varmap.contains_key(&**v) {
+					let n = ctxt.node_ctr; ctxt.node_ctr += 1;
+					block.push(Statement::Compute(n, Expr::NewTable));
+					ctxt.varmap.insert(v.clone(), n);
+				}
+				let var = ctxt.varmap[&**v];
+				let idx = lower_expr(&ASTExpr::Int(0), &mut block, &mut ctxt);
+				let val = lower_expr(rhs, &mut block, &mut ctxt);
+				block.push(Statement::Store(var, idx, val));
 			},
 			_ => todo!(),
 		}
