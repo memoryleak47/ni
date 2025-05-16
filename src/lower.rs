@@ -14,7 +14,6 @@ fn lower_expr(expr: &ASTExpr, ctxt: &mut Ctxt) -> Node {
 		ASTExpr::BinOp(op, lhs, rhs) => {
 			let lhs = lower_expr(lhs, ctxt);
 			let rhs = lower_expr(rhs, ctxt);
-			let n = ctxt.node_ctr; ctxt.node_ctr += 1;
 			ctxt.push_compute(Expr::BinOp(*op, lhs, rhs))
 		},
 		ASTExpr::Var(v) => {
