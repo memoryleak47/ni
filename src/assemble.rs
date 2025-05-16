@@ -1,4 +1,5 @@
-use crate::*;
+use crate::ast::*;
+use crate::tokenize::*;
 
 pub fn assemble(toks: &[Token]) -> AST {
 	let (ast, toks) = assemble_ast(toks).unwrap();

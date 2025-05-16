@@ -14,14 +14,20 @@ pub use tokenize::*;
 mod assemble;
 pub use assemble::*;
 
+mod lower;
+pub use lower::*;
+
 mod ir;
 pub use ir::*;
+
+mod exec_ir;
+pub use exec_ir::*;
 
 fn main() {
 	let filename = std::env::args().nth(1).expect("Missing CLI argument!");
 	let contents = fs::read_to_string(filename).unwrap();
 	let toks = tokenize(&contents);
-	dbg!(&toks);
 	let ast = assemble(&toks);
-	dbg!(&ast);
+	let ir = lower(&ast);
+	exec(&ir);
 }
