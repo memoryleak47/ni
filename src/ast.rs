@@ -1,22 +1,22 @@
-pub type AST = Vec<Stmt>;
+pub type AST = Vec<ASTStatement>;
 
 #[derive(Debug)]
-pub enum Stmt {
-	Assign(Expr, Expr),
+pub enum ASTStatement {
+	Assign(ASTExpr, ASTExpr),
 	Def(/*fn name*/ String, /*args*/ Vec<String>, /*body*/ AST),
 	Class(/*class name*/ String, /*superclasses*/ Vec<String>, /*body*/ AST),
-	If(Expr, AST),
-	While(Expr, AST),
+	If(ASTExpr, AST),
+	While(ASTExpr, AST),
 	Break,
 	Continue,
 	Return,
-	Expr(Expr),
+	Expr(ASTExpr),
 }
 
 #[derive(Debug)]
-pub enum Expr {
+pub enum ASTExpr {
 	Var(String),
 	ConstNum(f64),
-	Add(Box<Expr>, Box<Expr>),
-	FnCall(Box<Expr>, Vec<Expr>),
+	Add(Box<ASTExpr>, Box<ASTExpr>),
+	FnCall(Box<ASTExpr>, Vec<ASTExpr>),
 }

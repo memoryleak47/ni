@@ -39,29 +39,29 @@ fn assemble_paren_list<T>(sub: impl Assembler<T>) -> impl Assembler<Vec<T>> {
 	}
 }
 
-fn assemble_expr(toks: &[Token]) -> Result<(Expr, &[Token]), String> {
+fn assemble_expr(toks: &[Token]) -> Result<(ASTExpr, &[Token]), String> {
 	let (expr, toks) = assemble_atomic_expr(toks)?;
 	if let Some(Token::LParen) = &toks.get(0) {
 		let (children, toks) = assemble_paren_list(assemble_expr)(toks)?;
-		Ok((Expr::FnCall(Box::new(expr), children), toks))
+		Ok((ASTExpr::FnCall(Box::new(expr), children), toks))
 	} else { Ok((expr, toks)) }
 }
 
-fn assemble_atomic_expr(toks: &[Token]) -> Result<(Expr, &[Token]), String> {
+fn assemble_atomic_expr(toks: &[Token]) -> Result<(ASTExpr, &[Token]), String> {
 	match toks.get(0) {
-		Some(Token::Ident(x)) => Ok((Expr::Var(x.clone()), &toks[1..])),
+		Some(Token::Ident(x)) => Ok((ASTExpr::Var(x.clone()), &toks[1..])),
 		_ => Err(String::new()),
 	}
 }
 
-fn assemble_stmt(toks: &[Token]) -> Result<(Stmt, &[Token]), String> {
+fn assemble_stmt(toks: &[Token]) -> Result<(ASTStatement, &[Token]), String> {
 	or(assemble_stmt_base, or(assemble_def_stmt, or(assemble_class_stmt, or(assemble_expr_stmt, assemble_branch_stmt))))(toks)
 }
 
-fn assemble_branch_stmt(toks: &[Token]) -> Result<(Stmt, &[Token]), String> {
+fn assemble_branch_stmt(toks: &[Token]) -> Result<(ASTStatement, &[Token]), String> {
 	let f = match toks.get(0) {
-		Some(Token::If) => Stmt::If,
-		Some(Token::While) => Stmt::While,
+		Some(Token::If) => ASTStatement::If,
+		Some(Token::While) => ASTStatement::While,
 		_ => return Err(String::new()),
 	};
 	let toks = &toks[1..];
@@ -70,11 +70,11 @@ fn assemble_branch_stmt(toks: &[Token]) -> Result<(Stmt, &[Token]), String> {
 	Ok((f(expr, body), toks))
 }
 
-fn assemble_stmt_base(toks: &[Token]) -> Result<(Stmt, &[Token]), String> {
+fn assemble_stmt_base(toks: &[Token]) -> Result<(ASTStatement, &[Token]), String> {
 	match toks.get(0) {
-		Some(Token::Break) => Ok((Stmt::Break, &toks[1..])),
-		Some(Token::Continue) => Ok((Stmt::Continue, &toks[1..])),
-		Some(Token::Return) => Ok((Stmt::Return, &toks[1..])),
+		Some(Token::Break) => Ok((ASTStatement::Break, &toks[1..])),
+		Some(Token::Continue) => Ok((ASTStatement::Continue, &toks[1..])),
+		Some(Token::Return) => Ok((ASTStatement::Return, &toks[1..])),
 		_ => Err(String::new()),
 	}
 }
@@ -93,15 +93,15 @@ fn assemble_token(t: Token) -> impl Assembler<()> {
 	}
 }
 
-fn assemble_def_stmt(toks: &[Token]) -> Result<(Stmt, &[Token]), String> {
+fn assemble_def_stmt(toks: &[Token]) -> Result<(ASTStatement, &[Token]), String> {
 	let ((), toks) = assemble_token(Token::Def)(toks)?;
 	let (fn_name, toks) = assemble_ident(toks)?;
 	let (children, toks) = assemble_paren_list(assemble_ident)(toks)?;
 	let (body, toks) = assemble_indented_ast(toks)?;
-	Ok((Stmt::Def(fn_name, children, body), toks))
+	Ok((ASTStatement::Def(fn_name, children, body), toks))
 }
 
-fn assemble_class_stmt(toks: &[Token]) -> Result<(Stmt, &[Token]), String> {
+fn assemble_class_stmt(toks: &[Token]) -> Result<(ASTStatement, &[Token]), String> {
 	let ((), toks) = assemble_token(Token::Class)(toks)?;
 	let (class_name, toks) = assemble_ident(toks)?;
 	let (children, toks) = if let Some(Token::LParen) = toks.get(0) {
@@ -110,16 +110,16 @@ fn assemble_class_stmt(toks: &[Token]) -> Result<(Stmt, &[Token]), String> {
 		(Vec::new(), toks)
 	};
 	let (body, toks) = assemble_indented_ast(toks)?;
-	Ok((Stmt::Class(class_name, children, body), toks))
+	Ok((ASTStatement::Class(class_name, children, body), toks))
 }
 
-fn assemble_expr_stmt(toks: &[Token]) -> Result<(Stmt, &[Token]), String> {
+fn assemble_expr_stmt(toks: &[Token]) -> Result<(ASTStatement, &[Token]), String> {
 	let (expr, toks) = assemble_expr(toks)?;
 	if let Some(Token::Equals) = toks.get(0) {
 		let (rhs, toks) = assemble_expr(&toks[1..])?;
-		Ok((Stmt::Assign(expr, rhs), toks))
+		Ok((ASTStatement::Assign(expr, rhs), toks))
 	} else {
-		Ok((Stmt::Expr(expr), toks))
+		Ok((ASTStatement::Expr(expr), toks))
 	}
 }
 
