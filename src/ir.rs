@@ -1,31 +1,56 @@
-// lowering to this layer does the following things:
-// - decompose closures into tuples of functions and data
-// - decompose generators into blocks
-// - decompose exceptions into an exception handler linked-list stack, which are just handler functions
-
-// questions:
-// - do I have blocks & functions, or just one of them?
+use crate::*;
 
 pub type FnId = usize;
-pub type Blockid = usize;
+pub type BlockId = usize;
 pub type Node = usize;
 
-pub type Body = Vec<Stmt>;
+pub type Block = Vec<Stmt>;
 
-struct IR {
-	fns: Vec<FnDef>,
-	main: FnId,
+pub struct IR {
+    pub fns: Map<FnId, Function>,
+    pub main_fn: FnId,
+}
+
+pub struct Function {
+    pub blocks: Map<BlockId, Block>,
+    pub start_block: BlockId,
 }
 
 struct FnDef {
 	args: u32,
-	body: Body,
+	body: Block,
+}
+
+pub enum BinOpKind {
+    Plus, Minus, Mul, Div, IntDiv, Mod, Pow,
+    Lt, Le, Gt, Ge,
+    IsEqual, IsNotEqual,
 }
 
 enum Stmt {
-	Compute(Node, Expr),
+    Compute(Node, Expr), // create a new node with the value returned from the Expr.
+    Store(/*table: */ Node, /*index: */ Node, Node), // store the value from the Node in the table `table` at index `index`.
+    If(Node, /*then*/ BlockId, /*else*/ BlockId),
+    FnCall(/*func: */ Node, /* arg: */ Node),
+    Print(Node),
+    Crash(String), // something bad happened.
+    Return,
 }
 
 enum Expr {
-	FnCall(Node, Node),
+    Index(/*table: */ Node, /*index: */ Node),
+
+    Arg,
+    NewTable, // equivalent to {}
+    Function(FnId),
+    BinOp(BinOpKind, Node, Node),
+    Len(Node),
+    Next(Node, Node),
+    Type(Node),
+
+    // literals
+    Num(R64),
+    Bool(bool),
+    Nil,
+    Str(String),
 }
