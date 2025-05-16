@@ -7,6 +7,7 @@ pub enum Token {
 	Colon, LParen, RParen, Comma, Equals,
 	If, While, Return, Break, Continue, Def, Class,
 	Newline, Indent, Unindent,
+	BinOp(BinOpKind),
 }
 
 fn ident_char(c: char) -> bool {
@@ -58,15 +59,23 @@ pub fn tokenize(s: &str) -> Vec<Token> {
 				}
 			},
 			TokenizerState::InLine => {
-				match c {
-					'\n' => { state = TokenizerState::CountingIndents(0); i += 1; },
-					'#' => { state = TokenizerState::InComment; i += 1; },
-					':' => { tokens.push(Token::Colon); i += 1; },
-					'(' => { tokens.push(Token::LParen); i += 1; },
-					')' => { tokens.push(Token::RParen); i += 1; },
-					',' => { tokens.push(Token::Comma); i += 1; },
-					'=' => { tokens.push(Token::Equals); i += 1; },
-					' ' => { i += 1; },
+				match &chars[i..] {
+					['\n', ..] => { state = TokenizerState::CountingIndents(0); i += 1; },
+					['#', ..] => { state = TokenizerState::InComment; i += 1; },
+					[':', ..] => { tokens.push(Token::Colon); i += 1; },
+					['(', ..] => { tokens.push(Token::LParen); i += 1; },
+					[')', ..] => { tokens.push(Token::RParen); i += 1; },
+					[',', ..] => { tokens.push(Token::Comma); i += 1; },
+					['=', ..] => { tokens.push(Token::Equals); i += 1; },
+
+					['+', ..] => { tokens.push(Token::BinOp(BinOpKind::Plus)); i += 1; },
+					['-', ..] => { tokens.push(Token::BinOp(BinOpKind::Minus)); i += 1; },
+					['*', '*', ..] => { tokens.push(Token::BinOp(BinOpKind::Pow)); i += 2; },
+					['*', ..] => { tokens.push(Token::BinOp(BinOpKind::Mul)); i += 1; },
+					['/', ..] => { tokens.push(Token::BinOp(BinOpKind::Div)); i += 1; },
+					['%', ..] => { tokens.push(Token::BinOp(BinOpKind::Mod)); i += 1; },
+
+					[' ', ..] => { i += 1; },
 					_ if int_char(c) => { state = TokenizerState::InInt(c.to_string()); i += 1; },
 					_ if ident_char(c) => { state = TokenizerState::InStr(c.to_string()); i += 1; },
 					_ => panic!("unknown char '{c}'"),

@@ -1,5 +1,4 @@
-use crate::ast::*;
-use crate::tokenize::*;
+use crate::*;
 
 pub fn assemble(toks: &[Token]) -> AST {
 	let (ast, toks) = assemble_ast(toks).unwrap();
@@ -41,10 +40,17 @@ fn assemble_paren_list<T>(sub: impl Assembler<T>) -> impl Assembler<Vec<T>> {
 
 fn assemble_expr(toks: &[Token]) -> Result<(ASTExpr, &[Token]), String> {
 	let (expr, toks) = assemble_atomic_expr(toks)?;
-	if let Some(Token::LParen) = &toks.get(0) {
-		let (children, toks) = assemble_paren_list(assemble_expr)(toks)?;
-		Ok((ASTExpr::FnCall(Box::new(expr), children), toks))
-	} else { Ok((expr, toks)) }
+	match toks.get(0) {
+		Some(Token::LParen) => {
+			let (children, toks) = assemble_paren_list(assemble_expr)(toks)?;
+			Ok((ASTExpr::FnCall(Box::new(expr), children), toks))
+		},
+		Some(Token::BinOp(op)) => {
+			let (rhs, toks) = assemble_expr(&toks[1..])?;
+			Ok((ASTExpr::BinOp(*op, Box::new(expr), Box::new(rhs)), toks))
+		},
+		_ => Ok((expr, toks)),
+	}
 }
 
 fn assemble_atomic_expr(toks: &[Token]) -> Result<(ASTExpr, &[Token]), String> {

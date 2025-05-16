@@ -1,25 +1,38 @@
 use crate::*;
 
-fn lower_expr(expr: &ASTExpr, block: &mut Block, id_ctr: &mut usize) -> Node {
+fn lower_expr(expr: &ASTExpr, block: &mut Block, ctxt: &mut Ctxt) -> Node {
 	match expr {
 		ASTExpr::Int(i) => {
-			let n = *id_ctr; *id_ctr += 1;
+			let n = ctxt.node_ctr; ctxt.node_ctr += 1;
 			block.push(Statement::Compute(n, Expr::Num(r64(*i as f64))));
+			n
+		},
+		ASTExpr::BinOp(op, lhs, rhs) => {
+			let lhs = lower_expr(lhs, block, ctxt);
+			let rhs = lower_expr(rhs, block, ctxt);
+			let n = ctxt.node_ctr; ctxt.node_ctr += 1;
+			block.push(Statement::Compute(n, Expr::BinOp(*op, lhs, rhs)));
 			n
 		},
 		_ => todo!("{:?}", expr)
 	}
 }
 
+struct Ctxt {
+	node_ctr: usize,
+}
+
 pub fn lower(ast: &AST) -> IR {
-	let mut id_ctr = 0;
 	let mut block = Vec::new();
+	let mut ctxt = Ctxt {
+		node_ctr: 0,
+	};
 
 	for stmt in ast {
 		match stmt {
 			ASTStatement::Expr(ASTExpr::FnCall(f, args)) => {
 				if let ASTExpr::Var(fn_name) = &**f && fn_name == "print" {
-					let n = lower_expr(&args[0], &mut block, &mut id_ctr);
+					let n = lower_expr(&args[0], &mut block, &mut ctxt);
 					block.push(Statement::Print(n));
 				}
 			},

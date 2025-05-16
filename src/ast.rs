@@ -1,3 +1,5 @@
+use crate::*;
+
 pub type AST = Vec<ASTStatement>;
 
 #[derive(Debug)]
@@ -17,6 +19,6 @@ pub enum ASTStatement {
 pub enum ASTExpr {
 	Var(String),
 	Int(i64),
-	Add(Box<ASTExpr>, Box<ASTExpr>),
 	FnCall(Box<ASTExpr>, Vec<ASTExpr>),
+	BinOp(BinOpKind, Box<ASTExpr>, Box<ASTExpr>)
 }
