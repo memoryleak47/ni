@@ -16,11 +16,6 @@ pub struct Function {
     pub start_block: BlockId,
 }
 
-struct FnDef {
-	args: u32,
-	body: Block,
-}
-
 pub enum BinOpKind {
     Plus, Minus, Mul, Div, IntDiv, Mod, Pow,
     Lt, Le, Gt, Ge,
