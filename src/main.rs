@@ -23,6 +23,9 @@ pub use ir::*;
 mod exec_ir;
 pub use exec_ir::*;
 
+mod fmt;
+pub use fmt::*;
+
 mod cli;
 pub use cli::*;
 
@@ -45,7 +48,7 @@ fn main() {
 	let ir = lower(&ast);
 
 	if let Action::ShowIR = cli.action {
-		println!("{:?}", ir);
+		println!("{}", ir);
 		return;
 	}
 
