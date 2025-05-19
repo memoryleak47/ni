@@ -13,7 +13,7 @@ fn table_get(ptr: TablePtr, idx: Value, ctxt: &mut Ctxt) -> Value {
 
 fn table_set(ptr: TablePtr, idx: Value, val: Value, ctxt: &mut Ctxt) {
     if idx == Value::None {
-        panic!("setting index with nil is forbidden!");
+        panic!("setting index with None is forbidden!");
     }
 
     let data: &mut TableData = ctxt.heap.get_mut(ptr).expect("table_set got dangling pointer!");

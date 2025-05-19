@@ -83,7 +83,7 @@ impl Display for Expr {
             Len(r) => write!(f, "#{}", node_string(*r))?,
             Num(x) => write!(f, "{}", x)?,
             Bool(b) => write!(f, "{}", b)?,
-            Nil => write!(f, "nil")?,
+            None => write!(f, "None")?,
             Str(s) => write!(f, "\"{}\"", s)?,
         }
 

@@ -90,5 +90,5 @@ pub struct IR {
 // - function call to a non-function
 // - a If-node with a non-boolean argument
 // - division/remainder by zero?
-// - store with index nil
+// - store with index None
 // - argument to next is not a table
