@@ -81,7 +81,8 @@ impl Display for Expr {
             Next(v1, v2) => write!(f, "next({}, {})", node_string(*v1), node_string(*v2))?,
             BinOp(kind, l, r) => write!(f, "{} {} {}", node_string(*l), kind, node_string(*r))?,
             Len(r) => write!(f, "#{}", node_string(*r))?,
-            Num(x) => write!(f, "{}", x)?,
+            Float(x) => write!(f, "{}", x)?,
+            Int(x) => write!(f, "{}", x)?,
             Bool(b) => write!(f, "{}", b)?,
             None => write!(f, "None")?,
             Str(s) => write!(f, "\"{}\"", s)?,
@@ -106,7 +107,6 @@ impl Display for BinOpKind {
             Ge => ">=",
             IsEqual => "==",
             IsNotEqual => "~=",
-            Concat => "..",
             Pow => "^",
         };
         write!(f, "{}", s)

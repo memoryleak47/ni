@@ -19,10 +19,10 @@ fn table_set(ptr: TablePtr, idx: Value, val: Value, ctxt: &mut Ctxt) {
     let data: &mut TableData = ctxt.heap.get_mut(ptr).expect("table_set got dangling pointer!");
     data.entries.retain(|(x, _)| *x != idx);
     if val == Value::None { // Value::None means it's not there, so just don't add it!
-        if idx == Value::Num(R64::new((data.length) as f64)) {
+        if idx == Value::Int(data.length as _) {
             // recalculate length
             for i in 1.. {
-                if data.entries.iter().any(|(x, _)| x == &Value::Num(R64::new(i as f64))) {
+                if data.entries.iter().any(|(x, _)| x == &Value::Int(i as _)) {
                     data.length = i;
                 } else { break; }
             }
@@ -30,10 +30,10 @@ fn table_set(ptr: TablePtr, idx: Value, val: Value, ctxt: &mut Ctxt) {
     } else {
         data.entries.push((idx.clone(), val));
 
-        if idx == Value::Num(R64::new((data.length+1) as f64)) {
+        if idx == Value::Int((data.length+1) as _) {
             // recalculate length
             for i in (data.length+1).. {
-                if data.entries.iter().any(|(x, _)| x == &Value::Num(R64::new(i as f64))) {
+                if data.entries.iter().any(|(x, _)| x == &Value::Int(i as _)) {
                     data.length = i;
                 } else { break; }
             }
@@ -66,7 +66,8 @@ enum Value {
     TablePtr(TablePtr),
     Str(String),
     Function(FnId),
-    Num(R64),
+    Float(R64),
+    Int(i64),
 }
 
 struct FnCtxt {
@@ -121,8 +122,8 @@ fn exec_expr(expr: &Expr, ctxt: &mut Ctxt) -> Value {
             let r = ctxt.fcx().nodes[r].clone();
 
             match r {
-                Value::Str(s) => Value::Num(R64::new(s.len() as f64)),
-                Value::TablePtr(t) => Value::Num(R64::new(ctxt.heap[t].length as f64)),
+                Value::Str(s) => Value::Int(s.len() as _),
+                Value::TablePtr(t) => Value::Int(ctxt.heap[t].length as _),
                 _ => panic!("executing len on invalid type!"),
             }
         },
@@ -142,13 +143,15 @@ fn exec_expr(expr: &Expr, ctxt: &mut Ctxt) -> Value {
                 Value::Bool(_) => "boolean",
                 Value::Str(_) => "string",
                 Value::Function(..) => "function",
-                Value::Num(_) => "number",
+                Value::Float(_) => "float",
+                Value::Int(_) => "int",
                 Value::TablePtr(_) => "table"
             };
 
             Value::Str(s.to_string())
         }
-        Expr::Num(x) => Value::Num(*x),
+        Expr::Float(x) => Value::Float(*x),
+        Expr::Int(x) => Value::Int(*x),
         Expr::Bool(b) => Value::Bool(*b),
         Expr::None => Value::None,
         Expr::Str(s) => Value::Str(s.clone()),
@@ -159,19 +162,34 @@ fn exec_binop(kind: BinOpKind, l: Value, r: Value) -> Value {
     use BinOpKind::*;
 
     match (kind, l, r) {
-        (Plus, Value::Num(l), Value::Num(r)) => Value::Num(l + r),
-        (Minus, Value::Num(l), Value::Num(r)) => Value::Num(l - r),
-        (Mul, Value::Num(l), Value::Num(r)) => Value::Num(l * r),
-        (Div, Value::Num(l), Value::Num(r)) => Value::Num(l / r),
-        (Mod, Value::Num(l), Value::Num(r)) => Value::Num(l % r),
-        (Pow, Value::Num(l), Value::Num(r)) => Value::Num(l.powf(r)),
-        (Lt, Value::Num(l), Value::Num(r)) => Value::Bool(l < r),
-        (Le, Value::Num(l), Value::Num(r)) => Value::Bool(l <= r),
-        (Gt, Value::Num(l), Value::Num(r)) => Value::Bool(l > r),
-        (Ge, Value::Num(l), Value::Num(r)) => Value::Bool(l >= r),
+		// int
+        (Plus, Value::Int(l), Value::Int(r)) => Value::Int(l + r),
+        (Minus, Value::Int(l), Value::Int(r)) => Value::Int(l - r),
+        (Mul, Value::Int(l), Value::Int(r)) => Value::Int(l * r),
+        (Div, Value::Int(l), Value::Int(r)) => Value::Int(l / r),
+        (Mod, Value::Int(l), Value::Int(r)) => Value::Int(l % r),
+        (Pow, Value::Int(l), Value::Int(r)) => Value::Int(l.pow(r as _)),
+        (Lt, Value::Int(l), Value::Int(r)) => Value::Bool(l < r),
+        (Le, Value::Int(l), Value::Int(r)) => Value::Bool(l <= r),
+        (Gt, Value::Int(l), Value::Int(r)) => Value::Bool(l > r),
+        (Ge, Value::Int(l), Value::Int(r)) => Value::Bool(l >= r),
+
+		// float
+        (Plus, Value::Float(l), Value::Float(r)) => Value::Float(l + r),
+        (Minus, Value::Float(l), Value::Float(r)) => Value::Float(l - r),
+        (Mul, Value::Float(l), Value::Float(r)) => Value::Float(l * r),
+        (Div, Value::Float(l), Value::Float(r)) => Value::Float(l / r),
+        (Mod, Value::Float(l), Value::Float(r)) => Value::Float(l % r),
+        (Pow, Value::Float(l), Value::Float(r)) => Value::Float(l.powf(r)),
+        (Lt, Value::Float(l), Value::Float(r)) => Value::Bool(l < r),
+        (Le, Value::Float(l), Value::Float(r)) => Value::Bool(l <= r),
+        (Gt, Value::Float(l), Value::Float(r)) => Value::Bool(l > r),
+        (Ge, Value::Float(l), Value::Float(r)) => Value::Bool(l >= r),
+
+        (Plus, Value::Str(l), Value::Str(r)) => Value::Str(format!("{}{}", l, r)),
+
         (IsEqual, l, r) => Value::Bool(l == r),
         (IsNotEqual, l, r) => Value::Bool(l != r),
-        (Concat, Value::Str(l), Value::Str(r)) => Value::Str(format!("{}{}", l, r)),
         _ => panic!("type error!"),
     }
 }
@@ -255,7 +273,8 @@ fn step_stmt(stmt: &Statement, ctxt: &mut Ctxt) -> Option<()> {
                 Value::Str(s) => println!("{}", s),
                 Value::TablePtr(ptr) => println!("table: {}", ptr),
                 Value::Function(fid) => println!("function: {}", fid),
-                Value::Num(x) => println!("{}", x),
+                Value::Float(x) => println!("{}", x),
+                Value::Int(x) => println!("{}", x),
             }
         }
         Throw(s) => {

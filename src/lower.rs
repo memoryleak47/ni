@@ -6,7 +6,7 @@ fn lower_expr(expr: &ASTExpr, ctxt: &mut Ctxt) -> Node {
 			ctxt.push_compute(Expr::None)
 		},
 		ASTExpr::Int(i) => {
-			ctxt.push_compute(Expr::Num(r64(*i as f64)))
+			ctxt.push_compute(Expr::Int(*i))
 		},
 		ASTExpr::Bool(b) => {
 			ctxt.push_compute(Expr::Bool(*b))
@@ -30,13 +30,18 @@ fn lower_expr(expr: &ASTExpr, ctxt: &mut Ctxt) -> Node {
 				let n = lower_expr(&args[0], ctxt);
 				ctxt.push_statement(Statement::Print(n));
 				ctxt.push_compute(Expr::None)
-			} else if args.len() == 0 { // TODO allow args
+			} else {
 				let f = lower_expr(&f, ctxt);
 				let arg = ctxt.push_compute(Expr::NewTable);
+				for (i, a) in args.iter().enumerate() {
+					let i = ctxt.push_compute(Expr::Int(i as _));
+					let v = lower_expr(a, ctxt);
+					ctxt.push_statement(Statement::Store(arg, i, v));
+				}
 				ctxt.push_statement(Statement::FnCall(f, arg));
 				let idx = ctxt.push_compute(Expr::Str("ret".to_string()));
 				ctxt.push_compute(Expr::Index(arg, idx))
-			} else { todo!() }
+			}
 		},
 		_ => todo!("{:?}", expr)
 	}

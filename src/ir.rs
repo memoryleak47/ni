@@ -18,7 +18,7 @@ pub enum BinOpKind {
     Plus, Minus, Mul, Div, Mod,
     Lt, Le, Gt, Ge,
     IsEqual, IsNotEqual,
-    Concat, Pow,
+    Pow,
 }
 
 // Node is for temporary constants contained in the computation tree.
@@ -55,7 +55,8 @@ pub enum Expr {
     Type(Node),
 
     // literals
-    Num(R64),
+    Float(R64),
+	Int(i64),
     Bool(bool),
     None,
     Str(String),
