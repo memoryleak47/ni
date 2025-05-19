@@ -78,13 +78,13 @@ struct FnCtxt {
     statement_idx: usize,
 }
 
-struct Ctxt<'hir> {
+struct Ctxt<'ir> {
     heap: Vec<TableData>,
-    hir: &'hir IR,
+    ir: &'ir IR,
     stack: Vec<FnCtxt>,
 }
 
-impl<'hir> Ctxt<'hir> { 
+impl<'ir> Ctxt<'ir> {
     fn fcx(&self) -> &FnCtxt {
         self.stack.last().unwrap()
     }
@@ -200,7 +200,7 @@ fn call_fn(f: FnId, arg: Value, ctxt: &mut Ctxt) {
         nodes: Default::default(),
         arg,
         fn_id: f,
-        block_id: ctxt.hir.fns[&f].start_block,
+        block_id: ctxt.ir.fns[&f].start_block,
         statement_idx: 0,
     };
     ctxt.stack.push(fcx);
@@ -213,14 +213,14 @@ fn alloc_table(ctxt: &mut Ctxt) -> TablePtr {
     tid
 }
 
-pub fn exec(hir: &IR) {
+pub fn exec(ir: &IR) {
     let mut ctxt = Ctxt {
-        hir,
+        ir,
         heap: Vec::new(),
         stack: Vec::new(),
     };
 
-    call_fn(hir.main_fn, Value::None, &mut ctxt);
+    call_fn(ir.main_fn, Value::None, &mut ctxt);
 
     while ctxt.stack.len() > 0 {
         if step(&mut ctxt).is_none() {
@@ -291,7 +291,7 @@ fn step_stmt(stmt: &Statement, ctxt: &mut Ctxt) -> Option<()> {
 
 fn step(ctxt: &mut Ctxt) -> Option<()> {
     let l: &FnCtxt = ctxt.stack.last().unwrap();
-    let stmt = ctxt.hir.fns[&l.fn_id]
+    let stmt = ctxt.ir.fns[&l.fn_id]
 			.blocks[&l.block_id]
 			.get(l.statement_idx).unwrap();
     step_stmt(stmt, ctxt)
