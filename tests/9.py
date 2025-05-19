@@ -1,4 +1,4 @@
 def foo(x):
 	print(x)
 
-print("ok")
+foo("ok")
