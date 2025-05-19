@@ -194,6 +194,7 @@ fn lower_ast(ast: &AST, ctxt: &mut Ctxt) {
 				ctxt.push_statement(Statement::Store(argtable, idx, val));
 				ctxt.push_statement(Statement::Return);
 			},
+			ASTStatement::Pass => {}, // do nothing
 			_ => todo!(),
 		}
 	}

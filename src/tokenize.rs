@@ -6,7 +6,7 @@ pub enum Token {
 	Int(i64),
 	Str(String),
 	Colon, LParen, RParen, Comma, Equals,
-	If, While, Return, Break, Continue, Def, Class,
+	If, While, Return, Break, Continue, Def, Class, Pass,
 	Newline, Indent, Unindent,
 	BinOp(BinOpKind),
 }
@@ -116,6 +116,7 @@ pub fn tokenize(s: &str) -> Vec<Token> {
 						"continue" => Token::Continue,
 						"def" => Token::Def,
 						"class" => Token::Class,
+						"pass" => Token::Pass,
 						_ => Token::Ident(s),
 					});
 					state = TokenizerState::InLine;

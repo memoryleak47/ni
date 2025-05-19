@@ -62,7 +62,7 @@ fn assemble_atomic_expr(toks: &[Token]) -> Result<(ASTExpr, &[Token]), String> {
 	}
 }
 
-fn assemble_stmt(toks: &[Token]) -> Result<(ASTStatement, &[Token]), String> {
+fn assemble_stmt(mut toks: &[Token]) -> Result<(ASTStatement, &[Token]), String> {
 	or(assemble_stmt_base, or(assemble_def_stmt, or(assemble_class_stmt, or(assemble_expr_stmt, assemble_branch_stmt))))(toks)
 }
 
@@ -82,6 +82,7 @@ fn assemble_stmt_base(toks: &[Token]) -> Result<(ASTStatement, &[Token]), String
 	match toks.get(0) {
 		Some(Token::Break) => Ok((ASTStatement::Break, &toks[1..])),
 		Some(Token::Continue) => Ok((ASTStatement::Continue, &toks[1..])),
+		Some(Token::Pass) => Ok((ASTStatement::Pass, &toks[1..])),
 		Some(Token::Return) => {
 			match assemble_expr(&toks[1..]) {
 				Ok((expr, toks)) => Ok((ASTStatement::Return(Some(expr)), toks)),

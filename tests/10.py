@@ -9,6 +9,6 @@ def foo2():
 print(foo2())
 
 def foo3():
-	x=2
+	pass
 
 print(foo3())

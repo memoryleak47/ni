@@ -13,6 +13,7 @@ pub enum ASTStatement {
 	Continue,
 	Return(Option<ASTExpr>),
 	Expr(ASTExpr),
+	Pass,
 }
 
 #[derive(Debug)]
