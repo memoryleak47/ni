@@ -114,6 +114,23 @@ fn lower_ast(ast: &AST, ctxt: &mut Ctxt) {
 
 				ctxt.focus_blk(post);
 			},
+			ASTStatement::While(cond, then) => {
+				let pre = ctxt.alloc_blk();
+				let b = ctxt.alloc_blk();
+				let post = ctxt.alloc_blk();
+
+				ctxt.push_goto(pre);
+				ctxt.focus_blk(pre);
+				let cond = lower_expr(cond, ctxt);
+
+				ctxt.push_statement(Statement::If(cond, b, post));
+
+				ctxt.focus_blk(b);
+				lower_ast(then, ctxt);
+				ctxt.push_goto(pre);
+
+				ctxt.focus_blk(post);
+			},
 			_ => todo!(),
 		}
 	}
