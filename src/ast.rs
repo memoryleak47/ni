@@ -11,7 +11,7 @@ pub enum ASTStatement {
 	While(ASTExpr, AST),
 	Break,
 	Continue,
-	Return,
+	Return(Option<ASTExpr>),
 	Expr(ASTExpr),
 }
 
@@ -21,6 +21,7 @@ pub enum ASTExpr {
 	Str(String),
 	Int(i64),
 	Bool(bool),
+	None,
 	FnCall(Box<ASTExpr>, Vec<ASTExpr>),
 	BinOp(BinOpKind, Box<ASTExpr>, Box<ASTExpr>)
 }

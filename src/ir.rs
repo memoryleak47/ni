@@ -57,7 +57,7 @@ pub enum Expr {
     // literals
     Num(R64),
     Bool(bool),
-    Nil,
+    None,
     Str(String),
 }
 

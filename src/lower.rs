@@ -2,6 +2,9 @@ use crate::*;
 
 fn lower_expr(expr: &ASTExpr, ctxt: &mut Ctxt) -> Node {
 	match expr {
+		ASTExpr::None => {
+			ctxt.push_compute(Expr::None)
+		},
 		ASTExpr::Int(i) => {
 			ctxt.push_compute(Expr::Num(r64(*i as f64)))
 		},
@@ -20,6 +23,20 @@ fn lower_expr(expr: &ASTExpr, ctxt: &mut Ctxt) -> Node {
 			let v = ctxt.f().varmap[v];
 			let idx = lower_expr(&ASTExpr::Int(0), ctxt);
 			ctxt.push_compute(Expr::Index(v, idx))
+		},
+		ASTExpr::FnCall(f, args) => {
+			// TODO: make "print" a normal global variable.
+			if let ASTExpr::Var(fn_name) = &**f && fn_name == "print" {
+				let n = lower_expr(&args[0], ctxt);
+				ctxt.push_statement(Statement::Print(n));
+				ctxt.push_compute(Expr::None)
+			} else if args.len() == 0 { // TODO allow args
+				let f = lower_expr(&f, ctxt);
+				let arg = ctxt.push_compute(Expr::NewTable);
+				ctxt.push_statement(Statement::FnCall(f, arg));
+				let idx = ctxt.push_compute(Expr::Str("ret".to_string()));
+				ctxt.push_compute(Expr::Index(arg, idx))
+			} else { todo!() }
 		},
 		_ => todo!("{:?}", expr)
 	}
@@ -114,16 +131,8 @@ fn lower_assign(v: &str, val: Node, ctxt: &mut Ctxt) {
 fn lower_ast(ast: &AST, ctxt: &mut Ctxt) {
 	for stmt in ast {
 		match stmt {
-			ASTStatement::Expr(ASTExpr::FnCall(f, args)) => {
-				// TODO: make "print" a normal global variable.
-				if let ASTExpr::Var(fn_name) = &**f && fn_name == "print" {
-					let n = lower_expr(&args[0], ctxt);
-					ctxt.push_statement(Statement::Print(n));
-				} else if args.len() == 0 {
-					let f = lower_expr(&f, ctxt);
-					let arg = ctxt.push_compute(Expr::NewTable);
-					ctxt.push_statement(Statement::FnCall(f, arg));
-				}
+			ASTStatement::Expr(e) => {
+				lower_expr(e, ctxt);
 			},
 			ASTStatement::Assign(ASTExpr::Var(v), rhs) => {
 				let val = lower_expr(rhs, ctxt);
@@ -176,6 +185,14 @@ fn lower_ast(ast: &AST, ctxt: &mut Ctxt) {
 
 				let val = ctxt.push_compute(Expr::Function(i));
 				lower_assign(name, val, ctxt);
+			},
+			ASTStatement::Return(opt) => {
+				let expr = opt.as_ref().unwrap_or(&ASTExpr::None);
+				let val = lower_expr(expr, ctxt);
+				let argtable = ctxt.push_compute(Expr::Arg);
+				let idx = ctxt.push_compute(Expr::Str("ret".to_string()));
+				ctxt.push_statement(Statement::Store(argtable, idx, val));
+				ctxt.push_statement(Statement::Return);
 			},
 			_ => todo!(),
 		}

@@ -8,17 +8,17 @@ fn table_get(ptr: TablePtr, idx: Value, ctxt: &mut Ctxt) -> Value {
     ctxt.heap[ptr].entries.iter()
         .find(|(x, _)| *x == idx)
         .map(|(_, v)| v.clone())
-        .unwrap_or(Value::Nil)
+        .unwrap_or(Value::None)
 }
 
 fn table_set(ptr: TablePtr, idx: Value, val: Value, ctxt: &mut Ctxt) {
-    if idx == Value::Nil {
+    if idx == Value::None {
         panic!("setting index with nil is forbidden!");
     }
 
     let data: &mut TableData = ctxt.heap.get_mut(ptr).expect("table_set got dangling pointer!");
     data.entries.retain(|(x, _)| *x != idx);
-    if val == Value::Nil { // Value::Nil means it's not there, so just don't add it!
+    if val == Value::None { // Value::None means it's not there, so just don't add it!
         if idx == Value::Num(R64::new((data.length) as f64)) {
             // recalculate length
             for i in 1.. {
@@ -44,24 +44,24 @@ fn table_set(ptr: TablePtr, idx: Value, val: Value, ctxt: &mut Ctxt) {
 // this is not equivalent to "next", as it only returns the next key and not the value too.
 fn table_next(ptr: TablePtr, idx: Value, ctxt: &mut Ctxt) -> Value {
     let data = &ctxt.heap[ptr];
-    if idx == Value::Nil {
+    if idx == Value::None {
         match data.entries.get(0) {
             Some((k, _)) => k.clone(),
-            None => Value::Nil,
+            None => Value::None,
         }
     } else {
         let i = data.entries.iter().position(|(i, _)| *i == idx).expect("invalid key to next!");
         if let Some((k, _)) = data.entries.get(i+1) {
             k.clone()
         } else {
-            Value::Nil
+            Value::None
         }
     }
 }
 
 #[derive(Clone, PartialEq, Debug)]
 enum Value {
-    Nil,
+    None,
     Bool(bool),
     TablePtr(TablePtr),
     Str(String),
@@ -138,7 +138,7 @@ fn exec_expr(expr: &Expr, ctxt: &mut Ctxt) -> Value {
         Expr::Type(n) => {
             let val = &ctxt.fcx().nodes[n];
             let s = match val {
-                Value::Nil => "nil",
+                Value::None => "None",
                 Value::Bool(_) => "boolean",
                 Value::Str(_) => "string",
                 Value::Function(..) => "function",
@@ -150,7 +150,7 @@ fn exec_expr(expr: &Expr, ctxt: &mut Ctxt) -> Value {
         }
         Expr::Num(x) => Value::Num(*x),
         Expr::Bool(b) => Value::Bool(*b),
-        Expr::Nil => Value::Nil,
+        Expr::None => Value::None,
         Expr::Str(s) => Value::Str(s.clone()),
     }
 }
@@ -202,7 +202,7 @@ pub fn exec(hir: &IR) {
         stack: Vec::new(),
     };
 
-    call_fn(hir.main_fn, Value::Nil, &mut ctxt);
+    call_fn(hir.main_fn, Value::None, &mut ctxt);
 
     while ctxt.stack.len() > 0 {
         if step(&mut ctxt).is_none() {
@@ -249,7 +249,7 @@ fn step_stmt(stmt: &Statement, ctxt: &mut Ctxt) -> Option<()> {
         Print(n) => {
             let val = &ctxt.fcx().nodes[n];
             match val {
-                Value::Nil => println!("nil"),
+                Value::None => println!("None"),
                 Value::Bool(true) => println!("True"),
                 Value::Bool(false) => println!("False"),
                 Value::Str(s) => println!("{}", s),
