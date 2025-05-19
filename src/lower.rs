@@ -1,5 +1,30 @@
 use crate::*;
 
+fn add_builtins(ctxt: &mut Ctxt) {
+	let n = ctxt.ir.fns.len();
+	let mut blocks: HashMap<_, _> = Default::default();
+	blocks.insert(0, vec![
+		Statement::Compute(0, Expr::Arg),
+		Statement::Compute(1, Expr::Int(0)),
+		Statement::Compute(2, Expr::Index(0, 1)),
+		Statement::Print(2),
+
+		Statement::Compute(3, Expr::Str("ret".to_string())),
+		Statement::Compute(4, Expr::None),
+		Statement::Store(0, 3, 4),
+		Statement::Return,
+	]);
+	ctxt.ir.fns.insert(n, Function {
+		blocks,
+		start_block: 0,
+	});
+	let print_inner = ctxt.push_compute(Expr::Function(n));
+	let print = ctxt.push_compute(Expr::NewTable);
+	let idx = ctxt.push_compute(Expr::Int(0));
+	ctxt.push_statement(Statement::Store(print, idx, print_inner));
+	ctxt.f_mut().varmap.insert(String::from("print"), print);
+}
+
 fn lower_expr(expr: &ASTExpr, ctxt: &mut Ctxt) -> Node {
 	match expr {
 		ASTExpr::None => {
@@ -25,23 +50,16 @@ fn lower_expr(expr: &ASTExpr, ctxt: &mut Ctxt) -> Node {
 			ctxt.push_compute(Expr::Index(v, idx))
 		},
 		ASTExpr::FnCall(f, args) => {
-			// TODO: make "print" a normal global variable.
-			if let ASTExpr::Var(fn_name) = &**f && fn_name == "print" {
-				let n = lower_expr(&args[0], ctxt);
-				ctxt.push_statement(Statement::Print(n));
-				ctxt.push_compute(Expr::None)
-			} else {
-				let f = lower_expr(&f, ctxt);
-				let arg = ctxt.push_compute(Expr::NewTable);
-				for (i, a) in args.iter().enumerate() {
-					let i = ctxt.push_compute(Expr::Int(i as _));
-					let v = lower_expr(a, ctxt);
-					ctxt.push_statement(Statement::Store(arg, i, v));
-				}
-				ctxt.push_statement(Statement::FnCall(f, arg));
-				let idx = ctxt.push_compute(Expr::Str("ret".to_string()));
-				ctxt.push_compute(Expr::Index(arg, idx))
+			let f = lower_expr(&f, ctxt);
+			let arg = ctxt.push_compute(Expr::NewTable);
+			for (i, a) in args.iter().enumerate() {
+				let i = ctxt.push_compute(Expr::Int(i as _));
+				let v = lower_expr(a, ctxt);
+				ctxt.push_statement(Statement::Store(arg, i, v));
 			}
+			ctxt.push_statement(Statement::FnCall(f, arg));
+			let idx = ctxt.push_compute(Expr::Str("ret".to_string()));
+			ctxt.push_compute(Expr::Index(arg, idx))
 		},
 		_ => todo!("{:?}", expr)
 	}
@@ -230,6 +248,7 @@ fn lower_ast(ast: &AST, ctxt: &mut Ctxt) {
 pub fn lower(ast: &AST) -> IR {
 	let mut ctxt = Ctxt::new();
 
+	add_builtins(&mut ctxt);
 	lower_ast(ast, &mut ctxt);
 
 	ctxt.push_statement(Statement::Return);
