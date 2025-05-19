@@ -1,4 +1,4 @@
-def foo(x):
-	print(x)
+def foo():
+	print("ok")
 
-foo("ok")
+foo()

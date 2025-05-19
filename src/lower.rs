@@ -17,7 +17,7 @@ fn lower_expr(expr: &ASTExpr, ctxt: &mut Ctxt) -> Node {
 			ctxt.push_compute(Expr::BinOp(*op, lhs, rhs))
 		},
 		ASTExpr::Var(v) => {
-			let v = ctxt.varmap[v];
+			let v = ctxt.f().varmap[v];
 			let idx = lower_expr(&ASTExpr::Int(0), ctxt);
 			ctxt.push_compute(Expr::Index(v, idx))
 		},
@@ -25,15 +25,33 @@ fn lower_expr(expr: &ASTExpr, ctxt: &mut Ctxt) -> Node {
 	}
 }
 
-struct Ctxt {
+struct FnCtxt {
 	node_ctr: usize,
 	varmap: Map<String, Node>,
 	current_fn: FnId,
 	current_blk: BlockId,
+}
+
+impl FnCtxt {
+	fn new(f: FnId) -> Self {
+		Self {
+			node_ctr: 0,
+			varmap: Default::default(),
+			current_fn: f,
+			current_blk: 0,
+		}
+	}
+}
+
+struct Ctxt {
+	stack: Vec<FnCtxt>,
 	ir: IR,
 }
 
 impl Ctxt {
+	fn f(&self) -> &FnCtxt { self.stack.last().unwrap() }
+	fn f_mut(&mut self) -> &mut FnCtxt { self.stack.last_mut().unwrap() }
+
 	fn new() -> Self {
 		let mut fns: HashMap<_, _> = Default::default();
 		let mut blocks: HashMap<_, _> = Default::default();
@@ -45,10 +63,7 @@ impl Ctxt {
 		fns.insert(0, main_fn);
 
 		Ctxt {
-			node_ctr: 0,
-			varmap: Map::new(),
-			current_fn: 0,
-			current_blk: 0,
+			stack: vec![FnCtxt::new(0)],
 			ir: IR {
 				main_fn: 0,
 				fns,
@@ -57,13 +72,15 @@ impl Ctxt {
 	}
 
 	fn push_compute(&mut self, expr: Expr) -> Node {
-		let n = self.node_ctr; self.node_ctr += 1;
+		let n = self.f().node_ctr; self.f_mut().node_ctr += 1;
 		self.push_statement(Statement::Compute(n, expr));
 		n
 	}
 
 	fn push_statement(&mut self, stmt: Statement) {
-		self.ir.fns.get_mut(&self.current_fn).unwrap().blocks.get_mut(&self.current_blk).unwrap().push(stmt);
+		let current_fn = self.f().current_fn;
+		let current_blk = self.f().current_blk;
+		self.ir.fns.get_mut(&current_fn).unwrap().blocks.get_mut(&current_blk).unwrap().push(stmt);
 	}
 
 	fn push_goto(&mut self, b: BlockId) {
@@ -72,14 +89,15 @@ impl Ctxt {
 	}
 
 	fn alloc_blk(&mut self) -> BlockId {
-		let f = self.ir.fns.get_mut(&self.current_fn).unwrap();
+		let current_fn = self.f().current_fn;
+		let f = self.ir.fns.get_mut(&current_fn).unwrap();
 		let n = f.blocks.len();
 		f.blocks.insert(n, Vec::new());
 		n
 	}
 
 	fn focus_blk(&mut self, b: BlockId) {
-		self.current_blk = b;
+		self.f_mut().current_blk = b;
 	}
 }
 
@@ -93,11 +111,11 @@ fn lower_ast(ast: &AST, ctxt: &mut Ctxt) {
 				}
 			},
 			ASTStatement::Assign(ASTExpr::Var(v), rhs) => {
-				if !ctxt.varmap.contains_key(&**v) {
+				if !ctxt.f().varmap.contains_key(&**v) {
 					let n = ctxt.push_compute(Expr::NewTable);
-					ctxt.varmap.insert(v.clone(), n);
+					ctxt.f_mut().varmap.insert(v.clone(), n);
 				}
-				let var = ctxt.varmap[&**v];
+				let var = ctxt.f().varmap[&**v];
 				let idx = lower_expr(&ASTExpr::Int(0), ctxt);
 				let val = lower_expr(rhs, ctxt);
 				ctxt.push_statement(Statement::Store(var, idx, val));
@@ -130,6 +148,21 @@ fn lower_ast(ast: &AST, ctxt: &mut Ctxt) {
 				ctxt.push_goto(pre);
 
 				ctxt.focus_blk(post);
+			},
+			ASTStatement::Def(name, args, body) => {
+				let i = ctxt.ir.fns.len();
+				ctxt.stack.push(FnCtxt::new(i));
+
+				{ // add empty fn to IR
+					let mut blocks: HashMap<_, _> = Default::default();
+					blocks.insert(0, Vec::new());
+					let f = Function { blocks, start_block: 0 };
+					ctxt.ir.fns.insert(i, f);
+				}
+
+				lower_ast(body, ctxt);
+
+				ctxt.stack.pop();
 			},
 			_ => todo!(),
 		}
