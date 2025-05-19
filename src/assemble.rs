@@ -62,6 +62,7 @@ fn assemble_atomic_expr(toks: &[Token]) -> Result<(ASTExpr, &[Token]), String> {
 		Some(Token::Ident(x)) => Ok((ASTExpr::Var(x.clone()), &toks[1..])),
 		Some(Token::Int(x)) => Ok((ASTExpr::Int(*x), &toks[1..])),
 		Some(Token::Str(s)) => Ok((ASTExpr::Str(s.to_string()), &toks[1..])),
+		Some(Token::Bool(b)) => Ok((ASTExpr::Bool(*b), &toks[1..])),
 		_ => Err(String::new()),
 	}
 }

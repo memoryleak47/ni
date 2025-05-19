@@ -5,6 +5,7 @@ pub enum Token {
 	Ident(String),
 	Int(i64),
 	Str(String),
+	Bool(bool),
 	Colon, LParen, RParen, Comma, Equals,
 	If, While, Return, Break, Continue, Def, Class, Pass,
 	Newline, Indent, Unindent,
@@ -117,6 +118,8 @@ pub fn tokenize(s: &str) -> Vec<Token> {
 						"def" => Token::Def,
 						"class" => Token::Class,
 						"pass" => Token::Pass,
+						"True" => Token::Bool(true),
+						"False" => Token::Bool(false),
 						_ => Token::Ident(s),
 					});
 					state = TokenizerState::InLine;

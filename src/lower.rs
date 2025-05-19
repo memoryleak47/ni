@@ -52,6 +52,7 @@ struct FnCtxt {
 	varmap: Map<String, Node>,
 	current_fn: FnId,
 	current_blk: BlockId,
+	loop_stack: Vec<(/*break*/BlockId, /*continue*/BlockId)>,
 }
 
 impl FnCtxt {
@@ -61,6 +62,7 @@ impl FnCtxt {
 			varmap: Default::default(),
 			current_fn: f,
 			current_blk: 0,
+			loop_stack: Vec::new(),
 		}
 	}
 }
@@ -159,6 +161,7 @@ fn lower_ast(ast: &AST, ctxt: &mut Ctxt) {
 				let pre = ctxt.alloc_blk();
 				let b = ctxt.alloc_blk();
 				let post = ctxt.alloc_blk();
+				ctxt.f_mut().loop_stack.push((post, pre));
 
 				ctxt.push_goto(pre);
 				ctxt.focus_blk(pre);
@@ -171,6 +174,7 @@ fn lower_ast(ast: &AST, ctxt: &mut Ctxt) {
 				ctxt.push_goto(pre);
 
 				ctxt.focus_blk(post);
+				ctxt.f_mut().loop_stack.pop();
 			},
 			ASTStatement::Def(name, args, body) => {
 				let i = ctxt.ir.fns.len();
@@ -211,7 +215,13 @@ fn lower_ast(ast: &AST, ctxt: &mut Ctxt) {
 				ctxt.push_statement(Statement::Return);
 			},
 			ASTStatement::Pass => {}, // do nothing
-			_ => todo!(),
+			ASTStatement::Break => {
+				ctxt.push_goto(ctxt.f().loop_stack.last().unwrap().0);
+			},
+			ASTStatement::Continue => {
+				ctxt.push_goto(ctxt.f().loop_stack.last().unwrap().1);
+			},
+			x => todo!("{:?}", x),
 		}
 	}
 
