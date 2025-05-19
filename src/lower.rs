@@ -101,24 +101,33 @@ impl Ctxt {
 	}
 }
 
+fn lower_assign(v: &str, val: Node, ctxt: &mut Ctxt) {
+	if !ctxt.f().varmap.contains_key(v) {
+		let n = ctxt.push_compute(Expr::NewTable);
+		ctxt.f_mut().varmap.insert(v.to_string(), n);
+	}
+	let var = ctxt.f().varmap[v];
+	let idx = lower_expr(&ASTExpr::Int(0), ctxt);
+	ctxt.push_statement(Statement::Store(var, idx, val));
+}
+
 fn lower_ast(ast: &AST, ctxt: &mut Ctxt) {
 	for stmt in ast {
 		match stmt {
 			ASTStatement::Expr(ASTExpr::FnCall(f, args)) => {
+				// TODO: make "print" a normal global variable.
 				if let ASTExpr::Var(fn_name) = &**f && fn_name == "print" {
 					let n = lower_expr(&args[0], ctxt);
 					ctxt.push_statement(Statement::Print(n));
+				} else if args.len() == 0 {
+					let f = lower_expr(&f, ctxt);
+					let arg = ctxt.push_compute(Expr::NewTable);
+					ctxt.push_statement(Statement::FnCall(f, arg));
 				}
 			},
 			ASTStatement::Assign(ASTExpr::Var(v), rhs) => {
-				if !ctxt.f().varmap.contains_key(&**v) {
-					let n = ctxt.push_compute(Expr::NewTable);
-					ctxt.f_mut().varmap.insert(v.clone(), n);
-				}
-				let var = ctxt.f().varmap[&**v];
-				let idx = lower_expr(&ASTExpr::Int(0), ctxt);
 				let val = lower_expr(rhs, ctxt);
-				ctxt.push_statement(Statement::Store(var, idx, val));
+				lower_assign(v, val, ctxt);
 			},
 			ASTStatement::If(cond, then) => {
 				let cond = lower_expr(cond, ctxt);
@@ -161,8 +170,12 @@ fn lower_ast(ast: &AST, ctxt: &mut Ctxt) {
 				}
 
 				lower_ast(body, ctxt);
+				ctxt.push_statement(Statement::Return);
 
 				ctxt.stack.pop();
+
+				let val = ctxt.push_compute(Expr::Function(i));
+				lower_assign(name, val, ctxt);
 			},
 			_ => todo!(),
 		}
