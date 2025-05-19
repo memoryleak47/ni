@@ -183,6 +183,17 @@ fn lower_ast(ast: &AST, ctxt: &mut Ctxt) {
 					ctxt.ir.fns.insert(i, f);
 				}
 
+				// load args
+				let argtable = ctxt.push_compute(Expr::Arg);
+				let zero = ctxt.push_compute(Expr::Int(0));
+				for (i, a) in args.iter().enumerate() {
+					let i = ctxt.push_compute(Expr::Int(i as _));
+					let val = ctxt.push_compute(Expr::Index(argtable, i));
+					let t = ctxt.push_compute(Expr::NewTable);
+					ctxt.push_statement(Statement::Store(t, zero, val));
+					ctxt.f_mut().varmap.insert(a.to_string(), t);
+				}
+
 				lower_ast(body, ctxt);
 				ctxt.push_statement(Statement::Return);
 
