@@ -39,17 +39,21 @@ fn assemble_paren_list<T>(sub: impl Assembler<T>) -> impl Assembler<Vec<T>> {
 }
 
 fn assemble_expr(toks: &[Token]) -> Result<(ASTExpr, &[Token]), String> {
-	let (expr, toks) = assemble_atomic_expr(toks)?;
-	match toks.get(0) {
-		Some(Token::LParen) => {
-			let (children, toks) = assemble_paren_list(assemble_expr)(toks)?;
-			Ok((ASTExpr::FnCall(Box::new(expr), children), toks))
-		},
-		Some(Token::BinOp(op)) => {
-			let (rhs, toks) = assemble_expr(&toks[1..])?;
-			Ok((ASTExpr::BinOp(*op, Box::new(expr), Box::new(rhs)), toks))
-		},
-		_ => Ok((expr, toks)),
+	let (mut expr, mut toks) = assemble_atomic_expr(toks)?;
+	loop {
+		match toks.get(0) {
+			Some(Token::LParen) => {
+				let (children, toks2) = assemble_paren_list(assemble_expr)(toks)?;
+				expr = ASTExpr::FnCall(Box::new(expr), children);
+				toks = toks2;
+			},
+			Some(Token::BinOp(op)) => {
+				let (rhs, toks2) = assemble_expr(&toks[1..])?;
+				expr = ASTExpr::BinOp(*op, Box::new(expr), Box::new(rhs));
+				toks = toks2;
+			},
+			_ => return Ok((expr, toks)),
+		}
 	}
 }
 
