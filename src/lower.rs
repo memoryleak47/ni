@@ -18,11 +18,10 @@ fn add_builtins(ctxt: &mut Ctxt) {
 		blocks,
 		start_block: 0,
 	});
-	let print_inner = ctxt.push_compute(Expr::Function(n));
-	let print = ctxt.push_compute(Expr::NewTable);
-	let idx = ctxt.push_compute(Expr::Int(0));
-	ctxt.push_statement(Statement::Store(print, idx, print_inner));
-	ctxt.f_mut().varmap.insert(String::from("print"), print);
+	let print = ctxt.push_compute(Expr::Function(n));
+	let print_str = ctxt.push_compute(Expr::Str("print".to_string()));
+	let nn = ctxt.f().namespace_node;
+	ctxt.push_statement(Statement::Store(nn, print_str, print));
 }
 
 fn lower_expr(expr: &ASTExpr, ctxt: &mut Ctxt) -> Node {
@@ -45,9 +44,9 @@ fn lower_expr(expr: &ASTExpr, ctxt: &mut Ctxt) -> Node {
 			ctxt.push_compute(Expr::BinOp(*op, lhs, rhs))
 		},
 		ASTExpr::Var(v) => {
-			let v = ctxt.f().varmap[v];
-			let idx = lower_expr(&ASTExpr::Int(0), ctxt);
-			ctxt.push_compute(Expr::Index(v, idx))
+			let v_str = lower_expr(&ASTExpr::Str(v.to_string()), ctxt);
+			let nn = ctxt.f().namespace_node;
+			ctxt.push_compute(Expr::Index(nn, v_str))
 		},
 		ASTExpr::FnCall(f, args) => {
 			let f = lower_expr(&f, ctxt);
@@ -67,20 +66,20 @@ fn lower_expr(expr: &ASTExpr, ctxt: &mut Ctxt) -> Node {
 
 struct FnCtxt {
 	node_ctr: usize,
-	varmap: Map<String, Node>,
 	current_fn: FnId,
 	current_blk: BlockId,
 	loop_stack: Vec<(/*break*/BlockId, /*continue*/BlockId)>,
+	namespace_node: Node,
 }
 
 impl FnCtxt {
 	fn new(f: FnId) -> Self {
 		Self {
-			node_ctr: 0,
-			varmap: Default::default(),
+			node_ctr: 1,
 			current_fn: f,
 			current_blk: 0,
 			loop_stack: Vec::new(),
+			namespace_node: 0, // TODO needs to be overwritten.
 		}
 	}
 }
@@ -97,7 +96,7 @@ impl Ctxt {
 	fn new() -> Self {
 		let mut fns: HashMap<_, _> = Default::default();
 		let mut blocks: HashMap<_, _> = Default::default();
-		blocks.insert(0, Vec::new());
+		blocks.insert(0, vec![Statement::Compute(0, Expr::NewTable)]);
 		let main_fn = Function {
 			blocks,
 			start_block: 0,
@@ -144,13 +143,9 @@ impl Ctxt {
 }
 
 fn lower_assign(v: &str, val: Node, ctxt: &mut Ctxt) {
-	if !ctxt.f().varmap.contains_key(v) {
-		let n = ctxt.push_compute(Expr::NewTable);
-		ctxt.f_mut().varmap.insert(v.to_string(), n);
-	}
-	let var = ctxt.f().varmap[v];
-	let idx = lower_expr(&ASTExpr::Int(0), ctxt);
-	ctxt.push_statement(Statement::Store(var, idx, val));
+	let v_str = lower_expr(&ASTExpr::Str(v.to_string()), ctxt);
+	let nn = ctxt.f().namespace_node;
+	ctxt.push_statement(Statement::Store(nn, v_str, val));
 }
 
 fn lower_ast(ast: &AST, ctxt: &mut Ctxt) {
@@ -200,20 +195,22 @@ fn lower_ast(ast: &AST, ctxt: &mut Ctxt) {
 
 				{ // add empty fn to IR
 					let mut blocks: HashMap<_, _> = Default::default();
-					blocks.insert(0, Vec::new());
+
+					// TODO unify this with the construction of the main function.
+					// this creates the namespace node.
+					blocks.insert(0, vec![Statement::Compute(0, Expr::NewTable)]);
 					let f = Function { blocks, start_block: 0 };
 					ctxt.ir.fns.insert(i, f);
 				}
 
 				// load args
 				let argtable = ctxt.push_compute(Expr::Arg);
-				let zero = ctxt.push_compute(Expr::Int(0));
 				for (i, a) in args.iter().enumerate() {
 					let i = ctxt.push_compute(Expr::Int(i as _));
 					let val = ctxt.push_compute(Expr::Index(argtable, i));
-					let t = ctxt.push_compute(Expr::NewTable);
-					ctxt.push_statement(Statement::Store(t, zero, val));
-					ctxt.f_mut().varmap.insert(a.to_string(), t);
+					let nn = ctxt.f().namespace_node;
+					let a_str = ctxt.push_compute(Expr::Str(a.to_string()));
+					ctxt.push_statement(Statement::Store(nn, a_str, val));
 				}
 
 				lower_ast(body, ctxt);
