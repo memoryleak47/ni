@@ -45,12 +45,21 @@ fn lower_expr(expr: &ASTExpr, ctxt: &mut Ctxt) -> Node {
 		},
 		ASTExpr::Var(v) => {
 			let v_str = lower_expr(&ASTExpr::Str(v.to_string()), ctxt);
-			let nn = ctxt.f().namespace_node;
+			let nn = if let Some(VarPlace::Local) = ctxt.nameres_tab.get(&(ctxt.f().ast_ptr, v.to_string())) {
+				ctxt.f().namespace_node 
+			} else {
+				ctxt.f().global_node
+			};
 			ctxt.push_compute(Expr::Index(nn, v_str))
 		},
 		ASTExpr::FnCall(f, args) => {
 			let f = lower_expr(&f, ctxt);
 			let arg = ctxt.push_compute(Expr::NewTable);
+
+			// pass "scope_global" along.
+			let scope_global_str = ctxt.push_compute(Expr::Str("scope_global".to_string()));
+			ctxt.push_statement(Statement::Store(arg, scope_global_str, ctxt.f().global_node));
+
 			for (i, a) in args.iter().enumerate() {
 				let i = ctxt.push_compute(Expr::Int(i as _));
 				let v = lower_expr(a, ctxt);
@@ -70,16 +79,20 @@ struct FnCtxt {
 	current_blk: BlockId,
 	loop_stack: Vec<(/*break*/BlockId, /*continue*/BlockId)>,
 	namespace_node: Node,
+	global_node: Node,
+	ast_ptr: *const ASTStatement, // the original def stmt
 }
 
 impl FnCtxt {
-	fn new(f: FnId) -> Self {
+	fn new(f: FnId, ast_ptr: *const ASTStatement) -> Self {
 		Self {
-			node_ctr: 1,
+			node_ctr: 10,
 			current_fn: f,
 			current_blk: 0,
 			loop_stack: Vec::new(),
-			namespace_node: 0, // TODO needs to be overwritten.
+			namespace_node: 0,
+			global_node: 3,
+			ast_ptr,
 		}
 	}
 }
@@ -106,8 +119,10 @@ impl Ctxt {
 		};
 		fns.insert(0, main_fn);
 
+		let mut fn_ctxt = FnCtxt::new(0, 0 as _);
+		fn_ctxt.global_node = 0; // for the outer function, the global scope is actually it's local scope.
 		Ctxt {
-			stack: vec![FnCtxt::new(0)],
+			stack: vec![fn_ctxt],
 			nameres_tab,
 			ir: IR {
 				main_fn: 0,
@@ -195,14 +210,19 @@ fn lower_ast(ast: &AST, ctxt: &mut Ctxt) {
 			},
 			ASTStatement::Def(name, args, body) => {
 				let i = ctxt.ir.fns.len();
-				ctxt.stack.push(FnCtxt::new(i));
+				ctxt.stack.push(FnCtxt::new(i, stmt as _));
 
 				{ // add empty fn to IR
 					let mut blocks: HashMap<_, _> = Default::default();
 
 					// TODO unify this with the construction of the main function.
 					// this creates the namespace node.
-					blocks.insert(0, vec![Statement::Compute(0, Expr::NewTable)]);
+					blocks.insert(0, vec![
+						Statement::Compute(0, Expr::NewTable),
+						Statement::Compute(1, Expr::Str("scope_global".to_string())),
+						Statement::Compute(2, Expr::Arg),
+						Statement::Compute(3, Expr::Index(2, 1)),
+					]);
 					let f = Function { blocks, start_block: 0 };
 					ctxt.ir.fns.insert(i, f);
 				}

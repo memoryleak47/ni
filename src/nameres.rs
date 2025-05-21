@@ -13,9 +13,7 @@ pub fn nameres(ast: &AST) -> NameResTable {
 	let mut nrt = NameResTable::new();
 	iter(ast, &mut nrt, 0 as _);
 	nrt
-
 }
-
 
 fn iter(ast: &AST, nrt: &mut NameResTable, current_fn_ptr: *const ASTStatement) {
 	for stmt in ast {
