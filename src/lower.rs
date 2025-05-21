@@ -1,6 +1,6 @@
 use crate::*;
 
-fn add_builtins(ctxt: &mut Ctxt) {
+fn add_print_builtin(ctxt: &mut Ctxt) {
 	let n = ctxt.ir.fns.len();
 	let mut blocks: HashMap<_, _> = Default::default();
 	blocks.insert(0, vec![
@@ -22,6 +22,27 @@ fn add_builtins(ctxt: &mut Ctxt) {
 	let print_str = ctxt.push_compute(Expr::Str("print".to_string()));
 	let nn = ctxt.f().namespace_node;
 	ctxt.push_statement(Statement::Store(nn, print_str, print));
+}
+
+fn add_construct_builtin(ctxt: &mut Ctxt) {
+	let n = ctxt.ir.fns.len();
+	let mut blocks: HashMap<_, _> = Default::default();
+	blocks.insert(0, vec![
+		Statement::Compute(0, Expr::Arg),
+		Statement::Compute(1, Expr::Str("ret".to_string())),
+		Statement::Compute(2, Expr::NewTable),
+		Statement::Store(0, 1, 2),
+		Statement::Return,
+	]);
+	ctxt.ir.fns.insert(n, Function {
+		blocks,
+		start_block: 0,
+	});
+}
+
+fn add_builtins(ctxt: &mut Ctxt) {
+	add_print_builtin(ctxt);
+	add_construct_builtin(ctxt);
 }
 
 fn lower_expr(expr: &ASTExpr, ctxt: &mut Ctxt) -> Node {
@@ -266,14 +287,16 @@ fn lower_ast(ast: &AST, ctxt: &mut Ctxt) {
 				ctxt.push_goto(ctxt.f().loop_stack.last().unwrap().1);
 			},
 			ASTStatement::Scope(..) => {}, // scope is already handled in nameres
-			ASTStatement::Class(_name, _args, body) => {
+			ASTStatement::Class(name, _args, body) => {
 				// TODO: most stuff is missing here.
+
 				lower_ast(body, ctxt);
+				let val = ctxt.push_compute(Expr::Function(2)); // the construct builtin
+				lower_assign(name, val, ctxt);
 			},
 			x => todo!("{:?}", x),
 		}
 	}
-
 }
 
 pub fn lower(ast: &AST) -> IR {
