@@ -17,17 +17,16 @@ fn build_value(payload: Node, type_: Node, ctxt: &mut Ctxt) -> Node {
 
 fn lower_expr(expr: &ASTExpr, ctxt: &mut Ctxt) -> Node {
     match expr {
-        ASTExpr::None => ctxt.push_compute(Expr::None),
-        ASTExpr::Int(i) => ctxt.push_compute(Expr::Int(*i)),
-        ASTExpr::Bool(b) => ctxt.push_compute(Expr::Bool(*b)),
-        ASTExpr::Str(s) => ctxt.push_compute(Expr::Str(s.to_string())),
+        ASTExpr::None => ctxt.push_none(),
+        ASTExpr::Int(i) => ctxt.push_int(*i),
+        ASTExpr::Bool(b) => ctxt.push_bool(*b),
+        ASTExpr::Str(s) => ctxt.push_str(s),
         ASTExpr::BinOp(op, lhs, rhs) => {
             let lhs = lower_expr(lhs, ctxt);
             let rhs = lower_expr(rhs, ctxt);
             ctxt.push_compute(Expr::BinOp(*op, lhs, rhs))
         }
         ASTExpr::Var(v) => {
-            let v_str = lower_expr(&ASTExpr::Str(v.to_string()), ctxt);
             let nn = if let Some(VarPlace::Local) =
                 ctxt.nameres_tab.get(&(ctxt.f().ast_ptr, v.to_string()))
             {
@@ -35,13 +34,12 @@ fn lower_expr(expr: &ASTExpr, ctxt: &mut Ctxt) -> Node {
             } else {
                 ctxt.f().global_node
             };
-            ctxt.push_compute(Expr::Index(nn, v_str))
+            ctxt.push_index_str(nn, v)
         }
         ASTExpr::FnCall(f, args) => lower_fn_call(&*f, args, ctxt),
         ASTExpr::Attribute(e, a) => {
             let e = lower_expr(e, ctxt);
-            let a = ctxt.push_compute(Expr::Str(a.to_string()));
-            ctxt.push_compute(Expr::Index(e, a))
+            ctxt.push_index_str(e, a)
         },
         _ => todo!("{:?}", expr),
     }
@@ -49,7 +47,7 @@ fn lower_expr(expr: &ASTExpr, ctxt: &mut Ctxt) -> Node {
 
 fn lower_fn_call(f: &ASTExpr, args: &[ASTExpr], ctxt: &mut Ctxt) -> Node {
     let f = lower_expr(&f, ctxt);
-    let arg = ctxt.push_compute(Expr::NewTable);
+    let arg = ctxt.push_table();
 
     let is_function_ty = ctxt.alloc_blk();
     let is_no_function_ty = ctxt.alloc_blk();
@@ -58,28 +56,28 @@ fn lower_fn_call(f: &ASTExpr, args: &[ASTExpr], ctxt: &mut Ctxt) -> Node {
     let go = ctxt.alloc_blk();
 
     // where we store the function to call (under index "0").
-    let tmp = ctxt.push_compute(Expr::NewTable);
+    let tmp = ctxt.push_table();
 
     // if f["type"] == singletons["function"]: goto is_function_ty | is_no_function_ty
-    let a = ctxt.push_compute_index_str(f, "type");
-    let b = ctxt.push_compute_index_str(ctxt.f().singletons_node, "function");
-    let cond = ctxt.push_compute(Expr::BinOp(BinOpKind::IsEqual, a, b));
+    let a = ctxt.push_index_str(f, "type");
+    let b = ctxt.push_index_str(ctxt.f().singletons_node, "function");
+    let cond = ctxt.push_eq(a, b);
     ctxt.push_if(cond, is_function_ty, is_no_function_ty);
 
     ctxt.focus_blk(is_function_ty);
-    let f_payload = ctxt.push_compute_index_str(f, "payload");
+    let f_payload = ctxt.push_index_str(f, "payload");
     ctxt.push_store_str(tmp, "0", f_payload);
     ctxt.push_goto(go);
 
     // if f["type"] == singletons["type"]: goto is_class | err
     ctxt.focus_blk(is_no_function_ty);
-    let a = ctxt.push_compute_index_str(f, "type");
-    let b = ctxt.push_compute_index_str(ctxt.f().singletons_node, "type");
-    let cond = ctxt.push_compute(Expr::BinOp(BinOpKind::IsEqual, a, b));
+    let a = ctxt.push_index_str(f, "type");
+    let b = ctxt.push_index_str(ctxt.f().singletons_node, "type");
+    let cond = ctxt.push_eq(a, b);
     ctxt.push_if(cond, is_class, err);
 
     ctxt.focus_blk(is_class);
-    let payload = ctxt.push_compute_builtin("construct");
+    let payload = ctxt.push_builtin("construct");
     ctxt.push_store_str(tmp, "0", payload);
     ctxt.push_goto(go);
 
@@ -89,42 +87,29 @@ fn lower_fn_call(f: &ASTExpr, args: &[ASTExpr], ctxt: &mut Ctxt) -> Node {
     ctxt.focus_blk(go);
 
     // pass "scope_global" along.
-    let scope_global_str = ctxt.push_str("scope_global");
-    ctxt.push_statement(Statement::Store(
-        arg,
-        scope_global_str,
-        ctxt.f().global_node,
-    ));
+    ctxt.push_store_str(arg, "scope_global", ctxt.f().global_node);
 
     // pass "singletons" along.
-    let singletons_str = ctxt.push_str("singletons");
-    ctxt.push_statement(Statement::Store(
-        arg,
-        singletons_str,
-        ctxt.f().singletons_node,
-    ));
+    ctxt.push_store_str(arg, "singletons", ctxt.f().singletons_node);
 
     for (i, a) in args.iter().enumerate() {
         let i = ctxt.push_compute(Expr::Int(i as _));
         let v = lower_expr(a, ctxt);
         ctxt.push_statement(Statement::Store(arg, i, v));
     }
-    let f_payload = ctxt.push_compute_index_str(tmp, "0");
+    let f_payload = ctxt.push_index_str(tmp, "0");
     ctxt.push_statement(Statement::FnCall(f_payload, arg));
-    let idx = ctxt.push_compute(Expr::Str("ret".to_string()));
-    ctxt.push_compute(Expr::Index(arg, idx))
+    ctxt.push_index_str(arg, "ret")
 }
 
 fn lower_assign(v: &str, val: Node, ctxt: &mut Ctxt) {
-    let v_str = lower_expr(&ASTExpr::Str(v.to_string()), ctxt);
-
     let nn = if let Some(VarPlace::Local) = ctxt.nameres_tab.get(&(ctxt.f().ast_ptr, v.to_string()))
     {
         ctxt.f().namespace_node
     } else {
         ctxt.f().global_node
     };
-    ctxt.push_statement(Statement::Store(nn, v_str, val));
+    ctxt.push_store_str(nn, v, val);
 }
 
 fn lower_ast(ast: &AST, ctxt: &mut Ctxt) {
@@ -140,17 +125,17 @@ fn lower_ast(ast: &AST, ctxt: &mut Ctxt) {
             ASTStatement::Assign(ASTExpr::Attribute(e, v), rhs) => {
                 let e = lower_expr(e, ctxt);
                 let val = lower_expr(rhs, ctxt);
-                let v_str = ctxt.push_compute(Expr::Str(v.to_string()));
-                ctxt.push_statement(Statement::Store(e, v_str, val));
+                ctxt.push_store_str(e, v, val);
             },
             ASTStatement::If(cond, then) => {
                 let cond = lower_expr(cond, ctxt);
                 let b = ctxt.alloc_blk();
                 let post = ctxt.alloc_blk();
-                ctxt.push_statement(Statement::If(cond, b, post));
+                ctxt.push_if(cond, b, post);
 
                 ctxt.focus_blk(b);
                 lower_ast(then, ctxt);
+
                 ctxt.push_goto(post);
 
                 ctxt.focus_blk(post);
@@ -203,22 +188,21 @@ fn lower_ast(ast: &AST, ctxt: &mut Ctxt) {
                 }
 
                 // load args
-                let argtable = ctxt.push_compute(Expr::Arg);
+                let argtable = ctxt.push_arg();
                 for (i, a) in args.iter().enumerate() {
-                    let i = ctxt.push_compute(Expr::Int(i as _));
-                    let val = ctxt.push_compute(Expr::Index(argtable, i));
+                    let i = ctxt.push_int(i as _);
+                    let val = ctxt.push_index(argtable, i);
                     let nn = ctxt.f().namespace_node;
-                    let a_str = ctxt.push_compute(Expr::Str(a.to_string()));
-                    ctxt.push_statement(Statement::Store(nn, a_str, val));
+                    ctxt.push_store_str(nn, a, val);
                 }
 
                 lower_ast(body, ctxt);
-                ctxt.push_statement(Statement::Return);
+                ctxt.push_return();
 
                 ctxt.stack.pop();
 
                 let function = ctxt.push_compute(Expr::Function(i));
-                let function_t = ctxt.push_compute_index_str(ctxt.f().singletons_node, "function");
+                let function_t = ctxt.push_index_str(ctxt.f().singletons_node, "function");
                 let val = build_value(function, function_t, ctxt);
 
                 lower_assign(name, val, ctxt);
@@ -226,10 +210,9 @@ fn lower_ast(ast: &AST, ctxt: &mut Ctxt) {
             ASTStatement::Return(opt) => {
                 let expr = opt.as_ref().unwrap_or(&ASTExpr::None);
                 let val = lower_expr(expr, ctxt);
-                let argtable = ctxt.push_compute(Expr::Arg);
-                let idx = ctxt.push_compute(Expr::Str("ret".to_string()));
-                ctxt.push_statement(Statement::Store(argtable, idx, val));
-                ctxt.push_statement(Statement::Return);
+                let argtable = ctxt.push_arg();
+                ctxt.push_store_str(argtable, "ret", val);
+                ctxt.push_return();
             }
             ASTStatement::Pass => {} // do nothing
             ASTStatement::Break => {
@@ -243,8 +226,8 @@ fn lower_ast(ast: &AST, ctxt: &mut Ctxt) {
                 // TODO: most stuff is missing here.
 
                 lower_ast(body, ctxt);
-                let val = ctxt.push_compute(Expr::NewTable); // the construct builtin
-                let type_ = ctxt.push_compute_index_str(ctxt.f().singletons_node, "type");
+                let val = ctxt.push_table();
+                let type_ = ctxt.push_index_str(ctxt.f().singletons_node, "type");
                 ctxt.push_store_str(val, "type", type_);
                 lower_assign(name, val, ctxt);
             }
@@ -259,6 +242,6 @@ pub fn lower(ast: &AST) -> IR {
     add_builtins_and_singletons(&mut ctxt);
     lower_ast(ast, &mut ctxt);
 
-    ctxt.push_statement(Statement::Return);
+    ctxt.push_return();
     ctxt.ir
 }

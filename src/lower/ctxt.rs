@@ -72,7 +72,39 @@ impl Ctxt {
         n
     }
 
-    pub fn push_compute_builtin(&mut self, s: &str) -> Node {
+    pub fn push_table(&mut self) -> Node {
+        self.push_compute(Expr::NewTable)
+    }
+
+    pub fn push_index(&mut self, t: Node, k: Node) -> Node {
+        self.push_compute(Expr::Index(t, k))
+    }
+
+    pub fn push_int(&mut self, i: i64) -> Node {
+        self.push_compute(Expr::Int(i))
+    }
+
+    pub fn push_bool(&mut self, b: bool) -> Node {
+        self.push_compute(Expr::Bool(b))
+    }
+
+    pub fn push_eq(&mut self, a: Node, b: Node) -> Node {
+        self.push_compute(Expr::BinOp(BinOpKind::IsEqual, a, b))
+    }
+
+    pub fn push_none(&mut self) -> Node {
+        self.push_compute(Expr::None)
+    }
+
+    pub fn push_arg(&mut self) -> Node {
+        self.push_compute(Expr::Arg)
+    }
+
+    pub fn push_return(&mut self) {
+        self.push_statement(Statement::Return)
+    }
+
+    pub fn push_builtin(&mut self, s: &str) -> Node {
         self.push_compute(Expr::Function(self.builtin_fns[s]))
     }
 
@@ -89,7 +121,7 @@ impl Ctxt {
         self.push_statement(Statement::Store(t, k, v));
     }
 
-    pub fn push_compute_index_str(&mut self, t: Node, k: &str) -> Node {
+    pub fn push_index_str(&mut self, t: Node, k: &str) -> Node {
         let k = self.push_str(k);
         self.push_compute(Expr::Index(t, k))
     }
