@@ -15,15 +15,23 @@ pub type Stmt = (FnId, BlockId, StatementIndex);
 // the same as ast::BinOpKind but without And & Or.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum BinOpKind {
-    Plus, Minus, Mul, Div, Mod,
-    Lt, Le, Gt, Ge,
-    IsEqual, IsNotEqual,
+    Plus,
+    Minus,
+    Mul,
+    Div,
+    Mod,
+    Lt,
+    Le,
+    Gt,
+    Ge,
+    IsEqual,
+    IsNotEqual,
     Pow,
 }
 
 // Node is for temporary constants contained in the computation tree.
 // Nodes are constructed using the Statement::Compute instruction.
-// Each node id has exactly one such associated instruction. 
+// Each node id has exactly one such associated instruction.
 // nodes are somewhat like virtual registers %<id> from LLVM IR.
 // nodes are local to the functions they are defined in.
 pub type Node = usize;
@@ -56,7 +64,7 @@ pub enum Expr {
 
     // literals
     Float(R64),
-	Int(i64),
+    Int(i64),
     Bool(bool),
     None,
     Str(String),
@@ -76,7 +84,6 @@ pub struct IR {
     pub fns: HashMap<FnId, Function>,
     pub main_fn: FnId,
 }
-
 
 // UB definition:
 //

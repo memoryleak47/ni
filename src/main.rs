@@ -1,9 +1,9 @@
 use std::fs;
 
-pub use std::collections::HashSet as Set;
 pub use std::collections::HashMap as Map;
+pub use std::collections::HashSet as Set;
 
-pub use noisy_float::prelude::{R64, Float};
+pub use noisy_float::prelude::{Float, R64};
 
 mod ast;
 pub use ast::*;
@@ -33,27 +33,27 @@ mod cli;
 pub use cli::*;
 
 fn main() {
-	let cli = cli();
-	let contents = fs::read_to_string(cli.filename).unwrap();
-	let toks = tokenize(&contents);
-	if let Action::ShowTokens = cli.action {
-		println!("{:?}", toks);
-		return;
-	}
+    let cli = cli();
+    let contents = fs::read_to_string(cli.filename).unwrap();
+    let toks = tokenize(&contents);
+    if let Action::ShowTokens = cli.action {
+        println!("{:?}", toks);
+        return;
+    }
 
-	let ast = assemble(&toks);
+    let ast = assemble(&toks);
 
-	if let Action::ShowAst = cli.action {
-		println!("{:?}", ast);
-		return;
-	}
+    if let Action::ShowAst = cli.action {
+        println!("{:?}", ast);
+        return;
+    }
 
-	let ir = lower(&ast);
+    let ir = lower(&ast);
 
-	if let Action::ShowIR = cli.action {
-		println!("{}", ir);
-		return;
-	}
+    if let Action::ShowIR = cli.action {
+        println!("{}", ir);
+        return;
+    }
 
-	exec(&ir);
+    exec(&ir);
 }

@@ -5,7 +5,9 @@ use std::collections::HashMap;
 type TablePtr = usize;
 
 fn table_get(ptr: TablePtr, idx: Value, ctxt: &mut Ctxt) -> Value {
-    ctxt.heap[ptr].entries.iter()
+    ctxt.heap[ptr]
+        .entries
+        .iter()
         .find(|(x, _)| *x == idx)
         .map(|(_, v)| v.clone())
         .unwrap_or(Value::None)
@@ -16,26 +18,34 @@ fn table_set(ptr: TablePtr, idx: Value, val: Value, ctxt: &mut Ctxt) {
         panic!("setting index with None is forbidden!");
     }
 
-    let data: &mut TableData = ctxt.heap.get_mut(ptr).expect("table_set got dangling pointer!");
+    let data: &mut TableData = ctxt
+        .heap
+        .get_mut(ptr)
+        .expect("table_set got dangling pointer!");
     data.entries.retain(|(x, _)| *x != idx);
-    if val == Value::None { // Value::None means it's not there, so just don't add it!
+    if val == Value::None {
+        // Value::None means it's not there, so just don't add it!
         if idx == Value::Int(data.length as _) {
             // recalculate length
             for i in 1.. {
                 if data.entries.iter().any(|(x, _)| x == &Value::Int(i as _)) {
                     data.length = i;
-                } else { break; }
+                } else {
+                    break;
+                }
             }
         }
     } else {
         data.entries.push((idx.clone(), val));
 
-        if idx == Value::Int((data.length+1) as _) {
+        if idx == Value::Int((data.length + 1) as _) {
             // recalculate length
-            for i in (data.length+1).. {
+            for i in (data.length + 1).. {
                 if data.entries.iter().any(|(x, _)| x == &Value::Int(i as _)) {
                     data.length = i;
-                } else { break; }
+                } else {
+                    break;
+                }
             }
         }
     }
@@ -50,8 +60,12 @@ fn table_next(ptr: TablePtr, idx: Value, ctxt: &mut Ctxt) -> Value {
             None => Value::None,
         }
     } else {
-        let i = data.entries.iter().position(|(i, _)| *i == idx).expect("invalid key to next!");
-        if let Some((k, _)) = data.entries.get(i+1) {
+        let i = data
+            .entries
+            .iter()
+            .position(|(i, _)| *i == idx)
+            .expect("invalid key to next!");
+        if let Some((k, _)) = data.entries.get(i + 1) {
             k.clone()
         } else {
             Value::None
@@ -106,9 +120,11 @@ fn exec_expr(expr: &Expr, ctxt: &mut Ctxt) -> Value {
             let t = ctxt.fcx().nodes[t].clone();
             let idx = ctxt.fcx().nodes[idx].clone();
 
-            let Value::TablePtr(t) = t else { panic!("indexing into non-table {:?}!", t) };
+            let Value::TablePtr(t) = t else {
+                panic!("indexing into non-table {:?}!", t)
+            };
             table_get(t, idx, ctxt)
-        },
+        }
         Expr::Arg => ctxt.fcx().arg.clone(),
         Expr::NewTable => Value::TablePtr(alloc_table(ctxt)),
         Expr::Function(fnid) => Value::Function(*fnid),
@@ -117,7 +133,7 @@ fn exec_expr(expr: &Expr, ctxt: &mut Ctxt) -> Value {
             let r = ctxt.fcx().nodes[r].clone();
 
             exec_binop(kind.clone(), l, r)
-        },
+        }
         Expr::Len(r) => {
             let r = ctxt.fcx().nodes[r].clone();
 
@@ -126,16 +142,18 @@ fn exec_expr(expr: &Expr, ctxt: &mut Ctxt) -> Value {
                 Value::TablePtr(t) => Value::Int(ctxt.heap[t].length as _),
                 _ => panic!("executing len on invalid type!"),
             }
-        },
+        }
 
         Expr::Next(v1, v2) => {
             let v1 = &ctxt.fcx().nodes[v1];
-            let Value::TablePtr(v1_) = v1 else { panic!("calling next onto non-table!") };
+            let Value::TablePtr(v1_) = v1 else {
+                panic!("calling next onto non-table!")
+            };
 
             let v2 = ctxt.fcx().nodes[v2].clone();
 
             table_next(*v1_, v2, ctxt)
-        },
+        }
         Expr::Type(n) => {
             let val = &ctxt.fcx().nodes[n];
             let s = match val {
@@ -145,7 +163,7 @@ fn exec_expr(expr: &Expr, ctxt: &mut Ctxt) -> Value {
                 Value::Function(..) => "function",
                 Value::Float(_) => "float",
                 Value::Int(_) => "int",
-                Value::TablePtr(_) => "table"
+                Value::TablePtr(_) => "table",
             };
 
             Value::Str(s.to_string())
@@ -162,7 +180,7 @@ fn exec_binop(kind: BinOpKind, l: Value, r: Value) -> Value {
     use BinOpKind::*;
 
     match (kind, l, r) {
-		// int
+        // int
         (Plus, Value::Int(l), Value::Int(r)) => Value::Int(l + r),
         (Minus, Value::Int(l), Value::Int(r)) => Value::Int(l - r),
         (Mul, Value::Int(l), Value::Int(r)) => Value::Int(l * r),
@@ -174,7 +192,7 @@ fn exec_binop(kind: BinOpKind, l: Value, r: Value) -> Value {
         (Gt, Value::Int(l), Value::Int(r)) => Value::Bool(l > r),
         (Ge, Value::Int(l), Value::Int(r)) => Value::Bool(l >= r),
 
-		// float
+        // float
         (Plus, Value::Float(l), Value::Float(r)) => Value::Float(l + r),
         (Minus, Value::Float(l), Value::Float(r)) => Value::Float(l - r),
         (Mul, Value::Float(l), Value::Float(r)) => Value::Float(l * r),
@@ -193,7 +211,6 @@ fn exec_binop(kind: BinOpKind, l: Value, r: Value) -> Value {
         (kind, l, r) => panic!("type error! \"{l:?} {kind} {r:?}\""),
     }
 }
-
 
 fn call_fn(f: FnId, arg: Value, ctxt: &mut Ctxt) {
     let fcx = FnCtxt {
@@ -242,9 +259,11 @@ fn step_stmt(stmt: &Statement, ctxt: &mut Ctxt) -> Option<()> {
             let t = ctxt.fcx().nodes[t].clone();
             let idx = ctxt.fcx().nodes[idx].clone();
             let val = ctxt.fcx().nodes[n].clone();
-            let Value::TablePtr(t) = t.clone() else { panic!("indexing into non-table!") };
+            let Value::TablePtr(t) = t.clone() else {
+                panic!("indexing into non-table!")
+            };
             table_set(t, idx, val, ctxt);
-        },
+        }
         If(cond, then_body, else_body) => {
             let cond = ctxt.fcx().nodes[cond].clone();
             let blk = match &cond {
@@ -254,7 +273,7 @@ fn step_stmt(stmt: &Statement, ctxt: &mut Ctxt) -> Option<()> {
             };
             ctxt.fcx_mut().block_id = *blk;
             ctxt.fcx_mut().statement_idx = 0;
-        },
+        }
         FnCall(f, arg) => {
             let f = ctxt.fcx().nodes[f].clone();
             let arg = ctxt.fcx().nodes[arg].clone();
@@ -263,7 +282,7 @@ fn step_stmt(stmt: &Statement, ctxt: &mut Ctxt) -> Option<()> {
                 Value::Function(f_id) => call_fn(f_id, arg, ctxt),
                 v => panic!("trying to execute non-function value! {:?}", v),
             };
-        },
+        }
         Print(n) => {
             let val = &ctxt.fcx().nodes[n];
             match val {
@@ -283,7 +302,7 @@ fn step_stmt(stmt: &Statement, ctxt: &mut Ctxt) -> Option<()> {
         }
         Return => {
             ctxt.stack.pop();
-        },
+        }
     }
 
     Some(())
@@ -291,8 +310,8 @@ fn step_stmt(stmt: &Statement, ctxt: &mut Ctxt) -> Option<()> {
 
 fn step(ctxt: &mut Ctxt) -> Option<()> {
     let l: &FnCtxt = ctxt.stack.last().unwrap();
-    let stmt = ctxt.ir.fns[&l.fn_id]
-			.blocks[&l.block_id]
-			.get(l.statement_idx).unwrap();
+    let stmt = ctxt.ir.fns[&l.fn_id].blocks[&l.block_id]
+        .get(l.statement_idx)
+        .unwrap();
     step_stmt(stmt, ctxt)
 }
