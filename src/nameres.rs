@@ -22,7 +22,10 @@ fn iter(ast: &AST, nrt: &mut NameResTable, current_fn_ptr: *const ASTStatement) 
 				nrt.insert((current_fn_ptr, v.to_string()), VarPlace::Local);
 			},
 			ASTStatement::Assign(..) => todo!(),
-			ASTStatement::Def(_name, _args, body) => {
+			ASTStatement::Def(_name, args, body) => {
+				for a in args {
+					nrt.insert((stmt as _, a.to_string()), VarPlace::Local);
+				}
 				iter(body, nrt, stmt as _);
 			},
 			ASTStatement::Class(..) => todo!(),
