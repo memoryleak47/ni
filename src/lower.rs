@@ -1,21 +1,10 @@
 use crate::*;
 
-fn add_print_builtin(ctxt: &mut Ctxt) {
+fn new_fn(ctxt: &mut Ctxt, f: impl FnOnce(&mut Ctxt)) -> FnId {
     let n = ctxt.ir.fns.len();
     let mut blocks: HashMap<_, _> = Default::default();
-    blocks.insert(
-        0,
-        vec![
-            Statement::Compute(0, Expr::Arg),
-            Statement::Compute(1, Expr::Int(0)),
-            Statement::Compute(2, Expr::Index(0, 1)),
-            Statement::Print(2),
-            Statement::Compute(3, Expr::Str("ret".to_string())),
-            Statement::Compute(4, Expr::None),
-            Statement::Store(0, 3, 4),
-            Statement::Return,
-        ],
-    );
+    blocks.insert(0, Vec::new());
+
     ctxt.ir.fns.insert(
         n,
         Function {
@@ -23,7 +12,36 @@ fn add_print_builtin(ctxt: &mut Ctxt) {
             start_block: 0,
         },
     );
-    let print_f = ctxt.push_compute(Expr::Function(n));
+
+    ctxt.stack.push(FnCtxt {
+        node_ctr: 0,
+        current_fn: n,
+        current_blk: 0,
+        loop_stack: Vec::new(),
+        namespace_node: 0,
+        global_node: 0,
+        singletons_node: 0,
+        ast_ptr: 0 as _,
+    });
+
+    f(ctxt);
+
+    ctxt.stack.pop();
+
+    n
+}
+
+fn add_print_builtin(ctxt: &mut Ctxt) {
+    let print_fn = new_fn(ctxt, |ctxt| {
+        let arg = ctxt.push_compute(Expr::Arg);
+        let zero = ctxt.push_compute(Expr::Int(0));
+        let first_arg = ctxt.push_compute(Expr::Index(arg, zero));
+        ctxt.push_statement(Statement::Print(first_arg));
+        let none = ctxt.push_compute(Expr::None);
+        ctxt.push_store_str(arg, "ret", none);
+        ctxt.push_statement(Statement::Return);
+    });
+    let print_f = ctxt.push_compute(Expr::Function(print_fn));
     let function = ctxt.push_compute_index_str(ctxt.f().singletons_node, "function");
     let print = build_value(print_f, function, ctxt);
     let nn = ctxt.f().namespace_node;
@@ -40,25 +58,12 @@ fn build_value(payload: Node, type_: Node, ctxt: &mut Ctxt) -> Node {
 }
 
 fn add_construct_builtin(ctxt: &mut Ctxt) {
-    let n = ctxt.ir.fns.len();
-    let mut blocks: HashMap<_, _> = Default::default();
-    blocks.insert(
-        0,
-        vec![
-            Statement::Compute(0, Expr::Arg),
-            Statement::Compute(1, Expr::Str("ret".to_string())),
-            Statement::Compute(2, Expr::NewTable),
-            Statement::Store(0, 1, 2),
-            Statement::Return,
-        ],
-    );
-    ctxt.ir.fns.insert(
-        n,
-        Function {
-            blocks,
-            start_block: 0,
-        },
-    );
+    new_fn(ctxt, |ctxt| {
+        let arg = ctxt.push_compute(Expr::Arg);
+        let t = ctxt.push_compute(Expr::NewTable);
+        ctxt.push_store_str(arg, "ret", t);
+        ctxt.push_statement(Statement::Return);
+    });
 }
 
 fn add_singletons(ctxt: &mut Ctxt) {
