@@ -14,6 +14,13 @@ pub enum ASTStatement {
 	Return(Option<ASTExpr>),
 	Expr(ASTExpr),
 	Pass,
+	Scope(ScopeKind, Vec<String>),
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum ScopeKind {
+	Global,
+	NonLocal,
 }
 
 #[derive(Debug)]

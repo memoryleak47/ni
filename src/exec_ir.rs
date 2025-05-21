@@ -190,7 +190,7 @@ fn exec_binop(kind: BinOpKind, l: Value, r: Value) -> Value {
 
         (IsEqual, l, r) => Value::Bool(l == r),
         (IsNotEqual, l, r) => Value::Bool(l != r),
-        _ => panic!("type error!"),
+        (kind, l, r) => panic!("type error! \"{l:?} {kind} {r:?}\""),
     }
 }
 

@@ -88,6 +88,10 @@ fn assemble_stmt_base(toks: &[Token]) -> Result<(ASTStatement, &[Token]), String
 		Some(Token::Break) => Ok((ASTStatement::Break, &toks[1..])),
 		Some(Token::Continue) => Ok((ASTStatement::Continue, &toks[1..])),
 		Some(Token::Pass) => Ok((ASTStatement::Pass, &toks[1..])),
+		Some(Token::Scope(kind)) => {
+			let (id, toks) = assemble_ident(&toks[1..])?;
+			Ok((ASTStatement::Scope(*kind, vec![id]), toks))
+		},
 		Some(Token::Return) => {
 			match assemble_expr(&toks[1..]) {
 				Ok((expr, toks)) => Ok((ASTStatement::Return(Some(expr)), toks)),

@@ -19,18 +19,34 @@ fn iter(ast: &AST, nrt: &mut NameResTable, current_fn_ptr: *const ASTStatement) 
 	for stmt in ast {
 		match stmt {
 			ASTStatement::Assign(ASTExpr::Var(v), _) => {
-				nrt.insert((current_fn_ptr, v.to_string()), VarPlace::Local);
+				let k = (current_fn_ptr, v.to_string());
+				if !nrt.contains_key(&k) {
+					nrt.insert(k, VarPlace::Local);
+				}
 			},
 			ASTStatement::Assign(..) => todo!(),
 			ASTStatement::Def(_name, args, body) => {
 				for a in args {
-					nrt.insert((stmt as _, a.to_string()), VarPlace::Local);
+					let k = (stmt as _, a.to_string());
+					if !nrt.contains_key(&k) {
+						nrt.insert(k, VarPlace::Local);
+					}
 				}
 				iter(body, nrt, stmt as _);
 			},
 			ASTStatement::Class(..) => todo!(),
 			ASTStatement::If(_, body) | ASTStatement::While(_, body) => {
 				iter(body, nrt, current_fn_ptr);
+			},
+			ASTStatement::Scope(ScopeKind::Global, vars) => {
+				for v in vars {
+					nrt.insert((current_fn_ptr, v.to_string()), VarPlace::Global);
+				}
+			},
+			ASTStatement::Scope(ScopeKind::NonLocal, vars) => {
+				for v in vars {
+					nrt.insert((current_fn_ptr, v.to_string()), todo!());
+				}
 			},
 			ASTStatement::Break
 			| ASTStatement::Continue

@@ -46,7 +46,7 @@ fn lower_expr(expr: &ASTExpr, ctxt: &mut Ctxt) -> Node {
 		ASTExpr::Var(v) => {
 			let v_str = lower_expr(&ASTExpr::Str(v.to_string()), ctxt);
 			let nn = if let Some(VarPlace::Local) = ctxt.nameres_tab.get(&(ctxt.f().ast_ptr, v.to_string())) {
-				ctxt.f().namespace_node 
+				ctxt.f().namespace_node
 			} else {
 				ctxt.f().global_node
 			};
@@ -163,7 +163,12 @@ impl Ctxt {
 
 fn lower_assign(v: &str, val: Node, ctxt: &mut Ctxt) {
 	let v_str = lower_expr(&ASTExpr::Str(v.to_string()), ctxt);
-	let nn = ctxt.f().namespace_node;
+
+	let nn = if let Some(VarPlace::Local) = ctxt.nameres_tab.get(&(ctxt.f().ast_ptr, v.to_string())) {
+		ctxt.f().namespace_node
+	} else {
+		ctxt.f().global_node
+	};
 	ctxt.push_statement(Statement::Store(nn, v_str, val));
 }
 
@@ -260,6 +265,7 @@ fn lower_ast(ast: &AST, ctxt: &mut Ctxt) {
 			ASTStatement::Continue => {
 				ctxt.push_goto(ctxt.f().loop_stack.last().unwrap().1);
 			},
+			ASTStatement::Scope(..) => {}, // scope is already handled in nameres
 			x => todo!("{:?}", x),
 		}
 	}

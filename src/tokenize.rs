@@ -7,7 +7,7 @@ pub enum Token {
 	Str(String),
 	Bool(bool),
 	Colon, LParen, RParen, Comma, Equals,
-	If, While, Return, Break, Continue, Def, Class, Pass,
+	If, While, Return, Break, Continue, Def, Class, Pass, Scope(ScopeKind),
 	Newline, Indent, Unindent,
 	BinOp(BinOpKind),
 }
@@ -120,6 +120,8 @@ pub fn tokenize(s: &str) -> Vec<Token> {
 						"pass" => Token::Pass,
 						"True" => Token::Bool(true),
 						"False" => Token::Bool(false),
+						"global" => Token::Scope(ScopeKind::Global),
+						"nonlocal" => Token::Scope(ScopeKind::NonLocal),
 						_ => Token::Ident(s),
 					});
 					state = TokenizerState::InLine;
