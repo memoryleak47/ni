@@ -30,7 +30,7 @@ fn iter(ast: &AST, nrt: &mut NameResTable, current_fn_ptr: *const ASTStatement) 
                     nrt.insert(k, VarPlace::Local);
                 }
             }
-            ASTStatement::Assign(..) => todo!(),
+            ASTStatement::Assign(..) => {}, // correct?
             ASTStatement::Def(_name, args, body) => {
                 for a in args {
                     let k = (stmt as _, a.to_string());

@@ -58,6 +58,11 @@ fn assemble_expr(toks: &[Token]) -> Result<(ASTExpr, &[Token]), String> {
                 expr = ASTExpr::BinOp(*op, Box::new(expr), Box::new(rhs));
                 toks = toks2;
             }
+            Some(Token::Dot) => {
+                let (rhs, toks2) = assemble_ident(&toks[1..])?;
+                expr = ASTExpr::Attribute(Box::new(expr), rhs);
+                toks = toks2;
+            },
             _ => return Ok((expr, toks)),
         }
     }

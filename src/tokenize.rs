@@ -11,6 +11,7 @@ pub enum Token {
     LParen,
     RParen,
     Comma,
+    Dot,
     Equals,
     If,
     While,
@@ -82,96 +83,30 @@ pub fn tokenize(s: &str) -> Vec<Token> {
                 }
             }
             TokenizerState::InLine => match &chars[i..] {
-                ['+', ..] => {
-                    tokens.push(Token::BinOp(BinOpKind::Plus));
-                    i += 1;
-                }
-                ['-', ..] => {
-                    tokens.push(Token::BinOp(BinOpKind::Minus));
-                    i += 1;
-                }
-                ['*', '*', ..] => {
-                    tokens.push(Token::BinOp(BinOpKind::Pow));
-                    i += 2;
-                }
-                ['*', ..] => {
-                    tokens.push(Token::BinOp(BinOpKind::Mul));
-                    i += 1;
-                }
-                ['/', ..] => {
-                    tokens.push(Token::BinOp(BinOpKind::Div));
-                    i += 1;
-                }
-                ['%', ..] => {
-                    tokens.push(Token::BinOp(BinOpKind::Mod));
-                    i += 1;
-                }
-                ['<', '=', ..] => {
-                    tokens.push(Token::BinOp(BinOpKind::Le));
-                    i += 2;
-                }
-                ['>', '=', ..] => {
-                    tokens.push(Token::BinOp(BinOpKind::Ge));
-                    i += 2;
-                }
-                ['=', '=', ..] => {
-                    tokens.push(Token::BinOp(BinOpKind::IsEqual));
-                    i += 2;
-                }
-                ['!', '=', ..] => {
-                    tokens.push(Token::BinOp(BinOpKind::IsNotEqual));
-                    i += 2;
-                }
-                ['<', ..] => {
-                    tokens.push(Token::BinOp(BinOpKind::Lt));
-                    i += 1;
-                }
-                ['>', ..] => {
-                    tokens.push(Token::BinOp(BinOpKind::Gt));
-                    i += 1;
-                }
+                ['+', ..] => { tokens.push(Token::BinOp(BinOpKind::Plus)); i += 1; }
+                ['-', ..] => { tokens.push(Token::BinOp(BinOpKind::Minus)); i += 1; }
+                ['*', '*', ..] => { tokens.push(Token::BinOp(BinOpKind::Pow)); i += 2; }
+                ['*', ..] => { tokens.push(Token::BinOp(BinOpKind::Mul)); i += 1; }
+                ['/', ..] => { tokens.push(Token::BinOp(BinOpKind::Div)); i += 1; }
+                ['%', ..] => { tokens.push(Token::BinOp(BinOpKind::Mod)); i += 1; }
+                ['<', '=', ..] => { tokens.push(Token::BinOp(BinOpKind::Le)); i += 2; }
+                ['>', '=', ..] => { tokens.push(Token::BinOp(BinOpKind::Ge)); i += 2; }
+                ['=', '=', ..] => { tokens.push(Token::BinOp(BinOpKind::IsEqual)); i += 2; }
+                ['!', '=', ..] => { tokens.push(Token::BinOp(BinOpKind::IsNotEqual)); i += 2; }
+                ['<', ..] => { tokens.push(Token::BinOp(BinOpKind::Lt)); i += 1; }
+                ['>', ..] => { tokens.push(Token::BinOp(BinOpKind::Gt)); i += 1; }
+                ['"', ..] => { state = TokenizerState::InStr('"', String::new()); i += 1; }
+                ['\'', ..] => { state = TokenizerState::InStr('\'', String::new()); i += 1; }
+                ['\n', ..] => { state = TokenizerState::CountingIndents(0); i += 1; }
+                ['#', ..] => { state = TokenizerState::InComment; i += 1; }
+                [':', ..] => { tokens.push(Token::Colon); i += 1; }
+                ['(', ..] => { tokens.push(Token::LParen); i += 1; }
+                [')', ..] => { tokens.push(Token::RParen); i += 1; }
+                [',', ..] => { tokens.push(Token::Comma); i += 1; }
+                ['=', ..] => { tokens.push(Token::Equals); i += 1; }
+                ['.', ..] => { tokens.push(Token::Dot); i += 1; }
 
-                ['"', ..] => {
-                    state = TokenizerState::InStr('"', String::new());
-                    i += 1;
-                }
-                ['\'', ..] => {
-                    state = TokenizerState::InStr('\'', String::new());
-                    i += 1;
-                }
-                ['\n', ..] => {
-                    state = TokenizerState::CountingIndents(0);
-                    i += 1;
-                }
-                ['#', ..] => {
-                    state = TokenizerState::InComment;
-                    i += 1;
-                }
-                [':', ..] => {
-                    tokens.push(Token::Colon);
-                    i += 1;
-                }
-                ['(', ..] => {
-                    tokens.push(Token::LParen);
-                    i += 1;
-                }
-                [')', ..] => {
-                    tokens.push(Token::RParen);
-                    i += 1;
-                }
-                [',', ..] => {
-                    tokens.push(Token::Comma);
-                    i += 1;
-                }
-                ['=', ..] => {
-                    tokens.push(Token::Equals);
-                    i += 1;
-                }
-
-                [' ', ..] => {
-                    i += 1;
-                }
-                _ if int_char(c) => {
+                [' ', ..] => { i += 1; } _ if int_char(c) => {
                     state = TokenizerState::InInt(c.to_string());
                     i += 1;
                 }

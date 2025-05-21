@@ -40,4 +40,5 @@ pub enum ASTExpr {
     None,
     FnCall(Box<ASTExpr>, Vec<ASTExpr>),
     BinOp(BinOpKind, Box<ASTExpr>, Box<ASTExpr>),
+    Attribute(Box<ASTExpr>, String),
 }
