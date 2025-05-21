@@ -6,7 +6,10 @@ pub(in crate::lower) struct FnLowerCtxt {
     pub namespace_node: Node,
     pub global_node: Node,
     pub singletons_node: Node,
-    pub ast_ptr: *const ASTStatement, // the original def stmt we are lowering.
+
+    // the original def stmt we are lowering.
+    // set to 0 for the main function.
+    pub ast_ptr: *const ASTStatement,
 }
 
 // able to push new statements to this current function.
@@ -14,7 +17,7 @@ pub(in crate::lower) struct FnCtxt {
     pub node_ctr: usize,
     pub current_fn: FnId,
     pub current_blk: BlockId,
-    pub lowering: Option<FnLowerCtxt>,
+    pub lowering: Option<FnLowerCtxt>, // set to None for builtin functions.
 }
 
 impl FnCtxt {

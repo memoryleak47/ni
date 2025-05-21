@@ -7,9 +7,9 @@ mod ctxt;
 pub use ctxt::*;
 
 fn build_value(payload: Node, type_: Node, ctxt: &mut Ctxt) -> Node {
-    let t = ctxt.push_compute(Expr::NewTable);
+    let t = ctxt.push_table();
     ctxt.push_store_str(t, "type", type_);
-    let dict = ctxt.push_compute(Expr::NewTable);
+    let dict = ctxt.push_table();
     ctxt.push_store_str(t, "payload", payload);
     ctxt.push_store_str(t, "dict", dict);
     t
@@ -27,13 +27,7 @@ fn lower_expr(expr: &ASTExpr, ctxt: &mut Ctxt) -> Node {
             ctxt.push_compute(Expr::BinOp(*op, lhs, rhs))
         }
         ASTExpr::Var(v) => {
-            let nn = if let Some(VarPlace::Local) =
-                ctxt.nameres_tab.get(&(ctxt.fl().ast_ptr, v.to_string()))
-            {
-                ctxt.fl().namespace_node
-            } else {
-                ctxt.fl().global_node
-            };
+            let nn = find_namespace(v, ctxt);
             ctxt.push_index_str(nn, v)
         }
         ASTExpr::FnCall(f, args) => lower_fn_call(&*f, args, ctxt),
@@ -93,9 +87,9 @@ fn lower_fn_call(f: &ASTExpr, args: &[ASTExpr], ctxt: &mut Ctxt) -> Node {
     ctxt.push_store_str(arg, "singletons", ctxt.fl().singletons_node);
 
     for (i, a) in args.iter().enumerate() {
-        let i = ctxt.push_compute(Expr::Int(i as _));
+        let i = ctxt.push_int(i as _);
         let v = lower_expr(a, ctxt);
-        ctxt.push_statement(Statement::Store(arg, i, v));
+        ctxt.push_store(arg, i, v);
     }
     let f_payload = ctxt.push_index_str(tmp, "0");
     ctxt.push_statement(Statement::FnCall(f_payload, arg));
@@ -103,12 +97,7 @@ fn lower_fn_call(f: &ASTExpr, args: &[ASTExpr], ctxt: &mut Ctxt) -> Node {
 }
 
 fn lower_assign(v: &str, val: Node, ctxt: &mut Ctxt) {
-    let nn = if let Some(VarPlace::Local) = ctxt.nameres_tab.get(&(ctxt.fl().ast_ptr, v.to_string()))
-    {
-        ctxt.fl().namespace_node
-    } else {
-        ctxt.fl().global_node
-    };
+    let nn = find_namespace(v, ctxt);
     ctxt.push_store_str(nn, v, val);
 }
 
@@ -232,13 +221,13 @@ pub fn lower(ast: &AST) -> IR {
         let t = ctxt.push_table();
         ctxt.f_mut().lowering = Some(FnLowerCtxt {
             singletons_node: 0, // will be set in "add_builtins_and_singletons".
+            // for the main function, the global scope is actually it's local scope.
             global_node: t,
             namespace_node: t,
             ast_ptr: 0 as _,
             loop_stack: Vec::new(),
         });
 
-        // for the main function, the global scope is actually it's local scope.
 
         add_builtins_and_singletons(ctxt);
         lower_ast(ast, ctxt);
@@ -248,4 +237,12 @@ pub fn lower(ast: &AST) -> IR {
 
     ctxt.ir.main_fn = main;
     ctxt.ir
+}
+
+fn find_namespace(v: &str, ctxt: &mut Ctxt) -> Node {
+    let k = (ctxt.fl().ast_ptr, v.to_string());
+    match ctxt.nameres_tab.get(&k) {
+        Some(VarPlace::Local) => ctxt.fl().namespace_node,
+        _ => ctxt.fl().global_node,
+    }
 }
