@@ -1,0 +1,2 @@
+class A:
+	print("A!")
