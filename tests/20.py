@@ -1,6 +1,5 @@
-class A:
+def foo():
 	pass
 
-A.x = 2
-a = A()
-print(a.x)
+foo.x = 2
+print(foo.x)
