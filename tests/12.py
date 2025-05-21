@@ -1,8 +1,7 @@
 def fibo(x):
 	if x < 2:
 		return x
-	# TODO: re-enable
-	return 2 # fibo(x-1) + fibo(x-2)
+	return fibo(x-1) + fibo(x-2)
 
 i = 0
 while i < 10:
