@@ -266,6 +266,10 @@ fn lower_ast(ast: &AST, ctxt: &mut Ctxt) {
 				ctxt.push_goto(ctxt.f().loop_stack.last().unwrap().1);
 			},
 			ASTStatement::Scope(..) => {}, // scope is already handled in nameres
+			ASTStatement::Class(_name, _args, body) => {
+				// TODO: most stuff is missing here.
+				lower_ast(body, ctxt);
+			},
 			x => todo!("{:?}", x),
 		}
 	}

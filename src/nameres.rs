@@ -34,7 +34,7 @@ fn iter(ast: &AST, nrt: &mut NameResTable, current_fn_ptr: *const ASTStatement) 
 				}
 				iter(body, nrt, stmt as _);
 			},
-			ASTStatement::Class(..) => todo!(),
+			ASTStatement::Class(..) => {}, // TODO
 			ASTStatement::If(_, body) | ASTStatement::While(_, body) => {
 				iter(body, nrt, current_fn_ptr);
 			},
