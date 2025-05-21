@@ -99,6 +99,11 @@ fn lower_expr(expr: &ASTExpr, ctxt: &mut Ctxt) -> Node {
             let idx = ctxt.push_compute(Expr::Str("ret".to_string()));
             ctxt.push_compute(Expr::Index(arg, idx))
         }
+        ASTExpr::Attribute(e, a) => {
+            let e = lower_expr(e, ctxt);
+            let a = ctxt.push_compute(Expr::Str(a.to_string()));
+            ctxt.push_compute(Expr::Index(e, a))
+        },
         _ => todo!("{:?}", expr),
     }
 }
@@ -222,6 +227,12 @@ fn lower_ast(ast: &AST, ctxt: &mut Ctxt) {
                 let val = lower_expr(rhs, ctxt);
                 lower_assign(v, val, ctxt);
             }
+            ASTStatement::Assign(ASTExpr::Attribute(e, v), rhs) => {
+                let e = lower_expr(e, ctxt);
+                let val = lower_expr(rhs, ctxt);
+                let v_str = ctxt.push_compute(Expr::Str(v.to_string()));
+                ctxt.push_statement(Statement::Store(e, v_str, val));
+            },
             ASTStatement::If(cond, then) => {
                 let cond = lower_expr(cond, ctxt);
                 let b = ctxt.alloc_blk();
