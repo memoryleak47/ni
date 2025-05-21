@@ -1,16 +1,32 @@
 use crate::lower::*;
 
-pub(in crate::lower) struct FnCtxt {
-    pub node_ctr: usize,
-    pub current_fn: FnId,
-    pub current_blk: BlockId,
+// context for lowering statements from the AST.
+pub(in crate::lower) struct FnLowerCtxt {
     pub loop_stack: Vec<(/*break*/ BlockId, /*continue*/ BlockId)>,
     pub namespace_node: Node,
     pub global_node: Node,
     pub singletons_node: Node,
-    pub ast_ptr: *const ASTStatement, // the original def stmt
+    pub ast_ptr: *const ASTStatement, // the original def stmt we are lowering.
 }
 
+// able to push new statements to this current function.
+pub(in crate::lower) struct FnCtxt {
+    pub node_ctr: usize,
+    pub current_fn: FnId,
+    pub current_blk: BlockId,
+    pub lowering: Option<FnLowerCtxt>,
+}
+
+impl FnCtxt {
+    pub fn new(i: FnId) -> Self {
+        Self {
+            node_ctr: 0,
+            current_fn: i,
+            current_blk: 0,
+            lowering: None,
+        }
+    }
+}
 
 pub(in crate::lower) struct Ctxt {
     pub stack: Vec<FnCtxt>,
@@ -19,50 +35,21 @@ pub(in crate::lower) struct Ctxt {
     pub builtin_fns: HashMap<String, FnId>,
 }
 
-impl FnCtxt {
-    pub fn new(f: FnId, ast_ptr: *const ASTStatement) -> Self {
-        Self {
-            node_ctr: 10,
-            current_fn: f,
-            current_blk: 0,
-            loop_stack: Vec::new(),
-            namespace_node: 0,
-            global_node: 3,
-            singletons_node: 5,
-            ast_ptr,
-        }
-    }
-}
-
 impl Ctxt {
+    pub fn fl(&self) -> &FnLowerCtxt {
+        self.f().lowering.as_ref().unwrap()
+    }
+
+    pub fn fl_mut(&mut self) -> &mut FnLowerCtxt {
+        self.f_mut().lowering.as_mut().unwrap()
+    }
+
     pub fn f(&self) -> &FnCtxt {
         self.stack.last().unwrap()
     }
 
     pub fn f_mut(&mut self) -> &mut FnCtxt {
         self.stack.last_mut().unwrap()
-    }
-
-    pub fn new(ast: &AST) -> Self {
-        let nameres_tab = nameres(ast);
-
-        let mut fns: HashMap<_, _> = Default::default();
-        let mut blocks: HashMap<_, _> = Default::default();
-        blocks.insert(0, vec![Statement::Compute(0, Expr::NewTable)]);
-        let main_fn = Function {
-            blocks,
-            start_block: 0,
-        };
-        fns.insert(0, main_fn);
-
-        let mut fn_ctxt = FnCtxt::new(0, 0 as _);
-        fn_ctxt.global_node = 0; // for the outer function, the global scope is actually it's local scope.
-        Ctxt {
-            stack: vec![fn_ctxt],
-            nameres_tab,
-            ir: IR { main_fn: 0, fns },
-            builtin_fns: Default::default(),
-        }
     }
 
     pub fn push_compute(&mut self, expr: Expr) -> Node {
@@ -178,11 +165,7 @@ pub fn new_fn(ctxt: &mut Ctxt, f: impl FnOnce(&mut Ctxt)) -> FnId {
         node_ctr: 0,
         current_fn: n,
         current_blk: 0,
-        loop_stack: Vec::new(),
-        namespace_node: 0,
-        global_node: 0,
-        singletons_node: 0,
-        ast_ptr: 0 as _,
+        lowering: None,
     });
 
     f(ctxt);

@@ -13,9 +13,9 @@ fn add_print_builtin(ctxt: &mut Ctxt) {
     ctxt.builtin_fns.insert("print".to_string(), print_fn);
 
     let print_f = ctxt.push_builtin("print");
-    let function = ctxt.push_index_str(ctxt.f().singletons_node, "function");
+    let function = ctxt.push_index_str(ctxt.fl().singletons_node, "function");
     let print = build_value(print_f, function, ctxt);
-    let nn = ctxt.f().namespace_node;
+    let nn = ctxt.fl().namespace_node;
     ctxt.push_store_str(nn, "print", print);
 }
 
@@ -32,7 +32,7 @@ fn add_construct_builtin(ctxt: &mut Ctxt) {
 
 fn add_singletons(ctxt: &mut Ctxt) {
     let singleton = ctxt.push_compute(Expr::NewTable);
-    ctxt.f_mut().singletons_node = singleton;
+    ctxt.fl_mut().singletons_node = singleton;
 
     let type_ = ctxt.push_compute(Expr::NewTable);
     let type_str = ctxt.push_str("type");

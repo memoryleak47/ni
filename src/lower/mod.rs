@@ -28,11 +28,11 @@ fn lower_expr(expr: &ASTExpr, ctxt: &mut Ctxt) -> Node {
         }
         ASTExpr::Var(v) => {
             let nn = if let Some(VarPlace::Local) =
-                ctxt.nameres_tab.get(&(ctxt.f().ast_ptr, v.to_string()))
+                ctxt.nameres_tab.get(&(ctxt.fl().ast_ptr, v.to_string()))
             {
-                ctxt.f().namespace_node
+                ctxt.fl().namespace_node
             } else {
-                ctxt.f().global_node
+                ctxt.fl().global_node
             };
             ctxt.push_index_str(nn, v)
         }
@@ -60,7 +60,7 @@ fn lower_fn_call(f: &ASTExpr, args: &[ASTExpr], ctxt: &mut Ctxt) -> Node {
 
     // if f["type"] == singletons["function"]: goto is_function_ty | is_no_function_ty
     let a = ctxt.push_index_str(f, "type");
-    let b = ctxt.push_index_str(ctxt.f().singletons_node, "function");
+    let b = ctxt.push_index_str(ctxt.fl().singletons_node, "function");
     let cond = ctxt.push_eq(a, b);
     ctxt.push_if(cond, is_function_ty, is_no_function_ty);
 
@@ -72,7 +72,7 @@ fn lower_fn_call(f: &ASTExpr, args: &[ASTExpr], ctxt: &mut Ctxt) -> Node {
     // if f["type"] == singletons["type"]: goto is_class | err
     ctxt.focus_blk(is_no_function_ty);
     let a = ctxt.push_index_str(f, "type");
-    let b = ctxt.push_index_str(ctxt.f().singletons_node, "type");
+    let b = ctxt.push_index_str(ctxt.fl().singletons_node, "type");
     let cond = ctxt.push_eq(a, b);
     ctxt.push_if(cond, is_class, err);
 
@@ -87,10 +87,10 @@ fn lower_fn_call(f: &ASTExpr, args: &[ASTExpr], ctxt: &mut Ctxt) -> Node {
     ctxt.focus_blk(go);
 
     // pass "scope_global" along.
-    ctxt.push_store_str(arg, "scope_global", ctxt.f().global_node);
+    ctxt.push_store_str(arg, "scope_global", ctxt.fl().global_node);
 
     // pass "singletons" along.
-    ctxt.push_store_str(arg, "singletons", ctxt.f().singletons_node);
+    ctxt.push_store_str(arg, "singletons", ctxt.fl().singletons_node);
 
     for (i, a) in args.iter().enumerate() {
         let i = ctxt.push_compute(Expr::Int(i as _));
@@ -103,21 +103,19 @@ fn lower_fn_call(f: &ASTExpr, args: &[ASTExpr], ctxt: &mut Ctxt) -> Node {
 }
 
 fn lower_assign(v: &str, val: Node, ctxt: &mut Ctxt) {
-    let nn = if let Some(VarPlace::Local) = ctxt.nameres_tab.get(&(ctxt.f().ast_ptr, v.to_string()))
+    let nn = if let Some(VarPlace::Local) = ctxt.nameres_tab.get(&(ctxt.fl().ast_ptr, v.to_string()))
     {
-        ctxt.f().namespace_node
+        ctxt.fl().namespace_node
     } else {
-        ctxt.f().global_node
+        ctxt.fl().global_node
     };
     ctxt.push_store_str(nn, v, val);
 }
 
-fn lower_ast(ast: &AST, ctxt: &mut Ctxt) {
+fn lower_ast(ast: &[ASTStatement], ctxt: &mut Ctxt) {
     for stmt in ast {
         match stmt {
-            ASTStatement::Expr(e) => {
-                lower_expr(e, ctxt);
-            }
+            ASTStatement::Expr(e) => { lower_expr(e, ctxt); },
             ASTStatement::Assign(ASTExpr::Var(v), rhs) => {
                 let val = lower_expr(rhs, ctxt);
                 lower_assign(v, val, ctxt);
@@ -144,7 +142,7 @@ fn lower_ast(ast: &AST, ctxt: &mut Ctxt) {
                 let pre = ctxt.alloc_blk();
                 let b = ctxt.alloc_blk();
                 let post = ctxt.alloc_blk();
-                ctxt.f_mut().loop_stack.push((post, pre));
+                ctxt.fl_mut().loop_stack.push((post, pre));
 
                 ctxt.push_goto(pre);
                 ctxt.focus_blk(pre);
@@ -157,56 +155,9 @@ fn lower_ast(ast: &AST, ctxt: &mut Ctxt) {
                 ctxt.push_goto(pre);
 
                 ctxt.focus_blk(post);
-                ctxt.f_mut().loop_stack.pop();
+                ctxt.fl_mut().loop_stack.pop();
             }
-            ASTStatement::Def(name, args, body) => {
-                let i = ctxt.ir.fns.len();
-                ctxt.stack.push(FnCtxt::new(i, stmt as _));
-
-                {
-                    // add empty fn to IR
-                    let mut blocks: HashMap<_, _> = Default::default();
-
-                    // TODO unify this with the construction of the main function.
-                    // this creates the namespace node.
-                    blocks.insert(
-                        0,
-                        vec![
-                            Statement::Compute(0, Expr::NewTable),
-                            Statement::Compute(1, Expr::Arg),
-                            Statement::Compute(2, Expr::Str("scope_global".to_string())),
-                            Statement::Compute(3, Expr::Index(1, 2)),
-                            Statement::Compute(4, Expr::Str("singletons".to_string())),
-                            Statement::Compute(5, Expr::Index(1, 4)),
-                        ],
-                    );
-                    let f = Function {
-                        blocks,
-                        start_block: 0,
-                    };
-                    ctxt.ir.fns.insert(i, f);
-                }
-
-                // load args
-                let argtable = ctxt.push_arg();
-                for (i, a) in args.iter().enumerate() {
-                    let i = ctxt.push_int(i as _);
-                    let val = ctxt.push_index(argtable, i);
-                    let nn = ctxt.f().namespace_node;
-                    ctxt.push_store_str(nn, a, val);
-                }
-
-                lower_ast(body, ctxt);
-                ctxt.push_return();
-
-                ctxt.stack.pop();
-
-                let function = ctxt.push_compute(Expr::Function(i));
-                let function_t = ctxt.push_index_str(ctxt.f().singletons_node, "function");
-                let val = build_value(function, function_t, ctxt);
-
-                lower_assign(name, val, ctxt);
-            }
+            ASTStatement::Def(name, args, body) => lower_def(name, args, body, stmt, ctxt),
             ASTStatement::Return(opt) => {
                 let expr = opt.as_ref().unwrap_or(&ASTExpr::None);
                 let val = lower_expr(expr, ctxt);
@@ -216,10 +167,10 @@ fn lower_ast(ast: &AST, ctxt: &mut Ctxt) {
             }
             ASTStatement::Pass => {} // do nothing
             ASTStatement::Break => {
-                ctxt.push_goto(ctxt.f().loop_stack.last().unwrap().0);
+                ctxt.push_goto(ctxt.fl().loop_stack.last().unwrap().0);
             }
             ASTStatement::Continue => {
-                ctxt.push_goto(ctxt.f().loop_stack.last().unwrap().1);
+                ctxt.push_goto(ctxt.fl().loop_stack.last().unwrap().1);
             }
             ASTStatement::Scope(..) => {} // scope is already handled in nameres
             ASTStatement::Class(name, _args, body) => {
@@ -227,7 +178,7 @@ fn lower_ast(ast: &AST, ctxt: &mut Ctxt) {
 
                 lower_ast(body, ctxt);
                 let val = ctxt.push_table();
-                let type_ = ctxt.push_index_str(ctxt.f().singletons_node, "type");
+                let type_ = ctxt.push_index_str(ctxt.fl().singletons_node, "type");
                 ctxt.push_store_str(val, "type", type_);
                 lower_assign(name, val, ctxt);
             }
@@ -236,12 +187,65 @@ fn lower_ast(ast: &AST, ctxt: &mut Ctxt) {
     }
 }
 
+fn lower_def(name: &str, args: &[String], body: &[ASTStatement], stmt: &ASTStatement, ctxt: &mut Ctxt) {
+    let i = new_fn(ctxt, |ctxt| {
+        let arg = ctxt.push_arg();
+        ctxt.f_mut().lowering = Some(FnLowerCtxt {
+            namespace_node: ctxt.push_table(),
+            global_node: ctxt.push_index_str(arg, "scope_global"),
+            singletons_node: ctxt.push_index_str(arg, "singletons"),
+            ast_ptr: stmt,
+            loop_stack: Vec::new(),
+        });
+
+        // load args
+        let argtable = ctxt.push_arg();
+        for (i, a) in args.iter().enumerate() {
+            let i = ctxt.push_int(i as _);
+            let val = ctxt.push_index(argtable, i);
+            let nn = ctxt.fl().namespace_node;
+            ctxt.push_store_str(nn, a, val);
+        }
+
+        lower_ast(body, ctxt);
+        ctxt.push_return();
+    });
+
+    let function = ctxt.push_compute(Expr::Function(i));
+    let function_t = ctxt.push_index_str(ctxt.fl().singletons_node, "function");
+    let val = build_value(function, function_t, ctxt);
+
+    lower_assign(name, val, ctxt);
+}
+
 pub fn lower(ast: &AST) -> IR {
-    let mut ctxt = Ctxt::new(ast);
+    let nameres_tab = nameres(ast);
 
-    add_builtins_and_singletons(&mut ctxt);
-    lower_ast(ast, &mut ctxt);
+    let mut ctxt = Ctxt {
+        stack: Vec::new(),
+        nameres_tab,
+        ir: IR { main_fn: 0, fns: Default::default() },
+        builtin_fns: Default::default(),
+    };
 
-    ctxt.push_return();
+    let main = new_fn(&mut ctxt, |ctxt| {
+        let t = ctxt.push_table();
+        ctxt.f_mut().lowering = Some(FnLowerCtxt {
+            singletons_node: 0, // will be set in "add_builtins_and_singletons".
+            global_node: t,
+            namespace_node: t,
+            ast_ptr: 0 as _,
+            loop_stack: Vec::new(),
+        });
+
+        // for the main function, the global scope is actually it's local scope.
+
+        add_builtins_and_singletons(ctxt);
+        lower_ast(ast, ctxt);
+
+        ctxt.push_return();
+    });
+
+    ctxt.ir.main_fn = main;
     ctxt.ir
 }
