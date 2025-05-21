@@ -14,6 +14,9 @@ pub use tokenize::*;
 mod assemble;
 pub use assemble::*;
 
+mod nameres;
+pub use nameres::*;
+
 mod lower;
 pub use lower::*;
 

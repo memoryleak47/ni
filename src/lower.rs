@@ -86,6 +86,7 @@ impl FnCtxt {
 
 struct Ctxt {
 	stack: Vec<FnCtxt>,
+	nameres_tab: NameResTable,
 	ir: IR,
 }
 
@@ -93,7 +94,9 @@ impl Ctxt {
 	fn f(&self) -> &FnCtxt { self.stack.last().unwrap() }
 	fn f_mut(&mut self) -> &mut FnCtxt { self.stack.last_mut().unwrap() }
 
-	fn new() -> Self {
+	fn new(ast: &AST) -> Self {
+		let nameres_tab = nameres(ast);
+
 		let mut fns: HashMap<_, _> = Default::default();
 		let mut blocks: HashMap<_, _> = Default::default();
 		blocks.insert(0, vec![Statement::Compute(0, Expr::NewTable)]);
@@ -105,6 +108,7 @@ impl Ctxt {
 
 		Ctxt {
 			stack: vec![FnCtxt::new(0)],
+			nameres_tab,
 			ir: IR {
 				main_fn: 0,
 				fns,
@@ -243,7 +247,7 @@ fn lower_ast(ast: &AST, ctxt: &mut Ctxt) {
 }
 
 pub fn lower(ast: &AST) -> IR {
-	let mut ctxt = Ctxt::new();
+	let mut ctxt = Ctxt::new(ast);
 
 	add_builtins(&mut ctxt);
 	lower_ast(ast, &mut ctxt);
