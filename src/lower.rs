@@ -51,7 +51,34 @@ fn add_construct_builtin(ctxt: &mut Ctxt) {
     );
 }
 
-fn add_builtins(ctxt: &mut Ctxt) {
+fn add_singletons(ctxt: &mut Ctxt) {
+    let singleton = ctxt.push_compute(Expr::NewTable);
+    ctxt.f_mut().singletons_node = singleton;
+
+    let type_ = ctxt.push_compute(Expr::NewTable);
+    let type_str = ctxt.push_str("type");
+    ctxt.push_store(singleton, type_str, type_);
+
+    // type is of type `type`.
+    ctxt.push_store(type_, type_str, type_);
+
+    let mut add_primitive_type = |name| {
+        let tab = ctxt.push_compute(Expr::NewTable);
+        let name_str = ctxt.push_str(name);
+        ctxt.push_store(tab, type_str, type_);
+        ctxt.push_store(singleton, name_str, tab);
+    };
+
+    add_primitive_type("function");
+    add_primitive_type("str");
+    add_primitive_type("int");
+    add_primitive_type("float");
+    add_primitive_type("bool");
+    add_primitive_type("NoneType");
+}
+
+fn add_builtins_and_singletons(ctxt: &mut Ctxt) {
+    add_singletons(ctxt);
     add_print_builtin(ctxt);
     add_construct_builtin(ctxt);
 }
@@ -83,11 +110,19 @@ fn lower_expr(expr: &ASTExpr, ctxt: &mut Ctxt) -> Node {
             let arg = ctxt.push_compute(Expr::NewTable);
 
             // pass "scope_global" along.
-            let scope_global_str = ctxt.push_compute(Expr::Str("scope_global".to_string()));
+            let scope_global_str = ctxt.push_str("scope_global");
             ctxt.push_statement(Statement::Store(
                 arg,
                 scope_global_str,
                 ctxt.f().global_node,
+            ));
+
+            // pass "singletons" along.
+            let singletons_str = ctxt.push_str("singletons");
+            ctxt.push_statement(Statement::Store(
+                arg,
+                singletons_str,
+                ctxt.f().singletons_node,
             ));
 
             for (i, a) in args.iter().enumerate() {
@@ -115,6 +150,7 @@ struct FnCtxt {
     loop_stack: Vec<(/*break*/ BlockId, /*continue*/ BlockId)>,
     namespace_node: Node,
     global_node: Node,
+    singletons_node: Node,
     ast_ptr: *const ASTStatement, // the original def stmt
 }
 
@@ -127,6 +163,7 @@ impl FnCtxt {
             loop_stack: Vec::new(),
             namespace_node: 0,
             global_node: 3,
+            singletons_node: 5,
             ast_ptr,
         }
     }
@@ -172,6 +209,14 @@ impl Ctxt {
         self.f_mut().node_ctr += 1;
         self.push_statement(Statement::Compute(n, expr));
         n
+    }
+
+    fn push_str(&mut self, s: &str) -> Node {
+        self.push_compute(Expr::Str(s.to_string()))
+    }
+
+    fn push_store(&mut self, t: Node, k: Node, v: Node) {
+        self.push_statement(Statement::Store(t, k, v));
     }
 
     fn push_statement(&mut self, stmt: Statement) {
@@ -278,9 +323,11 @@ fn lower_ast(ast: &AST, ctxt: &mut Ctxt) {
                         0,
                         vec![
                             Statement::Compute(0, Expr::NewTable),
-                            Statement::Compute(1, Expr::Str("scope_global".to_string())),
-                            Statement::Compute(2, Expr::Arg),
-                            Statement::Compute(3, Expr::Index(2, 1)),
+                            Statement::Compute(1, Expr::Arg),
+                            Statement::Compute(2, Expr::Str("scope_global".to_string())),
+                            Statement::Compute(3, Expr::Index(1, 2)),
+                            Statement::Compute(4, Expr::Str("singletons".to_string())),
+                            Statement::Compute(5, Expr::Index(1, 4)),
                         ],
                     );
                     let f = Function {
@@ -339,7 +386,7 @@ fn lower_ast(ast: &AST, ctxt: &mut Ctxt) {
 pub fn lower(ast: &AST) -> IR {
     let mut ctxt = Ctxt::new(ast);
 
-    add_builtins(&mut ctxt);
+    add_builtins_and_singletons(&mut ctxt);
     lower_ast(ast, &mut ctxt);
 
     ctxt.push_statement(Statement::Return);
