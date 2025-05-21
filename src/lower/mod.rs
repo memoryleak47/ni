@@ -178,17 +178,16 @@ fn lower_ast(ast: &[ASTStatement], ctxt: &mut Ctxt) {
 
 fn lower_def(name: &str, args: &[String], body: &[ASTStatement], stmt: &ASTStatement, ctxt: &mut Ctxt) {
     let i = new_fn(ctxt, |ctxt| {
-        let arg = ctxt.push_arg();
+        let argtable = ctxt.push_arg();
         ctxt.f_mut().lowering = Some(FnLowerCtxt {
             namespace_node: ctxt.push_table(),
-            global_node: ctxt.push_index_str(arg, "scope_global"),
-            singletons_node: ctxt.push_index_str(arg, "singletons"),
+            global_node: ctxt.push_index_str(argtable, "scope_global"),
+            singletons_node: ctxt.push_index_str(argtable, "singletons"),
             ast_ptr: stmt,
             loop_stack: Vec::new(),
         });
 
         // load args
-        let argtable = ctxt.push_arg();
         for (i, a) in args.iter().enumerate() {
             let i = ctxt.push_int(i as _);
             let val = ctxt.push_index(argtable, i);
