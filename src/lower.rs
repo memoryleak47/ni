@@ -23,10 +23,20 @@ fn add_print_builtin(ctxt: &mut Ctxt) {
             start_block: 0,
         },
     );
-    let print = ctxt.push_compute(Expr::Function(n));
-    let print_str = ctxt.push_compute(Expr::Str("print".to_string()));
+    let print_f = ctxt.push_compute(Expr::Function(n));
+    let function = ctxt.push_compute_index_str(ctxt.f().singletons_node, "function");
+    let print = build_value(print_f, function, ctxt);
     let nn = ctxt.f().namespace_node;
-    ctxt.push_statement(Statement::Store(nn, print_str, print));
+    ctxt.push_store_str(nn, "print", print);
+}
+
+fn build_value(payload: Node, type_: Node, ctxt: &mut Ctxt) -> Node {
+    let t = ctxt.push_compute(Expr::NewTable);
+    ctxt.push_store_str(t, "type", type_);
+    let dict = ctxt.push_compute(Expr::NewTable);
+    ctxt.push_store_str(t, "payload", payload);
+    ctxt.push_store_str(t, "dict", dict);
+    t
 }
 
 fn add_construct_builtin(ctxt: &mut Ctxt) {
@@ -130,7 +140,8 @@ fn lower_expr(expr: &ASTExpr, ctxt: &mut Ctxt) -> Node {
                 let v = lower_expr(a, ctxt);
                 ctxt.push_statement(Statement::Store(arg, i, v));
             }
-            ctxt.push_statement(Statement::FnCall(f, arg));
+            let f_payload = ctxt.push_compute_index_str(f, "payload");
+            ctxt.push_statement(Statement::FnCall(f_payload, arg));
             let idx = ctxt.push_compute(Expr::Str("ret".to_string()));
             ctxt.push_compute(Expr::Index(arg, idx))
         }
@@ -217,6 +228,16 @@ impl Ctxt {
 
     fn push_store(&mut self, t: Node, k: Node, v: Node) {
         self.push_statement(Statement::Store(t, k, v));
+    }
+
+    fn push_store_str(&mut self, t: Node, k: &str, v: Node) {
+        let k = self.push_str(k);
+        self.push_statement(Statement::Store(t, k, v));
+    }
+
+    fn push_compute_index_str(&mut self, t: Node, k: &str) -> Node {
+        let k = self.push_str(k);
+        self.push_compute(Expr::Index(t, k))
     }
 
     fn push_statement(&mut self, stmt: Statement) {
@@ -352,7 +373,10 @@ fn lower_ast(ast: &AST, ctxt: &mut Ctxt) {
 
                 ctxt.stack.pop();
 
-                let val = ctxt.push_compute(Expr::Function(i));
+                let function = ctxt.push_compute(Expr::Function(i));
+                let function_t = ctxt.push_compute_index_str(ctxt.f().singletons_node, "function");
+                let val = build_value(function, function_t, ctxt);
+
                 lower_assign(name, val, ctxt);
             }
             ASTStatement::Return(opt) => {
