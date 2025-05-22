@@ -6,6 +6,9 @@ use crate::lower::*;
 // context for lowering statements from the AST.
 pub(in crate::lower) struct FnLowerCtxt {
     pub loop_stack: Vec<(/*break*/ BlockId, /*continue*/ BlockId)>,
+
+    // the node for the local context.
+    // sometimes switched out by the class context.
     pub namespace_node: Node,
     pub global_node: Node,
     pub singletons_node: Node,
@@ -26,9 +29,13 @@ impl Ctxt {
     }
 
     pub fn build_value(&mut self, payload: Node, type_: Node) -> Node {
+        let d = self.push_table();
+        self.build_value_w_dict(payload, type_, d)
+    }
+
+    pub fn build_value_w_dict(&mut self, payload: Node, type_: Node, dict: Node) -> Node {
         let t = self.push_table();
         self.push_store_str(t, "type", type_);
-        let dict = self.push_table();
         self.push_store_str(t, "payload", payload);
         self.push_store_str(t, "dict", dict);
         t

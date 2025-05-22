@@ -181,13 +181,19 @@ fn lower_ast(ast: &[ASTStatement], ctxt: &mut Ctxt) {
             }
             ASTStatement::Scope(..) => {} // scope is already handled in nameres
             ASTStatement::Class(name, _args, body) => {
+                let mut dict = ctxt.push_table();
+                // this temporarily overwrites the namespace node, so that local variables actually
+                // write to the class instead.
+                std::mem::swap(&mut ctxt.fl_mut().namespace_node, &mut dict);
                 // TODO: most stuff is missing here.
 
                 lower_ast(body, ctxt);
                 let u = ctxt.push_undef();
                 let type_ = ctxt.get_singleton("type");
-                let val = ctxt.build_value(u, type_);
+                let val = ctxt.build_value_w_dict(u, type_, dict);
                 lower_assign(name, val, ctxt);
+
+                std::mem::swap(&mut ctxt.fl_mut().namespace_node, &mut dict);
             }
             x => todo!("{:?}", x),
         }
