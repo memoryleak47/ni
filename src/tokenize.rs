@@ -49,11 +49,12 @@ pub fn tokenize(s: &str) -> Vec<Token> {
     let mut chars: Vec<_> = s.chars().collect();
     chars.push('#'); // automatically closes off final idents.
 
+    // tells how deeply indented previous indents were.
+    // this stack is never empty!
+    let mut indent_stack: Vec<usize> = vec![0];
+
     let mut i = 0;
     let mut tokens = Vec::new();
-
-    // how many indents where in the last line.
-    let mut last_indent = 0;
 
     let mut state = TokenizerState::CountingIndents(0);
 
@@ -62,6 +63,9 @@ pub fn tokenize(s: &str) -> Vec<Token> {
         match state {
             TokenizerState::CountingIndents(n) => {
                 if c == '\t' {
+                    state = TokenizerState::CountingIndents(((n + 8)/8)*8);
+                    i += 1;
+                } else if c == ' ' {
                     state = TokenizerState::CountingIndents(n + 1);
                     i += 1;
                 } else if c == '\n' {
@@ -70,16 +74,14 @@ pub fn tokenize(s: &str) -> Vec<Token> {
                     i += 1;
                 } else {
                     state = TokenizerState::InLine;
-                    let delta = (n as i32) - (last_indent as i32);
-
-                    for _ in 0..delta {
+                    if n > *indent_stack.last().unwrap() {
                         tokens.push(Token::Indent);
+                        indent_stack.push(n);
                     }
-                    for _ in delta..0 {
+                    while n < *indent_stack.last().unwrap() {
+                        indent_stack.pop();
                         tokens.push(Token::Unindent);
                     }
-
-                    last_indent = n;
                 }
             }
             TokenizerState::InLine => match &chars[i..] {
