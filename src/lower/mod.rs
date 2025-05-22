@@ -6,20 +6,8 @@ pub use init::*;
 mod ctxt;
 pub use ctxt::*;
 
-fn build_value(payload: Node, type_: Node, ctxt: &mut Ctxt) -> Node {
-    let t = ctxt.push_table();
-    ctxt.push_store_str(t, "type", type_);
-    let dict = ctxt.push_table();
-    ctxt.push_store_str(t, "payload", payload);
-    ctxt.push_store_str(t, "dict", dict);
-    t
-}
-
-fn push_return_none(ctxt: &mut Ctxt) {
-    let none = ctxt.push_none();
-    ctxt.push_store_str(ctxt.fl().arg_node, "ret", none);
-    ctxt.push_return();
-}
+mod fl;
+pub use fl::*;
 
 fn lower_expr(expr: &ASTExpr, ctxt: &mut Ctxt) -> Node {
     match expr {
@@ -204,12 +192,12 @@ fn lower_def(name: &str, args: &[String], body: &[ASTStatement], stmt: &ASTState
         }
 
         lower_ast(body, ctxt);
-        push_return_none(ctxt);
+        ctxt.push_return_none();
     });
 
     let function = ctxt.push_compute(Expr::Function(i));
     let function_t = ctxt.push_index_str(ctxt.fl().singletons_node, "function");
-    let val = build_value(function, function_t, ctxt);
+    let val = ctxt.build_value(function, function_t);
 
     lower_assign(name, val, ctxt);
 }

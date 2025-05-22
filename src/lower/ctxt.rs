@@ -1,18 +1,5 @@
 use crate::lower::*;
 
-// context for lowering statements from the AST.
-pub(in crate::lower) struct FnLowerCtxt {
-    pub loop_stack: Vec<(/*break*/ BlockId, /*continue*/ BlockId)>,
-    pub namespace_node: Node,
-    pub global_node: Node,
-    pub singletons_node: Node,
-    pub arg_node: Node,
-
-    // the original def stmt we are lowering.
-    // set to 0 for the main function.
-    pub ast_ptr: *const ASTStatement,
-}
-
 // able to push new statements to this current function.
 pub(in crate::lower) struct FnCtxt {
     pub node_ctr: usize,
@@ -40,14 +27,6 @@ pub(in crate::lower) struct Ctxt {
 }
 
 impl Ctxt {
-    pub fn fl(&self) -> &FnLowerCtxt {
-        self.f().lowering.as_ref().unwrap()
-    }
-
-    pub fn fl_mut(&mut self) -> &mut FnLowerCtxt {
-        self.f_mut().lowering.as_mut().unwrap()
-    }
-
     pub fn f(&self) -> &FnCtxt {
         self.stack.last().unwrap()
     }
@@ -85,6 +64,10 @@ impl Ctxt {
 
     pub fn push_none(&mut self) -> Node {
         self.push_compute(Expr::None)
+    }
+
+    pub fn push_undef(&mut self) -> Node {
+        self.push_compute(Expr::Undef)
     }
 
     pub fn push_arg(&mut self) -> Node {

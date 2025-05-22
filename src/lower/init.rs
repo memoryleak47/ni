@@ -14,7 +14,7 @@ fn add_print_builtin(ctxt: &mut Ctxt) {
 
     let print_f = ctxt.push_builtin("print");
     let function = ctxt.push_index_str(ctxt.fl().singletons_node, "function");
-    let print = build_value(print_f, function, ctxt);
+    let print = ctxt.build_value(print_f, function);
     let nn = ctxt.fl().namespace_node;
     ctxt.push_store_str(nn, "print", print);
 }
