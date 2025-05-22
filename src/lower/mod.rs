@@ -15,6 +15,13 @@ fn build_value(payload: Node, type_: Node, ctxt: &mut Ctxt) -> Node {
     t
 }
 
+fn push_return_none(ctxt: &mut Ctxt) {
+    let arg = ctxt.push_arg();
+    let none = ctxt.push_none();
+    ctxt.push_store_str(arg, "ret", none);
+    ctxt.push_return();
+}
+
 fn lower_expr(expr: &ASTExpr, ctxt: &mut Ctxt) -> Node {
     match expr {
         ASTExpr::None => ctxt.push_none(),
@@ -198,7 +205,7 @@ fn lower_def(name: &str, args: &[String], body: &[ASTStatement], stmt: &ASTState
         }
 
         lower_ast(body, ctxt);
-        ctxt.push_return();
+        push_return_none(ctxt);
     });
 
     let function = ctxt.push_compute(Expr::Function(i));

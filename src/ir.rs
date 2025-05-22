@@ -67,6 +67,7 @@ pub enum Expr {
     Int(i64),
     Bool(bool),
     None,
+    Undef, // everything is initially Undef.
     Str(String),
 }
 

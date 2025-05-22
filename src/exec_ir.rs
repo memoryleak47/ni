@@ -10,12 +10,12 @@ fn table_get(ptr: TablePtr, idx: Value, ctxt: &mut Ctxt) -> Value {
         .iter()
         .find(|(x, _)| *x == idx)
         .map(|(_, v)| v.clone())
-        .unwrap_or(Value::None)
+        .unwrap_or(Value::Undef)
 }
 
 fn table_set(ptr: TablePtr, idx: Value, val: Value, ctxt: &mut Ctxt) {
-    if idx == Value::None {
-        panic!("setting index with None is forbidden!");
+    if idx == Value::Undef {
+        panic!("setting index with Undef is forbidden!");
     }
 
     let data: &mut TableData = ctxt
@@ -23,8 +23,8 @@ fn table_set(ptr: TablePtr, idx: Value, val: Value, ctxt: &mut Ctxt) {
         .get_mut(ptr)
         .expect("table_set got dangling pointer!");
     data.entries.retain(|(x, _)| *x != idx);
-    if val == Value::None {
-        // Value::None means it's not there, so just don't add it!
+    if val == Value::Undef {
+        // Value::Undef means it's not there, so just don't add it!
         if idx == Value::Int(data.length as _) {
             // recalculate length
             for i in 1.. {
@@ -54,10 +54,10 @@ fn table_set(ptr: TablePtr, idx: Value, val: Value, ctxt: &mut Ctxt) {
 // this is not equivalent to "next", as it only returns the next key and not the value too.
 fn table_next(ptr: TablePtr, idx: Value, ctxt: &mut Ctxt) -> Value {
     let data = &ctxt.heap[ptr];
-    if idx == Value::None {
+    if idx == Value::Undef {
         match data.entries.get(0) {
             Some((k, _)) => k.clone(),
-            None => Value::None,
+            None => Value::Undef,
         }
     } else {
         let i = data
@@ -68,7 +68,7 @@ fn table_next(ptr: TablePtr, idx: Value, ctxt: &mut Ctxt) -> Value {
         if let Some((k, _)) = data.entries.get(i + 1) {
             k.clone()
         } else {
-            Value::None
+            Value::Undef
         }
     }
 }
@@ -76,6 +76,7 @@ fn table_next(ptr: TablePtr, idx: Value, ctxt: &mut Ctxt) -> Value {
 #[derive(Clone, PartialEq, Debug)]
 enum Value {
     None,
+    Undef,
     Bool(bool),
     TablePtr(TablePtr),
     Str(String),
@@ -158,6 +159,7 @@ fn exec_expr(expr: &Expr, ctxt: &mut Ctxt) -> Value {
             let val = &ctxt.fcx().nodes[n];
             let s = match val {
                 Value::None => "None",
+                Value::Undef => panic!("calling type on Undef!"),
                 Value::Bool(_) => "boolean",
                 Value::Str(_) => "string",
                 Value::Function(..) => "function",
@@ -172,6 +174,7 @@ fn exec_expr(expr: &Expr, ctxt: &mut Ctxt) -> Value {
         Expr::Int(x) => Value::Int(*x),
         Expr::Bool(b) => Value::Bool(*b),
         Expr::None => Value::None,
+        Expr::Undef => Value::Undef,
         Expr::Str(s) => Value::Str(s.clone()),
     }
 }
@@ -237,7 +240,7 @@ pub fn exec(ir: &IR) {
         stack: Vec::new(),
     };
 
-    call_fn(ir.main_fn, Value::None, &mut ctxt);
+    call_fn(ir.main_fn, Value::Undef, &mut ctxt);
 
     while ctxt.stack.len() > 0 {
         if step(&mut ctxt).is_none() {
@@ -287,6 +290,7 @@ fn step_stmt(stmt: &Statement, ctxt: &mut Ctxt) -> Option<()> {
             let val = &ctxt.fcx().nodes[n];
             match val {
                 Value::None => println!("None"),
+                Value::Undef => panic!("print called on Undef!"),
                 Value::Bool(true) => println!("True"),
                 Value::Bool(false) => println!("False"),
                 Value::Str(s) => println!("{}", s),

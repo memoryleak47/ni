@@ -157,6 +157,7 @@ fn display_expr(expr: &Expr, f: &mut Formatter<'_>, constmap: &Map<Node, String>
         Bool(true) => write!(f, "True")?,
         Bool(false) => write!(f, "False")?,
         None => write!(f, "None")?,
+        Undef => write!(f, "Undef")?,
         Str(s) => write!(f, "\"{}\"", s)?,
     }
 
