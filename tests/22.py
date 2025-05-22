@@ -6,7 +6,7 @@ def foo():
      print("o")
      if True:
                   print("wow?")
-     print("ok?")
+    print("ok?")
 
 
 foo()
