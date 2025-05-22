@@ -81,6 +81,8 @@ fn lower_fn_call(f: &ASTExpr, args: &[ASTExpr], ctxt: &mut Ctxt) -> Node {
     let is_function_ty = ctxt.alloc_blk();
     let is_no_function_ty = ctxt.alloc_blk();
     let is_class = ctxt.alloc_blk();
+    let is_class_with_ctor = ctxt.alloc_blk();
+    let is_class_finish = ctxt.alloc_blk();
     let err = ctxt.alloc_blk();
     let post = ctxt.alloc_blk();
 
@@ -101,9 +103,18 @@ fn lower_fn_call(f: &ASTExpr, args: &[ASTExpr], ctxt: &mut Ctxt) -> Node {
         ctxt.branch_eq(a, b, is_class, err);
 
     ctxt.focus_blk(is_class);
-        // TODO call constructor:
         let u = ctxt.push_undef();
         let t = ctxt.build_value(u, f);
+        let d = ctxt.push_index_str(f, "dict");
+        let constr = ctxt.push_index_str(d, "__init__");
+        ctxt.branch_undef(constr, is_class_finish, is_class_with_ctor);
+
+    ctxt.focus_blk(is_class_with_ctor);
+        let constr = ctxt.push_index_str(constr, "payload");
+        ctxt.push_statement(Statement::FnCall(constr, arg));
+        ctxt.push_goto(is_class_finish);
+
+    ctxt.focus_blk(is_class_finish);
         ctxt.push_store_str(arg, "ret", t);
         ctxt.push_goto(post);
 
@@ -185,7 +196,6 @@ fn lower_ast(ast: &[ASTStatement], ctxt: &mut Ctxt) {
                 // this temporarily overwrites the namespace node, so that local variables actually
                 // write to the class instead.
                 std::mem::swap(&mut ctxt.fl_mut().namespace_node, &mut dict);
-                // TODO: most stuff is missing here.
 
                 lower_ast(body, ctxt);
                 let u = ctxt.push_undef();
