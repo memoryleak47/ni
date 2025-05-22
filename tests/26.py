@@ -1,7 +1,8 @@
 class A:
-    x = "irrelevant"
-    a = "irrelevant"
+    x = "irrelevant1"
+    a = "irrelevant2"
     def __init__(self, x):
+        print(x)
         self.a = x
         print("constructor called!")
 

@@ -31,7 +31,12 @@ fn iter(ast: &AST, nrt: &mut NameResTable, current_fn_ptr: *const ASTStatement) 
                 }
             }
             ASTStatement::Assign(..) => {}, // correct?
-            ASTStatement::Def(_name, args, body) => {
+            ASTStatement::Def(name, args, body) => {
+                let k = (current_fn_ptr, name.to_string());
+                if !nrt.contains_key(&k) {
+                    nrt.insert(k, VarPlace::Local);
+                }
+
                 for a in args {
                     let k = (stmt as _, a.to_string());
                     if !nrt.contains_key(&k) {
@@ -40,7 +45,14 @@ fn iter(ast: &AST, nrt: &mut NameResTable, current_fn_ptr: *const ASTStatement) 
                 }
                 iter(body, nrt, stmt as _);
             }
-            ASTStatement::Class(..) => {} // TODO
+            ASTStatement::Class(name, _args, body) => {
+                let k = (current_fn_ptr, name.to_string());
+                if !nrt.contains_key(&k) {
+                    nrt.insert(k, VarPlace::Local);
+                }
+
+                iter(body, nrt, current_fn_ptr);
+            },
             ASTStatement::If(_, body) | ASTStatement::While(_, body) => {
                 iter(body, nrt, current_fn_ptr);
             }

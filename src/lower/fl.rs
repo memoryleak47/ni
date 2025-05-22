@@ -35,8 +35,8 @@ impl Ctxt {
 
     pub fn build_value_w_dict(&mut self, payload: Node, type_: Node, dict: Node) -> Node {
         let t = self.push_table();
-        self.push_store_str(t, "type", type_);
         self.push_store_str(t, "payload", payload);
+        self.push_store_str(t, "type", type_);
         self.push_store_str(t, "dict", dict);
         t
     }

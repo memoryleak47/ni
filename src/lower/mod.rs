@@ -62,21 +62,25 @@ fn lower_expr(expr: &ASTExpr, ctxt: &mut Ctxt) -> Node {
     }
 }
 
+// lower a function call, where you know that f is of type function.
+// arg is empty thus far.
+fn lower_fn_type_call(f: Node, args: &[Node], arg: Node, ctxt: &mut Ctxt) {
+    ctxt.push_store_str(arg, "scope_global", ctxt.fl().global_node);
+    ctxt.push_store_str(arg, "singletons", ctxt.fl().singletons_node);
+
+    for (i, a) in args.iter().enumerate() {
+        let i = ctxt.push_int(i as _);
+        ctxt.push_store(arg, i, *a);
+    }
+
+    let f_payload = ctxt.push_index_str(f, "payload");
+    ctxt.push_statement(Statement::FnCall(f_payload, arg));
+}
+
 fn lower_fn_call(f: &ASTExpr, args: &[ASTExpr], ctxt: &mut Ctxt) -> Node {
     let f = lower_expr(&f, ctxt);
+    let mut args: Vec<_> = args.iter().map(|x| lower_expr(x, ctxt)).collect();
     let arg = ctxt.push_table();
-
-    // setup child-call arg table:
-    {
-        ctxt.push_store_str(arg, "scope_global", ctxt.fl().global_node);
-        ctxt.push_store_str(arg, "singletons", ctxt.fl().singletons_node);
-
-        for (i, a) in args.iter().enumerate() {
-            let i = ctxt.push_int(i as _);
-            let v = lower_expr(a, ctxt);
-            ctxt.push_store(arg, i, v);
-        }
-    }
 
     let is_function_ty = ctxt.alloc_blk();
     let is_no_function_ty = ctxt.alloc_blk();
@@ -92,8 +96,7 @@ fn lower_fn_call(f: &ASTExpr, args: &[ASTExpr], ctxt: &mut Ctxt) -> Node {
     let cond = ctxt.branch_eq(a, b, is_function_ty, is_no_function_ty);
 
     ctxt.focus_blk(is_function_ty);
-        let f_payload = ctxt.push_index_str(f, "payload");
-        ctxt.push_statement(Statement::FnCall(f_payload, arg));
+        lower_fn_type_call(f, &args[..], arg, ctxt);
         ctxt.push_goto(post);
 
     // if f["type"] == singletons["type"]: goto is_class | err
@@ -110,8 +113,9 @@ fn lower_fn_call(f: &ASTExpr, args: &[ASTExpr], ctxt: &mut Ctxt) -> Node {
         ctxt.branch_undef(constr, is_class_finish, is_class_with_ctor);
 
     ctxt.focus_blk(is_class_with_ctor);
-        let constr = ctxt.push_index_str(constr, "payload");
-        ctxt.push_statement(Statement::FnCall(constr, arg));
+        args.insert(0, t);
+        // we technically didn't check whether "constr" is even a function.
+        lower_fn_type_call(constr, &args[..], arg, ctxt);
         ctxt.push_goto(is_class_finish);
 
     ctxt.focus_blk(is_class_finish);
@@ -192,18 +196,20 @@ fn lower_ast(ast: &[ASTStatement], ctxt: &mut Ctxt) {
             }
             ASTStatement::Scope(..) => {} // scope is already handled in nameres
             ASTStatement::Class(name, _args, body) => {
-                let mut dict = ctxt.push_table();
+                let dict = ctxt.push_table();
+                let old_namespace = ctxt.fl_mut().namespace_node;
                 // this temporarily overwrites the namespace node, so that local variables actually
                 // write to the class instead.
-                std::mem::swap(&mut ctxt.fl_mut().namespace_node, &mut dict);
+                ctxt.fl_mut().namespace_node = dict;
 
                 lower_ast(body, ctxt);
                 let u = ctxt.push_undef();
                 let type_ = ctxt.get_singleton("type");
                 let val = ctxt.build_value_w_dict(u, type_, dict);
-                lower_assign(name, val, ctxt);
 
-                std::mem::swap(&mut ctxt.fl_mut().namespace_node, &mut dict);
+                ctxt.fl_mut().namespace_node = old_namespace;
+
+                lower_assign(name, val, ctxt);
             }
             x => todo!("{:?}", x),
         }
@@ -235,7 +241,7 @@ fn lower_def(name: &str, args: &[String], body: &[ASTStatement], stmt: &ASTState
     });
 
     let function = ctxt.push_compute(Expr::Function(i));
-    let function_t = ctxt.push_index_str(ctxt.fl().singletons_node, "function");
+    let function_t = ctxt.get_singleton("function");
     let val = ctxt.build_value(function, function_t);
 
     lower_assign(name, val, ctxt);

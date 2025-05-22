@@ -41,18 +41,18 @@ fn add_singletons(ctxt: &mut Ctxt) {
     let singleton = ctxt.push_compute(Expr::NewTable);
     ctxt.fl_mut().singletons_node = singleton;
 
-    let type_ = ctxt.push_compute(Expr::NewTable);
-    let type_str = ctxt.push_str("type");
-    ctxt.push_store(singleton, type_str, type_);
+    let type_ = ctxt.push_table();
+    ctxt.push_store_str(singleton, "type", type_);
 
     // type is of type `type`.
-    ctxt.push_store(type_, type_str, type_);
+    ctxt.push_store_str(type_, "type", type_);
+    let dict = ctxt.push_table();
+    ctxt.push_store_str(type_, "dict", dict);
 
     let mut add_primitive_type = |name| {
-        let tab = ctxt.push_compute(Expr::NewTable);
-        let name_str = ctxt.push_str(name);
-        ctxt.push_store(tab, type_str, type_);
-        ctxt.push_store(singleton, name_str, tab);
+        let tab = ctxt.push_table();
+        ctxt.push_store_str(tab, "type", type_);
+        ctxt.push_store_str(singleton, name, tab);
     };
 
     add_primitive_type("function");
