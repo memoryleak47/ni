@@ -19,10 +19,13 @@ fn add_print_builtin(ctxt: &mut Ctxt) {
     ctxt.push_store_str(nn, "print", print);
 }
 
+// TODO remove this.
 fn add_construct_builtin(ctxt: &mut Ctxt) {
     let f = new_fn(ctxt, |ctxt| {
         let arg = ctxt.push_arg();
         let t = ctxt.push_table();
+        let d = ctxt.push_table();
+        ctxt.push_store_str(t, "dict", d);
         ctxt.push_store_str(arg, "ret", t);
         ctxt.push_return();
     });

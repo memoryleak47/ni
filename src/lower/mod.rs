@@ -33,7 +33,8 @@ fn lower_expr(expr: &ASTExpr, ctxt: &mut Ctxt) -> Node {
         ASTExpr::FnCall(f, args) => lower_fn_call(&*f, args, ctxt),
         ASTExpr::Attribute(e, a) => {
             let e = lower_expr(e, ctxt);
-            ctxt.push_index_str(e, a)
+            let d = ctxt.push_index_str(e, "dict");
+            ctxt.push_index_str(d, a)
         },
         _ => todo!("{:?}", expr),
     }
@@ -111,8 +112,9 @@ fn lower_ast(ast: &[ASTStatement], ctxt: &mut Ctxt) {
             }
             ASTStatement::Assign(ASTExpr::Attribute(e, v), rhs) => {
                 let e = lower_expr(e, ctxt);
+                let d = ctxt.push_index_str(e, "dict");
                 let val = lower_expr(rhs, ctxt);
-                ctxt.push_store_str(e, v, val);
+                ctxt.push_store_str(d, v, val);
             },
             ASTStatement::If(cond, then) => {
                 let cond = lower_expr(cond, ctxt);
