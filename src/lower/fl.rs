@@ -40,10 +40,14 @@ impl Ctxt {
         self.push_return();
     }
 
+    pub fn branch_eq(&mut self, l: Node, r: Node, yes: BlockId, no: BlockId) {
+        let cmp = self.push_eq(l, r);
+        self.push_if(cmp, yes, no);
+    }
+
     pub fn branch_undef(&mut self, v: Node, undef: BlockId, not_undef: BlockId) {
         let u = self.push_undef();
-        let cmp = self.push_eq(v, u);
-        self.push_if(cmp, undef, not_undef);
+        self.branch_eq(v, u, undef, not_undef);
     }
 
     pub fn get_singleton(&mut self, v: &str) -> Node {

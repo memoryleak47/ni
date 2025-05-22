@@ -19,20 +19,6 @@ fn add_print_builtin(ctxt: &mut Ctxt) {
     ctxt.push_store_str(nn, "print", print);
 }
 
-// TODO remove this.
-fn add_construct_builtin(ctxt: &mut Ctxt) {
-    let f = new_fn(ctxt, |ctxt| {
-        let arg = ctxt.push_arg();
-        let t = ctxt.push_table();
-        let d = ctxt.push_table();
-        ctxt.push_store_str(t, "dict", d);
-        ctxt.push_store_str(arg, "ret", t);
-        ctxt.push_return();
-    });
-
-    ctxt.builtin_fns.insert("construct".to_string(), f);
-}
-
 fn add_singletons(ctxt: &mut Ctxt) {
     let singleton = ctxt.push_compute(Expr::NewTable);
     ctxt.fl_mut().singletons_node = singleton;
@@ -62,5 +48,4 @@ fn add_singletons(ctxt: &mut Ctxt) {
 pub fn add_builtins_and_singletons(ctxt: &mut Ctxt) {
     add_singletons(ctxt);
     add_print_builtin(ctxt);
-    add_construct_builtin(ctxt);
 }

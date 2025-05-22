@@ -66,57 +66,52 @@ fn lower_fn_call(f: &ASTExpr, args: &[ASTExpr], ctxt: &mut Ctxt) -> Node {
     let f = lower_expr(&f, ctxt);
     let arg = ctxt.push_table();
 
+    // setup child-call arg table:
+    {
+        ctxt.push_store_str(arg, "scope_global", ctxt.fl().global_node);
+        ctxt.push_store_str(arg, "singletons", ctxt.fl().singletons_node);
+
+        for (i, a) in args.iter().enumerate() {
+            let i = ctxt.push_int(i as _);
+            let v = lower_expr(a, ctxt);
+            ctxt.push_store(arg, i, v);
+        }
+    }
+
     let is_function_ty = ctxt.alloc_blk();
     let is_no_function_ty = ctxt.alloc_blk();
     let is_class = ctxt.alloc_blk();
     let err = ctxt.alloc_blk();
-    let go = ctxt.alloc_blk();
-
-    // where we store the function to call (under index "0").
-    let tmp = ctxt.push_table();
+    let post = ctxt.alloc_blk();
 
     // if f["type"] == singletons["function"]: goto is_function_ty | is_no_function_ty
     let a = ctxt.push_index_str(f, "type");
-    let b = ctxt.push_index_str(ctxt.fl().singletons_node, "function");
-    let cond = ctxt.push_eq(a, b);
-    ctxt.push_if(cond, is_function_ty, is_no_function_ty);
+    let b = ctxt.get_singleton("function");
+    let cond = ctxt.branch_eq(a, b, is_function_ty, is_no_function_ty);
 
     ctxt.focus_blk(is_function_ty);
-    let f_payload = ctxt.push_index_str(f, "payload");
-    ctxt.push_store_str(tmp, "0", f_payload);
-    ctxt.push_goto(go);
+        let f_payload = ctxt.push_index_str(f, "payload");
+        ctxt.push_statement(Statement::FnCall(f_payload, arg));
+        ctxt.push_goto(post);
 
     // if f["type"] == singletons["type"]: goto is_class | err
     ctxt.focus_blk(is_no_function_ty);
-    let a = ctxt.push_index_str(f, "type");
-    let b = ctxt.push_index_str(ctxt.fl().singletons_node, "type");
-    let cond = ctxt.push_eq(a, b);
-    ctxt.push_if(cond, is_class, err);
+        let a = ctxt.push_index_str(f, "type");
+        let b = ctxt.get_singleton("type");
+        ctxt.branch_eq(a, b, is_class, err);
 
     ctxt.focus_blk(is_class);
-    let payload = ctxt.push_builtin("construct");
-    ctxt.push_store_str(tmp, "0", payload);
-    ctxt.push_goto(go);
+        // TODO call constructor:
+        let u = ctxt.push_undef();
+        let t = ctxt.build_value(u, f);
+        ctxt.push_store_str(arg, "ret", t);
+        ctxt.push_goto(post);
 
     ctxt.focus_blk(err);
-    ctxt.push_statement(Statement::Throw("can't call this thing!".to_string()));
+        ctxt.push_statement(Statement::Throw("can't call this thing!".to_string()));
 
-    ctxt.focus_blk(go);
-
-    // pass "scope_global" along.
-    ctxt.push_store_str(arg, "scope_global", ctxt.fl().global_node);
-
-    // pass "singletons" along.
-    ctxt.push_store_str(arg, "singletons", ctxt.fl().singletons_node);
-
-    for (i, a) in args.iter().enumerate() {
-        let i = ctxt.push_int(i as _);
-        let v = lower_expr(a, ctxt);
-        ctxt.push_store(arg, i, v);
-    }
-    let f_payload = ctxt.push_index_str(tmp, "0");
-    ctxt.push_statement(Statement::FnCall(f_payload, arg));
-    ctxt.push_index_str(arg, "ret")
+    ctxt.focus_blk(post);
+        ctxt.push_index_str(arg, "ret")
 }
 
 fn lower_assign(v: &str, val: Node, ctxt: &mut Ctxt) {
