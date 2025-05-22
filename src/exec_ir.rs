@@ -122,7 +122,7 @@ fn exec_expr(expr: &Expr, ctxt: &mut Ctxt) -> Value {
             let idx = ctxt.fcx().nodes[idx].clone();
 
             let Value::TablePtr(t) = t else {
-                panic!("indexing into non-table {:?}!", t)
+                panic!("indexing into non-table {:?}, with index {:?}!", t, idx)
             };
             table_get(t, idx, ctxt)
         }

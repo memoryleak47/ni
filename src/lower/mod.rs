@@ -26,9 +26,37 @@ fn lower_expr(expr: &ASTExpr, ctxt: &mut Ctxt) -> Node {
         }
         ASTExpr::FnCall(f, args) => lower_fn_call(&*f, args, ctxt),
         ASTExpr::Attribute(e, a) => {
+            let found = ctxt.alloc_blk();
+            let not_found = ctxt.alloc_blk();
+            let inclass_found = ctxt.alloc_blk();
+            let inclass_not_found = ctxt.alloc_blk();
+            let post = ctxt.alloc_blk();
+
+            let tmp = ctxt.push_table();
             let e = lower_expr(e, ctxt);
             let d = ctxt.push_index_str(e, "dict");
-            ctxt.push_index_str(d, a)
+            let v = ctxt.push_index_str(d, a);
+            ctxt.branch_undef(v, not_found, found);
+
+            ctxt.focus_blk(found);
+                ctxt.push_store_str(tmp, "0", v);
+                ctxt.push_goto(post);
+
+            ctxt.focus_blk(not_found);
+                let class_t = ctxt.push_index_str(e, "type");
+                let class_d = ctxt.push_index_str(class_t, "dict");
+                let class_v = ctxt.push_index_str(class_d, a);
+                ctxt.branch_undef(class_v, inclass_not_found, inclass_found);
+
+            ctxt.focus_blk(inclass_found);
+                ctxt.push_store_str(tmp, "0", class_v);
+                ctxt.push_goto(post);
+
+            ctxt.focus_blk(inclass_not_found);
+                ctxt.push_statement(Statement::Throw("missing attribute!".to_string()));
+
+            ctxt.focus_blk(post);
+                ctxt.push_index_str(tmp, "0")
         },
         _ => todo!("{:?}", expr),
     }
@@ -161,9 +189,9 @@ fn lower_ast(ast: &[ASTStatement], ctxt: &mut Ctxt) {
                 // TODO: most stuff is missing here.
 
                 lower_ast(body, ctxt);
-                let val = ctxt.push_table();
-                let type_ = ctxt.push_index_str(ctxt.fl().singletons_node, "type");
-                ctxt.push_store_str(val, "type", type_);
+                let u = ctxt.push_undef();
+                let type_ = ctxt.get_singleton("type");
+                let val = ctxt.build_value(u, type_);
                 lower_assign(name, val, ctxt);
             }
             x => todo!("{:?}", x),

@@ -39,4 +39,14 @@ impl Ctxt {
         self.push_store_str(self.fl().arg_node, "ret", none);
         self.push_return();
     }
+
+    pub fn branch_undef(&mut self, v: Node, undef: BlockId, not_undef: BlockId) {
+        let u = self.push_undef();
+        let cmp = self.push_eq(v, u);
+        self.push_if(cmp, undef, not_undef);
+    }
+
+    pub fn get_singleton(&mut self, v: &str) -> Node {
+        self.push_index_str(self.fl().singletons_node, v)
+    }
 }
