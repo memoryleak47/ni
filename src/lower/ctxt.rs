@@ -6,6 +6,7 @@ pub(in crate::lower) struct FnLowerCtxt {
     pub namespace_node: Node,
     pub global_node: Node,
     pub singletons_node: Node,
+    pub arg_node: Node,
 
     // the original def stmt we are lowering.
     // set to 0 for the main function.

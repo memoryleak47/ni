@@ -16,9 +16,8 @@ fn build_value(payload: Node, type_: Node, ctxt: &mut Ctxt) -> Node {
 }
 
 fn push_return_none(ctxt: &mut Ctxt) {
-    let arg = ctxt.push_arg();
     let none = ctxt.push_none();
-    ctxt.push_store_str(arg, "ret", none);
+    ctxt.push_store_str(ctxt.fl().arg_node, "ret", none);
     ctxt.push_return();
 }
 
@@ -159,8 +158,7 @@ fn lower_ast(ast: &[ASTStatement], ctxt: &mut Ctxt) {
             ASTStatement::Return(opt) => {
                 let expr = opt.as_ref().unwrap_or(&ASTExpr::None);
                 let val = lower_expr(expr, ctxt);
-                let argtable = ctxt.push_arg();
-                ctxt.push_store_str(argtable, "ret", val);
+                ctxt.push_store_str(ctxt.fl().arg_node, "ret", val);
                 ctxt.push_return();
             }
             ASTStatement::Pass => {} // do nothing
@@ -190,6 +188,7 @@ fn lower_def(name: &str, args: &[String], body: &[ASTStatement], stmt: &ASTState
         let argtable = ctxt.push_arg();
         ctxt.f_mut().lowering = Some(FnLowerCtxt {
             namespace_node: ctxt.push_table(),
+            arg_node: argtable,
             global_node: ctxt.push_index_str(argtable, "scope_global"),
             singletons_node: ctxt.push_index_str(argtable, "singletons"),
             ast_ptr: stmt,
@@ -232,6 +231,7 @@ pub fn lower(ast: &AST) -> IR {
             // for the main function, the global scope is actually it's local scope.
             global_node: t,
             namespace_node: t,
+            arg_node: ctxt.push_arg(),
             ast_ptr: 0 as _,
             loop_stack: Vec::new(),
         });
