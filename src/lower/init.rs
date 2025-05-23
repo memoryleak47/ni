@@ -50,21 +50,24 @@ fn add_singletons(ctxt: &mut Ctxt) {
     let dict = ctxt.push_table();
     ctxt.push_store_str(type_, "dict", dict);
 
-    let mut add_primitive_type = |name| {
+    for name in PRIM_TYPES {
         let tab = ctxt.push_table();
         let dict = ctxt.push_table();
         ctxt.push_store_str(tab, "type", type_);
         ctxt.push_store_str(tab, "dict", dict);
         ctxt.push_store_str(singleton, name, tab);
-    };
-
-    add_primitive_type("function");
-    add_primitive_type("str");
-    add_primitive_type("int");
-    add_primitive_type("float");
-    add_primitive_type("bool");
-    add_primitive_type("NoneType");
+    }
 }
+
+static PRIM_TYPES: &[&'static str] = &[
+    "function",
+    "method",
+    "str",
+    "int",
+    "float",
+    "bool",
+    "NoneType",
+];
 
 static OPS: &[BinOpKind] =
     &[BinOpKind::Plus, BinOpKind::Minus, BinOpKind::Mul, BinOpKind::Div, BinOpKind::Mod, BinOpKind::Lt, BinOpKind::Gt, BinOpKind::Ge, BinOpKind::Le, BinOpKind::IsEqual, BinOpKind::IsNotEqual, BinOpKind::Pow];
@@ -107,7 +110,7 @@ pub fn add_builtins_and_singletons(ctxt: &mut Ctxt) {
     add_type_builtin(ctxt);
 
     add_ops(ctxt);
-    for ty in ["type", "function", "str", "int", "float", "bool", "NoneType"] {
+    for ty in PRIM_TYPES.iter().copied().chain(std::iter::once("type")) {
         let ty = ctxt.get_singleton(ty);
         add_ops_to_type(ty, ctxt);
     }
