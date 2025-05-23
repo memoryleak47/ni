@@ -113,8 +113,12 @@ fn lower_attribute_using_class(e: Node, a: &str, tmp: Node, post: BlockId, ctxt:
         let f = ctxt.get_singleton("function");
         ctxt.branch_eq(v_t, f, found_is_fn, found_is_no_fn);
 
-    ctxt.focus_blk(found_is_fn); // return method object now!
-        ctxt.push_statement(Statement::Throw("TODO create method object!".to_string()));
+    ctxt.focus_blk(found_is_fn); // return method object here:
+        let method_ty = ctxt.get_singleton("method");
+        let method_obj = ctxt.build_value(v, method_ty);
+        ctxt.push_store_str(method_obj, "self", e);
+        ctxt.push_store_str(tmp, "0", method_obj);
+        ctxt.push_goto(post);
 
     ctxt.focus_blk(found_is_no_fn);
         ctxt.push_store_str(tmp, "0", v);
