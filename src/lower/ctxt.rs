@@ -114,7 +114,7 @@ impl Ctxt {
     }
 
     pub fn push_goto(&mut self, b: BlockId) {
-        let true_ = lower_expr(&ASTExpr::Bool(true), self);
+        let true_ = self.push_bool(true);
         self.push_statement(Statement::If(true_, b, b));
     }
 
