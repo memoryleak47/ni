@@ -15,8 +15,8 @@ pub fn lower_expr(expr: &ASTExpr, ctxt: &mut Ctxt) -> Node {
     }
 }
 
-fn lower_binop(op: BinOpKind, lhs: &ASTExpr, rhs: &ASTExpr, ctxt: &mut Ctxt) -> Node {
-    let attr = match op {
+pub fn op_attrs(op: BinOpKind) -> &'static str {
+    match op {
         BinOpKind::Plus => "__add__",
         BinOpKind::Minus => "__sub__",
         BinOpKind::Mul => "__mul__",
@@ -29,7 +29,11 @@ fn lower_binop(op: BinOpKind, lhs: &ASTExpr, rhs: &ASTExpr, ctxt: &mut Ctxt) -> 
         BinOpKind::IsEqual => "__eq__",
         BinOpKind::IsNotEqual => "__ne__",
         BinOpKind::Pow => "__pow__",
-    };
+    }
+}
+
+fn lower_binop(op: BinOpKind, lhs: &ASTExpr, rhs: &ASTExpr, ctxt: &mut Ctxt) -> Node {
+    let attr = op_attrs(op);
     let lhs = lower_expr(lhs, ctxt);
     let rhs = lower_expr(rhs, ctxt);
 

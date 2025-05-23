@@ -64,33 +64,51 @@ fn add_singletons(ctxt: &mut Ctxt) {
     add_primitive_type("float");
     add_primitive_type("bool");
     add_primitive_type("NoneType");
+}
 
-    // TODO: move somewhere else: This just implements integer addition.
-    let fid = new_fn(ctxt, |ctxt| {
-        let arg = ctxt.push_arg();
-        let singleton = ctxt.push_index_str(arg, "singletons");
-        let int_ty = ctxt.push_index_str(singleton, "int");
-        let a = ctxt.push_index_int(arg, 0);
-        let a = ctxt.push_index_str(a, "payload");
+static OPS: &[BinOpKind] =
+    &[BinOpKind::Plus, BinOpKind::Minus, BinOpKind::Mul, BinOpKind::Div, BinOpKind::Mod, BinOpKind::Lt, BinOpKind::Gt, BinOpKind::Ge, BinOpKind::Le, BinOpKind::IsEqual, BinOpKind::IsNotEqual, BinOpKind::Pow];
 
-        let b = ctxt.push_index_int(arg, 1);
-        let b = ctxt.push_index_str(b, "payload");
+fn add_ops(ctxt: &mut Ctxt) {
+    for op in OPS {
+        let fid = new_fn(ctxt, |ctxt| {
+            let arg = ctxt.push_arg();
+            let a = ctxt.push_index_int(arg, 0);
+            let a_ty = ctxt.push_index_str(a, "type");
+            let a = ctxt.push_index_str(a, "payload");
 
-        let v = ctxt.push_compute(Expr::BinOp(BinOpKind::Plus, a, b));
-        let v = ctxt.build_value(v, int_ty);
-        ctxt.push_store_str(arg, "ret", v);
-        ctxt.push_return();
-    });
-    let int_ty = ctxt.get_singleton("int");
-    let fn_ty = ctxt.get_singleton("function");
-    let int_dict = ctxt.push_index_str(int_ty, "dict");
-    let f = ctxt.push_compute(Expr::Function(fid));
-    let f_val = ctxt.build_value(f, fn_ty);
-    ctxt.push_store_str(int_dict, "__add__", f_val);
+            let b = ctxt.push_index_int(arg, 1);
+            let b = ctxt.push_index_str(b, "payload");
+
+            let v = ctxt.push_compute(Expr::BinOp(*op, a, b));
+            let v = ctxt.build_value(v, a_ty);
+            ctxt.push_store_str(arg, "ret", v);
+            ctxt.push_return();
+        });
+
+        ctxt.builtin_fns.insert(op_attrs(*op).to_string(), fid);
+    }
+}
+
+fn add_ops_to_type(ty: Node, ctxt: &mut Ctxt) {
+    for op in OPS {
+        let fid = ctxt.builtin_fns[op_attrs(*op)];
+        let fn_ty = ctxt.get_singleton("function");
+        let int_dict = ctxt.push_index_str(ty, "dict");
+        let f = ctxt.push_compute(Expr::Function(fid));
+        let f_val = ctxt.build_value(f, fn_ty);
+        ctxt.push_store_str(int_dict, op_attrs(*op), f_val);
+    }
 }
 
 pub fn add_builtins_and_singletons(ctxt: &mut Ctxt) {
     add_singletons(ctxt);
     add_print_builtin(ctxt);
     add_type_builtin(ctxt);
+
+    add_ops(ctxt);
+    for ty in ["type", "function", "str", "int", "float", "bool", "NoneType"] {
+        let ty = ctxt.get_singleton(ty);
+        add_ops_to_type(ty, ctxt);
+    }
 }

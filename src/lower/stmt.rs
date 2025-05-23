@@ -5,6 +5,13 @@ pub fn lower_assign(v: &str, val: Node, ctxt: &mut Ctxt) {
     ctxt.push_store_str(nn, v, val);
 }
 
+// lowers an expression and converts it to a bool.
+fn lower_cond(e: &ASTExpr, ctxt: &mut Ctxt) -> Node {
+    let e = lower_expr(e, ctxt);
+    // so far we assume it's a bool!
+    ctxt.push_index_str(e, "payload")
+}
+
 pub fn lower_ast(ast: &[ASTStatement], ctxt: &mut Ctxt) {
     for stmt in ast {
         match stmt {
@@ -20,7 +27,7 @@ pub fn lower_ast(ast: &[ASTStatement], ctxt: &mut Ctxt) {
                 ctxt.push_store_str(d, v, val);
             },
             ASTStatement::If(cond, then) => {
-                let cond = lower_expr(cond, ctxt);
+                let cond = lower_cond(cond, ctxt);
                 let b = ctxt.alloc_blk();
                 let post = ctxt.alloc_blk();
                 ctxt.push_if(cond, b, post);
@@ -40,7 +47,7 @@ pub fn lower_ast(ast: &[ASTStatement], ctxt: &mut Ctxt) {
 
                 ctxt.push_goto(pre);
                 ctxt.focus_blk(pre);
-                let cond = lower_expr(cond, ctxt);
+                let cond = lower_cond(cond, ctxt);
 
                 ctxt.push_statement(Statement::If(cond, b, post));
 
