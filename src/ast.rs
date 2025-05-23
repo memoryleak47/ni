@@ -2,7 +2,7 @@ use crate::*;
 
 pub type AST = Vec<ASTStatement>;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ASTStatement {
     Assign(ASTExpr, ASTExpr),
     Def(
@@ -31,7 +31,7 @@ pub enum ScopeKind {
     NonLocal,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ASTExpr {
     Var(String),
     Str(String),

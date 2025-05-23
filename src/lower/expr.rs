@@ -4,11 +4,7 @@ pub fn lower_expr(expr: &ASTExpr, ctxt: &mut Ctxt) -> Node {
     if let Some(x) = lower_primitive(expr, ctxt) { return x; }
 
     match expr {
-        ASTExpr::BinOp(op, lhs, rhs) => {
-            let lhs = lower_expr(lhs, ctxt);
-            let rhs = lower_expr(rhs, ctxt);
-            ctxt.push_compute(Expr::BinOp(*op, lhs, rhs))
-        }
+        ASTExpr::BinOp(op, lhs, rhs) => lower_binop(*op, lhs, rhs, ctxt),
         ASTExpr::Var(v) => {
             let nn = find_namespace(v, ctxt);
             ctxt.push_index_str(nn, v)
@@ -17,6 +13,33 @@ pub fn lower_expr(expr: &ASTExpr, ctxt: &mut Ctxt) -> Node {
         ASTExpr::Attribute(e, a) => lower_attribute(e, a, ctxt),
         _ => todo!("{:?}", expr),
     }
+}
+
+fn lower_binop(op: BinOpKind, lhs: &ASTExpr, rhs: &ASTExpr, ctxt: &mut Ctxt) -> Node {
+    let attr = match op {
+        BinOpKind::Plus => "__add__",
+        BinOpKind::Minus => "__sub__",
+        BinOpKind::Mul => "__mul__",
+        BinOpKind::Div => "__truediv__",
+        BinOpKind::Mod => "__mod__",
+        BinOpKind::Lt => "__lt__",
+        BinOpKind::Gt => "__gt__",
+        BinOpKind::Ge => "__ge__",
+        BinOpKind::Le => "__le__",
+        BinOpKind::IsEqual => "__eq__",
+        BinOpKind::IsNotEqual => "__ne__",
+        BinOpKind::Pow => "__pow__",
+    };
+    let lhs = lower_expr(lhs, ctxt);
+    let rhs = lower_expr(rhs, ctxt);
+
+    // python doesn't check `lhs.attr`, but rather `type(lhs).attr` directly!
+    let lhs_ty = ctxt.push_index_str(lhs, "type");
+    let lhs_dict = ctxt.push_index_str(lhs_ty, "dict");
+    let op = ctxt.push_index_str(lhs_dict, attr);
+    let arg = ctxt.push_table();
+    lower_fn_type_call(op, &[lhs, rhs], arg, ctxt);
+    ctxt.push_index_str(arg, "ret")
 }
 
 fn lower_primitive(e: &ASTExpr, ctxt: &mut Ctxt) -> Option<Node> {

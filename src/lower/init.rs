@@ -51,7 +51,9 @@ fn add_singletons(ctxt: &mut Ctxt) {
 
     let mut add_primitive_type = |name| {
         let tab = ctxt.push_table();
+        let dict = ctxt.push_table();
         ctxt.push_store_str(tab, "type", type_);
+        ctxt.push_store_str(tab, "dict", dict);
         ctxt.push_store_str(singleton, name, tab);
     };
 
