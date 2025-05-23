@@ -127,8 +127,7 @@ fn lower_fn_type_call(f: Node, args: &[Node], arg: Node, ctxt: &mut Ctxt) {
     ctxt.push_store_str(arg, "singletons", ctxt.fl().singletons_node);
 
     for (i, a) in args.iter().enumerate() {
-        let i = ctxt.push_int(i as _);
-        ctxt.push_store(arg, i, *a);
+        ctxt.push_store_int(arg, i, *a);
     }
 
     let f_payload = ctxt.push_index_str(f, "payload");

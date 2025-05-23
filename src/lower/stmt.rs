@@ -101,8 +101,7 @@ fn lower_def(name: &str, args: &[String], body: &[ASTStatement], stmt: &ASTState
 
         // load args
         for (i, a) in args.iter().enumerate() {
-            let i = ctxt.push_int(i as _);
-            let val = ctxt.push_index(argtable, i);
+            let val = ctxt.push_index_int(argtable, i);
             let nn = ctxt.fl().namespace_node;
             ctxt.push_store_str(nn, a, val);
         }

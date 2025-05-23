@@ -100,6 +100,16 @@ impl Ctxt {
         self.push_compute(Expr::Index(t, k))
     }
 
+    pub fn push_store_int(&mut self, t: Node, k: usize, v: Node) {
+        let k = self.push_int(k as i64);
+        self.push_statement(Statement::Store(t, k, v));
+    }
+
+    pub fn push_index_int(&mut self, t: Node, k: usize) -> Node {
+        let k = self.push_int(k as i64);
+        self.push_compute(Expr::Index(t, k))
+    }
+
     pub fn push_statement(&mut self, stmt: Statement) {
         let current_fn = self.f().current_fn;
         let current_blk = self.f().current_blk;
