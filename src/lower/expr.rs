@@ -1,11 +1,9 @@
 use crate::lower::*;
 
 pub fn lower_expr(expr: &ASTExpr, ctxt: &mut Ctxt) -> Node {
+    if let Some(x) = lower_primitive(expr, ctxt) { return x; }
+
     match expr {
-        ASTExpr::None => ctxt.push_none(),
-        ASTExpr::Int(i) => ctxt.push_int(*i),
-        ASTExpr::Bool(b) => ctxt.push_bool(*b),
-        ASTExpr::Str(s) => ctxt.push_str(s),
         ASTExpr::BinOp(op, lhs, rhs) => {
             let lhs = lower_expr(lhs, ctxt);
             let rhs = lower_expr(rhs, ctxt);
@@ -19,6 +17,32 @@ pub fn lower_expr(expr: &ASTExpr, ctxt: &mut Ctxt) -> Node {
         ASTExpr::Attribute(e, a) => lower_attribute(e, a, ctxt),
         _ => todo!("{:?}", expr),
     }
+}
+
+fn lower_primitive(e: &ASTExpr, ctxt: &mut Ctxt) -> Option<Node> {
+    Some(match e {
+        ASTExpr::None => {
+            let payload = ctxt.push_none();
+            let ty = ctxt.get_singleton("NoneType");
+            ctxt.build_value(payload, ty)
+        },
+        ASTExpr::Int(i) => {
+            let i = ctxt.push_int(*i);
+            let ty = ctxt.get_singleton("int");
+            ctxt.build_value(i, ty)
+        },
+        ASTExpr::Bool(b) => {
+            let b = ctxt.push_bool(*b);
+            let ty = ctxt.get_singleton("bool");
+            ctxt.build_value(b, ty)
+        },
+        ASTExpr::Str(s) => {
+            let s = ctxt.push_str(s);
+            let ty = ctxt.get_singleton("str");
+            ctxt.build_value(s, ty)
+        },
+        _ => return None,
+    })
 }
 
 fn lower_attribute(e: &ASTExpr, a: &str, ctxt: &mut Ctxt) -> Node {
