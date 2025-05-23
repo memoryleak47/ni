@@ -47,19 +47,19 @@ fn lower_attribute(e: &ASTExpr, a: &str, ctxt: &mut Ctxt) -> Node {
 // you evaluate `e.a` where you know that e does not contain a directly, so you check the class instead.
 // writes the output to `tmp["0"]`, and jumps to `post`.
 fn lower_attribute_using_class(e: Node, a: &str, tmp: Node, post: BlockId, ctxt: &mut Ctxt) {
-    let inclass_found = ctxt.alloc_blk();
-    let inclass_not_found = ctxt.alloc_blk();
+    let found = ctxt.alloc_blk();
+    let not_found = ctxt.alloc_blk();
 
-    let class_t = ctxt.push_index_str(e, "type");
-    let class_d = ctxt.push_index_str(class_t, "dict");
-    let class_v = ctxt.push_index_str(class_d, a);
-    ctxt.branch_undef(class_v, inclass_not_found, inclass_found);
+    let t = ctxt.push_index_str(e, "type");
+    let d = ctxt.push_index_str(t, "dict");
+    let v = ctxt.push_index_str(d, a);
+    ctxt.branch_undef(v, not_found, found);
 
-    ctxt.focus_blk(inclass_found);
-        ctxt.push_store_str(tmp, "0", class_v);
+    ctxt.focus_blk(found);
+        ctxt.push_store_str(tmp, "0", v);
         ctxt.push_goto(post);
 
-    ctxt.focus_blk(inclass_not_found);
+    ctxt.focus_blk(not_found);
         ctxt.push_statement(Statement::Throw("missing attribute!".to_string()));
 }
 
