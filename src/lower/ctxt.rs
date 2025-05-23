@@ -123,6 +123,11 @@ impl Ctxt {
             .push(stmt);
     }
 
+    pub fn push_print(&mut self, x: &str) {
+        let x = self.push_str(x);
+        self.push_statement(Statement::Print(x));
+    }
+
     pub fn push_goto(&mut self, b: BlockId) {
         let true_ = self.push_bool(true);
         self.push_statement(Statement::If(true_, b, b));

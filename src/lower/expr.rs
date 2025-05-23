@@ -115,7 +115,8 @@ fn lower_attribute_using_class(e: Node, a: &str, tmp: Node, post: BlockId, ctxt:
 
     ctxt.focus_blk(found_is_fn); // return method object here:
         let method_ty = ctxt.get_singleton("method");
-        let method_obj = ctxt.build_value(v, method_ty);
+        let v_pay = ctxt.push_index_str(v, "payload");
+        let method_obj = ctxt.build_value(v_pay, method_ty);
         ctxt.push_store_str(method_obj, "self", e);
         ctxt.push_store_str(tmp, "0", method_obj);
         ctxt.push_goto(post);
@@ -144,7 +145,7 @@ fn lower_fn_type_call(f: Node, args: &[Node], arg: Node, ctxt: &mut Ctxt) {
 
 fn lower_fn_call(f: &ASTExpr, args: &[ASTExpr], ctxt: &mut Ctxt) -> Node {
     let f = lower_expr(&f, ctxt);
-    let mut args: Vec<_> = args.iter().map(|x| lower_expr(x, ctxt)).collect();
+    let args: Vec<_> = args.iter().map(|x| lower_expr(x, ctxt)).collect();
     let arg = ctxt.push_table();
 
     let is_function_ty = ctxt.alloc_blk();
@@ -152,6 +153,8 @@ fn lower_fn_call(f: &ASTExpr, args: &[ASTExpr], ctxt: &mut Ctxt) -> Node {
     let is_class = ctxt.alloc_blk();
     let is_class_with_ctor = ctxt.alloc_blk();
     let is_class_finish = ctxt.alloc_blk();
+    let check_is_method = ctxt.alloc_blk();
+    let is_method = ctxt.alloc_blk();
     let err = ctxt.alloc_blk();
     let post = ctxt.alloc_blk();
 
@@ -168,7 +171,8 @@ fn lower_fn_call(f: &ASTExpr, args: &[ASTExpr], ctxt: &mut Ctxt) -> Node {
     ctxt.focus_blk(is_no_function_ty);
         let a = ctxt.push_index_str(f, "type");
         let b = ctxt.get_singleton("type");
-        ctxt.branch_eq(a, b, is_class, err);
+
+        ctxt.branch_eq(a, b, is_class, check_is_method);
 
     ctxt.focus_blk(is_class);
         let u = ctxt.push_undef();
@@ -178,13 +182,24 @@ fn lower_fn_call(f: &ASTExpr, args: &[ASTExpr], ctxt: &mut Ctxt) -> Node {
         ctxt.branch_undef(constr, is_class_finish, is_class_with_ctor);
 
     ctxt.focus_blk(is_class_with_ctor);
-        args.insert(0, t);
+        let local_args: Vec<Node> = std::iter::once(t).chain(args.iter().copied()).collect();
         // we technically didn't check whether "constr" is even a function.
-        lower_fn_type_call(constr, &args[..], arg, ctxt);
+        lower_fn_type_call(constr, &local_args[..], arg, ctxt);
         ctxt.push_goto(is_class_finish);
 
     ctxt.focus_blk(is_class_finish);
         ctxt.push_store_str(arg, "ret", t);
+        ctxt.push_goto(post);
+
+    ctxt.focus_blk(check_is_method);
+        let a = ctxt.push_index_str(f, "type");
+        let b = ctxt.get_singleton("method");
+        ctxt.branch_eq(a, b, is_method, err);
+
+    ctxt.focus_blk(is_method);
+        let slf = ctxt.push_index_str(f, "self");
+        let local_args: Vec<Node> = std::iter::once(slf).chain(args.iter().copied()).collect();
+        lower_fn_type_call(f, &local_args[..], arg, ctxt);
         ctxt.push_goto(post);
 
     ctxt.focus_blk(err);
