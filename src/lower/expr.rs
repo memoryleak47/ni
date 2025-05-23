@@ -48,6 +48,8 @@ fn lower_attribute(e: &ASTExpr, a: &str, ctxt: &mut Ctxt) -> Node {
 // writes the output to `tmp["0"]`, and jumps to `post`.
 fn lower_attribute_using_class(e: Node, a: &str, tmp: Node, post: BlockId, ctxt: &mut Ctxt) {
     let found = ctxt.alloc_blk();
+    let found_is_fn = ctxt.alloc_blk();
+    let found_is_no_fn = ctxt.alloc_blk();
     let not_found = ctxt.alloc_blk();
 
     let t = ctxt.push_index_str(e, "type");
@@ -56,6 +58,14 @@ fn lower_attribute_using_class(e: Node, a: &str, tmp: Node, post: BlockId, ctxt:
     ctxt.branch_undef(v, not_found, found);
 
     ctxt.focus_blk(found);
+        let v_t = ctxt.push_index_str(v, "type");
+        let f = ctxt.get_singleton("function");
+        ctxt.branch_eq(v_t, f, found_is_fn, found_is_no_fn);
+
+    ctxt.focus_blk(found_is_fn); // return method object now!
+        ctxt.push_statement(Statement::Throw("TODO create method object!".to_string()));
+
+    ctxt.focus_blk(found_is_no_fn);
         ctxt.push_store_str(tmp, "0", v);
         ctxt.push_goto(post);
 

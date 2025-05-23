@@ -57,6 +57,11 @@ impl Ctxt {
         self.branch_eq(v, u, undef, not_undef);
     }
 
+    pub fn branch_is_fn(&mut self, v: Node, undef: BlockId, not_undef: BlockId) {
+        let u = self.push_undef();
+        self.branch_eq(v, u, undef, not_undef);
+    }
+
     pub fn get_singleton(&mut self, v: &str) -> Node {
         self.push_index_str(self.fl().singletons_node, v)
     }
