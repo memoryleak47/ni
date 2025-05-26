@@ -27,6 +27,7 @@ pub enum BinOpKind {
     IsEqual,
     IsNotEqual,
     Pow,
+    Subscript,
 }
 
 // Node is for temporary constants contained in the computation tree.

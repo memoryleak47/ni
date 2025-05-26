@@ -11,6 +11,17 @@ pub fn lower_expr(expr: &ASTExpr, ctxt: &mut Ctxt) -> Node {
         }
         ASTExpr::FnCall(f, args) => lower_fn_call(&*f, args, ctxt),
         ASTExpr::Attribute(e, a) => lower_attribute(e, a, ctxt),
+        ASTExpr::List(l) => {
+            let t = ctxt.push_table();
+            let ty = ctxt.get_singleton("list");
+            let len_int = ctxt.push_int(l.len() as _);
+            ctxt.push_store_str(t, "len", len_int);
+            for (i, x) in l.iter().enumerate() {
+                let x = lower_expr(x, ctxt);
+                ctxt.push_store_int(t, i, x);
+            }
+            ctxt.build_value(t, ty)
+        },
         _ => todo!("{:?}", expr),
     }
 }
@@ -29,6 +40,7 @@ pub fn op_attrs(op: BinOpKind) -> &'static str {
         BinOpKind::IsEqual => "__eq__",
         BinOpKind::IsNotEqual => "__ne__",
         BinOpKind::Pow => "__pow__",
+        BinOpKind::Subscript => "__getitem__",
     }
 }
 

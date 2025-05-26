@@ -137,6 +137,12 @@ fn display_expr(expr: &Expr, f: &mut Formatter<'_>, constmap: &Map<Node, String>
         Arg => write!(f, "arg")?,
         NewTable => write!(f, "{{}}")?,
         Function(fid) => write!(f, "{}", fn_id_string(*fid))?,
+        BinOp(BinOpKind::Subscript, l, r) => write!(
+            f,
+            "{}[{}]",
+            node_string(*l, constmap),
+            node_string(*r, constmap)
+        )?,
         BinOp(kind, l, r) => write!(
             f,
             "{} {} {}",
@@ -178,6 +184,7 @@ impl Display for BinOpKind {
             IsEqual => "==",
             IsNotEqual => "~=",
             Pow => "^",
+            Subscript => "[_]",
         };
         write!(f, "{}", s)
     }

@@ -71,7 +71,7 @@ fn assemble_expr(toks: &[Token]) -> Result<(ASTExpr, &[Token]), String> {
             Some(Token::LBracket) => {
                 let (idx, toks2) = assemble_expr(&toks[1..])?;
                 let [Token::RBracket, ..] = &toks2[..] else { return Err("missing RBracket".to_string()) };
-                expr = ASTExpr::Index(Box::new(expr), Box::new(idx));
+                expr = ASTExpr::BinOp(BinOpKind::Subscript, Box::new(expr), Box::new(idx));
                 toks = &toks2[1..];
             },
             _ => return Ok((expr, toks)),

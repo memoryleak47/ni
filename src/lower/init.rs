@@ -66,6 +66,7 @@ static PRIM_TYPES: &[&'static str] = &[
     "int",
     "float",
     "bool",
+    "list",
     "NoneType",
 ];
 
