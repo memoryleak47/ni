@@ -200,7 +200,7 @@ pub fn node_string(n: Node, constmap: &Map<Node, String>) -> String {
     constmap
         .get(&n)
         .cloned()
-        .unwrap_or_else(|| format!("n{}", n))
+        .unwrap_or_else(|| format!("%{}", n))
 }
 
 fn ordered_map_iter<'s, K: Ord + 's, V: 's>(
