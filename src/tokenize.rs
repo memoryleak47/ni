@@ -28,6 +28,9 @@ pub enum Token {
     Indent,
     Unindent,
     BinOp(BinOpKind),
+    Try,
+    Except,
+    Raise
 }
 
 fn ident_char(c: char) -> bool {
@@ -152,6 +155,9 @@ pub fn tokenize(s: &str) -> Vec<Token> {
                         "None" => Token::None,
                         "global" => Token::Scope(ScopeKind::Global),
                         "nonlocal" => Token::Scope(ScopeKind::NonLocal),
+                        "try" => Token::Try,
+                        "except" => Token::Except,
+                        "raise" => Token::Raise,
                         _ => Token::Ident(s),
                     });
                     state = TokenizerState::InLine;

@@ -71,6 +71,8 @@ fn iter(ast: &AST, nrt: &mut NameResTable, current_fn_ptr: *const ASTStatement) 
             | ASTStatement::Return(_)
             | ASTStatement::Expr(_)
             | ASTStatement::Pass => {}
+
+            _ => todo!(),
         }
     }
 }

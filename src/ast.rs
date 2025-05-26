@@ -23,6 +23,9 @@ pub enum ASTStatement {
     Expr(ASTExpr),
     Pass,
     Scope(ScopeKind, Vec<String>),
+    Try(AST),
+    Except(AST),
+    Raise(ASTExpr),
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
