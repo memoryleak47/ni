@@ -37,6 +37,8 @@ pub enum ASTExpr {
     Str(String),
     Int(i64),
     Bool(bool),
+    List(Vec<ASTExpr>),
+    Index(/*obj*/ Box<ASTExpr>, /*index*/ Box<ASTExpr>),
     None,
     FnCall(Box<ASTExpr>, Vec<ASTExpr>),
     BinOp(BinOpKind, Box<ASTExpr>, Box<ASTExpr>),

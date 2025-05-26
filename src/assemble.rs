@@ -18,11 +18,16 @@ fn assemble_ast(mut toks: &[Token]) -> Result<(AST, &[Token]), String> {
 
 // (t1, t2, t3, ...)
 fn assemble_paren_list<T>(sub: impl Assembler<T>) -> impl Assembler<Vec<T>> {
+    assemble_general_list(sub, Token::LParen, Token::RParen)
+}
+
+// `l` t1, t2, t3, ... `r`
+fn assemble_general_list<T>(sub: impl Assembler<T>, l: Token, r: Token) -> impl Assembler<Vec<T>> {
     move |toks| {
-        if toks[0] != Token::LParen {
+        if toks[0] != l {
             return Err(String::new());
         }
-        if toks[1] == Token::RParen {
+        if toks[1] == r {
             return Ok((Vec::new(), &toks[2..]));
         }
         let toks = &toks[1..];
@@ -36,7 +41,7 @@ fn assemble_paren_list<T>(sub: impl Assembler<T>) -> impl Assembler<Vec<T>> {
             toks = rst;
             children.push(c);
         }
-        if toks[0] != Token::RParen {
+        if toks[0] != r {
             return Err(String::new());
         };
         let toks = &toks[1..];
@@ -63,6 +68,12 @@ fn assemble_expr(toks: &[Token]) -> Result<(ASTExpr, &[Token]), String> {
                 expr = ASTExpr::Attribute(Box::new(expr), rhs);
                 toks = toks2;
             },
+            Some(Token::LBracket) => {
+                let (idx, toks2) = assemble_expr(&toks[1..])?;
+                let [Token::RBracket, ..] = &toks2[..] else { return Err("missing RBracket".to_string()) };
+                expr = ASTExpr::Index(Box::new(expr), Box::new(idx));
+                toks = &toks2[1..];
+            },
             _ => return Ok((expr, toks)),
         }
     }
@@ -75,6 +86,10 @@ fn assemble_atomic_expr(toks: &[Token]) -> Result<(ASTExpr, &[Token]), String> {
         Some(Token::Str(s)) => Ok((ASTExpr::Str(s.to_string()), &toks[1..])),
         Some(Token::Bool(b)) => Ok((ASTExpr::Bool(*b), &toks[1..])),
         Some(Token::None) => Ok((ASTExpr::None, &toks[1..])),
+        Some(Token::LBracket) => {
+            let (list, toks) = assemble_general_list(assemble_expr, Token::LBracket, Token::RBracket)(toks)?;
+            Ok((ASTExpr::List(list), toks))
+        },
         _ => Err(String::new()),
     }
 }

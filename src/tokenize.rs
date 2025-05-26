@@ -10,6 +10,8 @@ pub enum Token {
     Colon,
     LParen,
     RParen,
+    LBracket,
+    RBracket,
     Comma,
     Dot,
     Equals,
@@ -104,6 +106,8 @@ pub fn tokenize(s: &str) -> Vec<Token> {
                 [':', ..] => { tokens.push(Token::Colon); i += 1; }
                 ['(', ..] => { tokens.push(Token::LParen); i += 1; }
                 [')', ..] => { tokens.push(Token::RParen); i += 1; }
+                ['[', ..] => { tokens.push(Token::LBracket); i += 1; }
+                [']', ..] => { tokens.push(Token::RBracket); i += 1; }
                 [',', ..] => { tokens.push(Token::Comma); i += 1; }
                 ['=', ..] => { tokens.push(Token::Equals); i += 1; }
                 ['.', ..] => { tokens.push(Token::Dot); i += 1; }
