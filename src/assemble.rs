@@ -100,7 +100,27 @@ fn assemble_stmt(toks: &[Token]) -> Result<(ASTStatement, &[Token]), String> {
     let a = or(a, assemble_class_stmt);
     let a = or(a, assemble_expr_stmt);
     let a = or(a, assemble_branch_stmt);
+    let a = or(a, assemble_noarg_branch_stmt);
+    let a = or(a, assemble_raise_stmt);
     a(toks)
+}
+
+fn assemble_raise_stmt(toks: &[Token]) -> Result<(ASTStatement, &[Token]), String> {
+    let Some(Token::Raise) = toks.get(0) else { return Err("".to_string()) };
+    let toks = &toks[1..];
+    let (expr, toks) = assemble_expr(toks)?;
+    Ok((ASTStatement::Raise(expr), toks))
+}
+
+fn assemble_noarg_branch_stmt(toks: &[Token]) -> Result<(ASTStatement, &[Token]), String> {
+    let f = match toks.get(0) {
+        Some(Token::Try) => ASTStatement::Try,
+        Some(Token::Except) => ASTStatement::Except,
+        _ => return Err(String::new()),
+    };
+    let toks = &toks[1..];
+    let (body, toks) = assemble_indented_ast(toks)?;
+    Ok((f(body), toks))
 }
 
 fn assemble_branch_stmt(toks: &[Token]) -> Result<(ASTStatement, &[Token]), String> {
