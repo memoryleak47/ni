@@ -23,53 +23,8 @@ fn table_set(ptr: TablePtr, idx: Value, val: Value, ctxt: &mut Ctxt) {
         .get_mut(ptr)
         .expect("table_set got dangling pointer!");
     data.entries.retain(|(x, _)| *x != idx);
-    if val == Value::Undef {
-        // Value::Undef means it's not there, so just don't add it!
-        if idx == Value::Int(data.length as _) {
-            // recalculate length
-            for i in 1.. {
-                if data.entries.iter().any(|(x, _)| x == &Value::Int(i as _)) {
-                    data.length = i;
-                } else {
-                    break;
-                }
-            }
-        }
-    } else {
+    if val != Value::Undef {
         data.entries.push((idx.clone(), val));
-
-        if idx == Value::Int((data.length + 1) as _) {
-            // recalculate length
-            for i in (data.length + 1).. {
-                if data.entries.iter().any(|(x, _)| x == &Value::Int(i as _)) {
-                    data.length = i;
-                } else {
-                    break;
-                }
-            }
-        }
-    }
-}
-
-// this is not equivalent to "next", as it only returns the next key and not the value too.
-fn table_next(ptr: TablePtr, idx: Value, ctxt: &mut Ctxt) -> Value {
-    let data = &ctxt.heap[ptr];
-    if idx == Value::Undef {
-        match data.entries.get(0) {
-            Some((k, _)) => k.clone(),
-            None => Value::Undef,
-        }
-    } else {
-        let i = data
-            .entries
-            .iter()
-            .position(|(i, _)| *i == idx)
-            .expect("invalid key to next!");
-        if let Some((k, _)) = data.entries.get(i + 1) {
-            k.clone()
-        } else {
-            Value::Undef
-        }
     }
 }
 
@@ -112,7 +67,6 @@ impl<'ir> Ctxt<'ir> {
 #[derive(Default)]
 struct TableData {
     entries: Vec<(Value, Value)>,
-    length: usize,
 }
 
 fn exec_expr(expr: &Expr, ctxt: &mut Ctxt) -> Value {
