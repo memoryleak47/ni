@@ -58,9 +58,6 @@ pub enum Expr {
     NewTable, // equivalent to {}
     Function(FnId),
     BinOp(BinOpKind, Node, Node),
-    Len(Node),
-    Next(Node, Node),
-    Type(Node),
 
     // literals
     Float(R64),
@@ -99,5 +96,4 @@ pub struct IR {
 // - function call to a non-function
 // - a If-node with a non-boolean argument
 // - division/remainder by zero?
-// - store with index None
-// - argument to next is not a table
+// - TODO What things are allowed / forbidden for Undef?

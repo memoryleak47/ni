@@ -137,13 +137,6 @@ fn display_expr(expr: &Expr, f: &mut Formatter<'_>, constmap: &Map<Node, String>
         Arg => write!(f, "arg")?,
         NewTable => write!(f, "{{}}")?,
         Function(fid) => write!(f, "{}", fn_id_string(*fid))?,
-        Type(v) => write!(f, "type({})", node_string(*v, constmap))?,
-        Next(v1, v2) => write!(
-            f,
-            "next({}, {})",
-            node_string(*v1, constmap),
-            node_string(*v2, constmap)
-        )?,
         BinOp(kind, l, r) => write!(
             f,
             "{} {} {}",
@@ -151,7 +144,6 @@ fn display_expr(expr: &Expr, f: &mut Formatter<'_>, constmap: &Map<Node, String>
             kind,
             node_string(*r, constmap)
         )?,
-        Len(r) => write!(f, "#{}", node_string(*r, constmap))?,
         Float(x) => write!(f, "{}", x)?,
         Int(x) => write!(f, "{}", x)?,
         Bool(true) => write!(f, "True")?,

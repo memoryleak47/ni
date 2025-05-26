@@ -135,41 +135,6 @@ fn exec_expr(expr: &Expr, ctxt: &mut Ctxt) -> Value {
 
             exec_binop(kind.clone(), l, r)
         }
-        Expr::Len(r) => {
-            let r = ctxt.fcx().nodes[r].clone();
-
-            match r {
-                Value::Str(s) => Value::Int(s.len() as _),
-                Value::TablePtr(t) => Value::Int(ctxt.heap[t].length as _),
-                _ => panic!("executing len on invalid type!"),
-            }
-        }
-
-        Expr::Next(v1, v2) => {
-            let v1 = &ctxt.fcx().nodes[v1];
-            let Value::TablePtr(v1_) = v1 else {
-                panic!("calling next onto non-table!")
-            };
-
-            let v2 = ctxt.fcx().nodes[v2].clone();
-
-            table_next(*v1_, v2, ctxt)
-        }
-        Expr::Type(n) => {
-            let val = &ctxt.fcx().nodes[n];
-            let s = match val {
-                Value::None => "None",
-                Value::Undef => panic!("calling type on Undef!"),
-                Value::Bool(_) => "boolean",
-                Value::Str(_) => "string",
-                Value::Function(..) => "function",
-                Value::Float(_) => "float",
-                Value::Int(_) => "int",
-                Value::TablePtr(_) => "table",
-            };
-
-            Value::Str(s.to_string())
-        }
         Expr::Float(x) => Value::Float(*x),
         Expr::Int(x) => Value::Int(*x),
         Expr::Bool(b) => Value::Bool(*b),
