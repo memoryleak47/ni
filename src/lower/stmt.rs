@@ -26,6 +26,11 @@ pub fn lower_ast(ast: &[ASTStatement], ctxt: &mut Ctxt) {
                 let val = lower_expr(rhs, ctxt);
                 ctxt.push_store_str(d, v, val);
             },
+            ASTStatement::Assign(ASTExpr::BinOp(BinOpKind::Subscript, e, v), rhs) => {
+                let e_setattr = Box::new(ASTExpr::Attribute(e.clone(), "__setitem__".to_string()));
+                let real_stmt = ASTStatement::Expr(ASTExpr::FnCall(e_setattr, vec![(**v).clone(), rhs.clone()]));
+                lower_ast(&[real_stmt], ctxt);
+            },
             ASTStatement::If(cond, then) => {
                 let cond = lower_cond(cond, ctxt);
                 let b = ctxt.alloc_blk();

@@ -125,11 +125,33 @@ fn add_list_getitem(ctxt: &mut Ctxt) {
     ctxt.push_store_str(list_ty_dict, "__getitem__", getitem_fn);
 }
 
+fn add_list_setitem(ctxt: &mut Ctxt) {
+    let f = new_fn(ctxt, |ctxt| {
+        let arg = ctxt.push_arg();
+        let list = ctxt.push_index_int(arg, 0);
+        let index = ctxt.push_index_int(arg, 1);
+        let val = ctxt.push_index_int(arg, 2);
+        let list_payload = ctxt.push_index_str(list, "payload");
+        let index_payload = ctxt.push_index_str(index, "payload");
+        ctxt.push_statement(Statement::Store(list_payload, index_payload, val));
+        ctxt.push_return();
+        // TODO technically, we have to return None here.
+    });
+
+    let function = ctxt.get_singleton("function");
+    let f = ctxt.push_compute(Expr::Function(f));
+    let setitem_fn = ctxt.build_value(f, function);
+    let list_ty = ctxt.get_singleton("list");
+    let list_ty_dict = ctxt.push_index_str(list_ty, "dict");
+    ctxt.push_store_str(list_ty_dict, "__setitem__", setitem_fn);
+}
+
 pub fn add_builtins_and_singletons(ctxt: &mut Ctxt) {
     add_singletons(ctxt);
     add_print_builtin(ctxt);
     add_type_builtin(ctxt);
     add_list_getitem(ctxt);
+    add_list_setitem(ctxt);
 
     add_ops(ctxt);
     for ty in PRIM_TYPES.iter().copied().chain(std::iter::once("type")) {
