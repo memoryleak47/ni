@@ -95,16 +95,12 @@ fn assemble_atomic_expr(toks: &[Token]) -> Result<(ASTExpr, &[Token]), String> {
 }
 
 fn assemble_stmt(toks: &[Token]) -> Result<(ASTStatement, &[Token]), String> {
-    or(
-        assemble_stmt_base,
-        or(
-            assemble_def_stmt,
-            or(
-                assemble_class_stmt,
-                or(assemble_expr_stmt, assemble_branch_stmt),
-            ),
-        ),
-    )(toks)
+    let a = assemble_stmt_base;
+    let a = or(a, assemble_def_stmt);
+    let a = or(a, assemble_class_stmt);
+    let a = or(a, assemble_expr_stmt);
+    let a = or(a, assemble_branch_stmt);
+    a(toks)
 }
 
 fn assemble_branch_stmt(toks: &[Token]) -> Result<(ASTStatement, &[Token]), String> {
