@@ -53,7 +53,7 @@ fn iter(ast: &AST, nrt: &mut NameResTable, current_fn_ptr: *const ASTStatement) 
 
                 iter(body, nrt, current_fn_ptr);
             },
-            ASTStatement::If(_, body) | ASTStatement::While(_, body) => {
+            ASTStatement::If(_, body) | ASTStatement::While(_, body) | ASTStatement::Try(body) | ASTStatement::Except(body) => {
                 iter(body, nrt, current_fn_ptr);
             }
             ASTStatement::Scope(ScopeKind::Global, vars) => {
@@ -70,6 +70,7 @@ fn iter(ast: &AST, nrt: &mut NameResTable, current_fn_ptr: *const ASTStatement) 
             | ASTStatement::Continue
             | ASTStatement::Return(_)
             | ASTStatement::Expr(_)
+            | ASTStatement::Raise(_)
             | ASTStatement::Pass => {}
 
             _ => todo!(),
