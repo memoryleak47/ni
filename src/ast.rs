@@ -12,7 +12,7 @@ pub enum ASTStatement {
     ),
     Class(
         /*class name*/ String,
-        /*superclasses*/ Vec<String>,
+        /*superclasses*/ Vec<ASTExpr>,
         /*body*/ AST,
     ),
     If(ASTExpr, AST),

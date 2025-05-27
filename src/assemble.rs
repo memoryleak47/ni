@@ -183,7 +183,7 @@ fn assemble_class_stmt(toks: &[Token]) -> Result<(ASTStatement, &[Token]), Strin
     let ((), toks) = assemble_token(Token::Class)(toks)?;
     let (class_name, toks) = assemble_ident(toks)?;
     let (children, toks) = if let Some(Token::LParen) = toks.get(0) {
-        assemble_paren_list(assemble_ident)(toks)?
+        assemble_paren_list(assemble_expr)(toks)?
     } else {
         (Vec::new(), toks)
     };
