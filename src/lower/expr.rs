@@ -106,15 +106,38 @@ fn lower_attribute(e: &ASTExpr, a: &str, ctxt: &mut Ctxt) -> Node {
 // you evaluate `e.a` where you know that e does not contain a directly, so you check the class instead.
 // writes the output to `tmp["0"]`, and jumps to `post`.
 fn lower_attribute_using_class(e: Node, a: &str, tmp: Node, post: BlockId, ctxt: &mut Ctxt) {
+    let pre_loop = ctxt.alloc_blk();
+    let in_loop = ctxt.alloc_blk();
+    let post_loop = ctxt.alloc_blk(); // reached only when the attr was found nowhere.
+
     let found = ctxt.alloc_blk();
     let found_is_fn = ctxt.alloc_blk();
     let found_is_no_fn = ctxt.alloc_blk();
     let not_found = ctxt.alloc_blk();
 
+    let i = ctxt.push_table();
+    let zero = ctxt.push_int(0);
+    let one = ctxt.push_int(1);
+    ctxt.push_store_str(i, "0", zero);
+
     let t = ctxt.push_index_str(e, "type");
-    let d = ctxt.push_index_str(t, "dict");
-    let v = ctxt.push_index_str(d, a);
-    ctxt.branch_undef(v, not_found, found);
+    let mro = ctxt.push_index_str(t, "mro");
+    let mro_list = ctxt.push_index_str(mro, "payload");
+    let mro_len = ctxt.push_index_str(mro_list, "len");
+    ctxt.push_goto(pre_loop);
+
+    ctxt.focus_blk(pre_loop);
+        let a_ = ctxt.push_index_str(i, "0");
+        let b_ = mro_len;
+        let cond = ctxt.push_compute(Expr::BinOp(BinOpKind::Lt, a_, b_));
+        ctxt.push_if(cond, in_loop, post_loop);
+
+    ctxt.focus_blk(in_loop);
+        let i_val = ctxt.push_index_str(i, "0");
+        let super_ty = ctxt.push_index(mro_list, i_val);
+        let d = ctxt.push_index_str(super_ty, "dict");
+        let v = ctxt.push_index_str(d, a);
+        ctxt.branch_undef(v, not_found, found);
 
     ctxt.focus_blk(found);
         let v_t = ctxt.push_index_str(v, "type");
@@ -134,6 +157,12 @@ fn lower_attribute_using_class(e: Node, a: &str, tmp: Node, post: BlockId, ctxt:
         ctxt.push_goto(post);
 
     ctxt.focus_blk(not_found);
+        let i_val = ctxt.push_index_str(i, "0");
+        let i1_val = ctxt.push_compute(Expr::BinOp(BinOpKind::Plus, i_val, one));
+        ctxt.push_store_str(i, "0", i1_val); // i = i+1
+        ctxt.push_goto(pre_loop);
+
+    ctxt.focus_blk(post_loop);
         ctxt.push_statement(Statement::Throw("missing attribute!".to_string()));
 }
 
