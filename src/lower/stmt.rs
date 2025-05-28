@@ -80,11 +80,6 @@ pub fn lower_ast(ast: &[ASTStatement], ctxt: &mut Ctxt) {
             ASTStatement::Scope(..) => {} // scope is already handled in nameres
             ASTStatement::Class(name, args, body) => {
                 let mut args: Vec<Node> = args.iter().map(|x| lower_expr(x, ctxt)).collect();
-                if args.len() == 0 {
-                    let t = ctxt.get_singleton("object");
-                    args = vec![t];
-                }
-                let [base] = args[..] else { panic!("multiple inheritance not supported!") };
 
                 let dict = ctxt.push_table();
                 let old_namespace = ctxt.fl_mut().namespace_node;
@@ -96,7 +91,7 @@ pub fn lower_ast(ast: &[ASTStatement], ctxt: &mut Ctxt) {
                 let u = ctxt.push_undef();
                 let type_ = ctxt.get_singleton("type");
                 let val = ctxt.build_value_w_dict(u, type_, dict);
-                ctxt.push_store_str(val, "base", base);
+                add_mro(val, &args, ctxt);
 
                 ctxt.fl_mut().namespace_node = old_namespace;
 

@@ -82,7 +82,7 @@ fn add_singletons(ctxt: &mut Ctxt) {
 
 // for now, mro computation just accepts a single base type.
 // we just prepend ty to bases[0].mro
-fn add_mro(ty: Node, bases: &[Node], ctxt: &mut Ctxt) {
+pub fn add_mro(ty: Node, bases: &[Node], ctxt: &mut Ctxt) {
     let base = match bases[..] {
         [base] => base,
         [] => ctxt.get_singleton("object"),
