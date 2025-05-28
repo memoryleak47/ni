@@ -15,7 +15,7 @@ fn table_get(ptr: TablePtr, idx: Value, ctxt: &mut Ctxt) -> Value {
 
 fn table_set(ptr: TablePtr, idx: Value, val: Value, ctxt: &mut Ctxt) {
     if idx == Value::Undef {
-        panic!("setting index with Undef is forbidden!");
+        crash("setting index with Undef is forbidden!", ctxt);
     }
 
     let data: &mut TableData = ctxt
@@ -39,6 +39,7 @@ enum Value {
     Int(i64),
 }
 
+#[derive(Debug)]
 struct FnCtxt {
     arg: Value,
     nodes: HashMap<Node, Value>,
@@ -47,6 +48,7 @@ struct FnCtxt {
     statement_idx: usize,
 }
 
+#[derive(Debug)]
 struct Ctxt<'ir> {
     heap: Vec<TableData>,
     ir: &'ir IR,
@@ -63,7 +65,7 @@ impl<'ir> Ctxt<'ir> {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 struct TableData {
     entries: Vec<(Value, Value)>,
 }
@@ -75,7 +77,7 @@ fn exec_expr(expr: &Expr, ctxt: &mut Ctxt) -> Value {
             let idx = ctxt.fcx().nodes[idx].clone();
 
             let Value::TablePtr(t) = t else {
-                panic!("indexing into non-table {:?}, with index {:?}!", t, idx)
+                crash(&format!("indexing into non-table {:?}, with index {:?}!", t, idx), ctxt)
             };
             table_get(t, idx, ctxt)
         }
@@ -86,7 +88,7 @@ fn exec_expr(expr: &Expr, ctxt: &mut Ctxt) -> Value {
             let l = ctxt.fcx().nodes[l].clone();
             let r = ctxt.fcx().nodes[r].clone();
 
-            exec_binop(kind.clone(), l, r)
+            exec_binop(kind.clone(), l, r, ctxt)
         }
         Expr::Float(x) => Value::Float(*x),
         Expr::Int(x) => Value::Int(*x),
@@ -96,7 +98,7 @@ fn exec_expr(expr: &Expr, ctxt: &mut Ctxt) -> Value {
     }
 }
 
-fn exec_binop(kind: BinOpKind, l: Value, r: Value) -> Value {
+fn exec_binop(kind: BinOpKind, l: Value, r: Value, ctxt: &mut Ctxt) -> Value {
     use BinOpKind::*;
 
     match (kind, l, r) {
@@ -128,7 +130,7 @@ fn exec_binop(kind: BinOpKind, l: Value, r: Value) -> Value {
 
         (IsEqual, l, r) => Value::Bool(l == r),
         (IsNotEqual, l, r) => Value::Bool(l != r),
-        (kind, l, r) => panic!("type error! \"{l:?} {kind} {r:?}\""),
+        (kind, l, r) => crash(&format!("type error! \"{l:?} {kind} {r:?}\""), ctxt),
     }
 }
 
@@ -180,7 +182,7 @@ fn step_stmt(stmt: &Statement, ctxt: &mut Ctxt) -> Option<()> {
             let idx = ctxt.fcx().nodes[idx].clone();
             let val = ctxt.fcx().nodes[n].clone();
             let Value::TablePtr(t) = t.clone() else {
-                panic!("indexing into non-table!")
+                crash("indexing into non-table!", ctxt)
             };
             table_set(t, idx, val, ctxt);
         }
@@ -189,7 +191,7 @@ fn step_stmt(stmt: &Statement, ctxt: &mut Ctxt) -> Option<()> {
             let blk = match &cond {
                 Value::Bool(true) => then_body,
                 Value::Bool(false) => else_body,
-                _ => panic!("UB: non-boolean in if-condition"),
+                _ => crash("UB: non-boolean in if-condition", ctxt),
             };
             ctxt.fcx_mut().block_id = *blk;
             ctxt.fcx_mut().statement_idx = 0;
@@ -200,13 +202,13 @@ fn step_stmt(stmt: &Statement, ctxt: &mut Ctxt) -> Option<()> {
 
             match f {
                 Value::Function(f_id) => call_fn(f_id, arg, ctxt),
-                v => panic!("trying to execute non-function value! {:?}", v),
+                v => crash(&format!("trying to execute non-function value! {:?}", v), ctxt),
             };
         }
         Print(n) => {
             let val = &ctxt.fcx().nodes[n];
             match val {
-                Value::Undef => panic!("print called on Undef!"),
+                Value::Undef => crash("print called on Undef!", ctxt),
                 Value::Bool(true) => println!("True"),
                 Value::Bool(false) => println!("False"),
                 Value::Str(s) => println!("{}", s),
@@ -232,6 +234,23 @@ fn step(ctxt: &mut Ctxt) -> Option<()> {
     let l: &FnCtxt = ctxt.stack.last().unwrap();
     let stmt = ctxt.ir.fns[&l.fn_id].blocks[&l.block_id]
         .get(l.statement_idx)
-        .unwrap_or_else(|| panic!("stmt overflow: ({}, {}, {})", l.fn_id, l.block_id, l.statement_idx));
+        .unwrap_or_else(|| crash(&format!("stmt overflow: ({}, {}, {})", l.fn_id, l.block_id, l.statement_idx), ctxt));
     step_stmt(stmt, ctxt)
+}
+
+fn crash(s: &str, ctxt: &Ctxt) -> ! {
+    let l: &FnCtxt = ctxt.stack.last().unwrap();
+    let pos = (l.fn_id, l.block_id, l.statement_idx);
+    let stmt = ctxt.ir.fns[&l.fn_id].blocks[&l.block_id]
+        .get(l.statement_idx)
+        .map(|x| format!("{x}"))
+        .unwrap_or_else(|| "<empty>".to_string());
+    println!("exec IR crashing due to '{s}' at {pos:?} on stmt {stmt}");
+    println!("current state:");
+    dump(ctxt);
+    std::process::exit(1);
+}
+
+fn dump(ctxt: &Ctxt) {
+    dbg!(ctxt);
 }
