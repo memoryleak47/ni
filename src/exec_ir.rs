@@ -53,6 +53,7 @@ struct Ctxt<'ir> {
     heap: Vec<TableData>,
     ir: &'ir IR,
     stack: Vec<FnCtxt>,
+    last_stmt: Option<Stmt>, // only for debugging purposes
 }
 
 impl<'ir> Ctxt<'ir> {
@@ -157,11 +158,15 @@ pub fn exec(ir: &IR) {
         ir,
         heap: Vec::new(),
         stack: Vec::new(),
+        last_stmt: None,
     };
 
     call_fn(ir.main_fn, Value::Undef, &mut ctxt);
 
     while ctxt.stack.len() > 0 {
+        let l: &FnCtxt = ctxt.stack.last().unwrap();
+        ctxt.last_stmt = Some((l.fn_id, l.block_id, l.statement_idx));
+
         if step(&mut ctxt).is_none() {
             break;
         }
@@ -239,10 +244,9 @@ fn step(ctxt: &mut Ctxt) -> Option<()> {
 }
 
 fn crash(s: &str, ctxt: &Ctxt) -> ! {
-    let l: &FnCtxt = ctxt.stack.last().unwrap();
-    let pos = (l.fn_id, l.block_id, l.statement_idx);
-    let stmt = ctxt.ir.fns[&l.fn_id].blocks[&l.block_id]
-        .get(l.statement_idx)
+    let pos = ctxt.last_stmt.unwrap();
+    let stmt = ctxt.ir.fns[&pos.0].blocks[&pos.1]
+        .get(pos.2)
         .map(|x| format!("{x}"))
         .unwrap_or_else(|| "<empty>".to_string());
     println!("exec IR crashing due to '{s}' at {pos:?} on stmt {stmt}");
