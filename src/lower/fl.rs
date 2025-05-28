@@ -11,8 +11,6 @@ pub(in crate::lower) struct FnLowerCtxt {
     // sometimes switched out by the class context.
     pub namespace_node: Node,
     pub global_node: Node,
-    pub singletons_node: Node,
-    pub arg_node: Node,
 
     // the original def stmt we are lowering.
     // set to 0 for the main function.
@@ -41,11 +39,13 @@ impl Ctxt {
         t
     }
 
+    pub fn push_none(&mut self) -> Node {
+        self.get_singleton("None")
+    }
+
     pub fn push_return_none(&mut self) {
-        let none = self.push_undef();
-        let none_ty = self.get_singleton("NoneType");
-        let none = self.build_value(none, none_ty);
-        self.push_store_str(self.fl().arg_node, "ret", none);
+        let none = self.push_none();
+        self.push_store_str(self.f().arg_node, "ret", none);
         self.push_return();
     }
 
@@ -62,9 +62,5 @@ impl Ctxt {
     pub fn branch_is_fn(&mut self, v: Node, undef: BlockId, not_undef: BlockId) {
         let u = self.push_undef();
         self.branch_eq(v, u, undef, not_undef);
-    }
-
-    pub fn get_singleton(&mut self, v: &str) -> Node {
-        self.push_index_str(self.fl().singletons_node, v)
     }
 }

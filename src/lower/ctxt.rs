@@ -58,16 +58,8 @@ impl Ctxt {
         self.push_compute(Expr::Undef)
     }
 
-    pub fn push_arg(&mut self) -> Node {
-        self.push_compute(Expr::Arg)
-    }
-
     pub fn push_return(&mut self) {
         self.push_statement(Statement::Return)
-    }
-
-    pub fn push_builtin(&mut self, s: &str) -> Node {
-        self.push_compute(Expr::Function(self.builtin_fns[s]))
     }
 
     pub fn push_str(&mut self, s: &str) -> Node {
@@ -135,6 +127,17 @@ impl Ctxt {
 
     pub fn focus_blk(&mut self, b: BlockId) {
         self.f_mut().current_blk = b;
+    }
+}
+
+// Generic Ctxt functions that go beyond general IR construction, and are tainted by our lowering procedure:
+impl Ctxt {
+    pub fn get_singleton(&mut self, v: &str) -> Node {
+        self.push_index_str(self.f().singletons_node, v)
+    }
+
+    pub fn push_builtin(&mut self, s: &str) -> Node {
+        self.push_compute(Expr::Function(self.builtin_fns[s]))
     }
 }
 

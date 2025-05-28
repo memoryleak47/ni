@@ -60,11 +60,7 @@ fn lower_binop(op: BinOpKind, lhs: &ASTExpr, rhs: &ASTExpr, ctxt: &mut Ctxt) -> 
 
 fn lower_primitive(e: &ASTExpr, ctxt: &mut Ctxt) -> Option<Node> {
     Some(match e {
-        ASTExpr::None => {
-            let payload = ctxt.push_undef();
-            let ty = ctxt.get_singleton("NoneType");
-            ctxt.build_value(payload, ty)
-        },
+        ASTExpr::None => ctxt.get_singleton("None"),
         ASTExpr::Int(i) => {
             let i = ctxt.push_int(*i);
             let ty = ctxt.get_singleton("int");
@@ -145,7 +141,7 @@ fn lower_attribute_using_class(e: Node, a: &str, tmp: Node, post: BlockId, ctxt:
 // arg is empty thus far.
 fn lower_fn_type_call(f: Node, args: &[Node], arg: Node, ctxt: &mut Ctxt) {
     ctxt.push_store_str(arg, "scope_global", ctxt.fl().global_node);
-    ctxt.push_store_str(arg, "singletons", ctxt.fl().singletons_node);
+    ctxt.push_store_str(arg, "singletons", ctxt.f().singletons_node);
 
     for (i, a) in args.iter().enumerate() {
         ctxt.push_store_int(arg, i, *a);

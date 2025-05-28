@@ -29,11 +29,9 @@ pub fn lower(ast: &AST) -> IR {
     let main = new_fn_general(true, &mut ctxt, |ctxt| {
         let t = ctxt.push_table();
         ctxt.f_mut().lowering = Some(FnLowerCtxt {
-            singletons_node: 0, // will be set in "add_builtins_and_singletons".
             // for the main function, the global scope is actually it's local scope.
             global_node: t,
             namespace_node: t,
-            arg_node: ctxt.push_arg(),
             ast_ptr: 0 as _,
             loop_stack: Vec::new(),
         });

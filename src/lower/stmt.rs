@@ -67,7 +67,7 @@ pub fn lower_ast(ast: &[ASTStatement], ctxt: &mut Ctxt) {
             ASTStatement::Return(opt) => {
                 let expr = opt.as_ref().unwrap_or(&ASTExpr::None);
                 let val = lower_expr(expr, ctxt);
-                ctxt.push_store_str(ctxt.fl().arg_node, "ret", val);
+                ctxt.push_store_str(ctxt.f().arg_node, "ret", val);
                 ctxt.push_return();
             }
             ASTStatement::Pass => {} // do nothing
@@ -109,19 +109,16 @@ pub fn lower_ast(ast: &[ASTStatement], ctxt: &mut Ctxt) {
 
 fn lower_def(name: &str, args: &[String], body: &[ASTStatement], stmt: &ASTStatement, ctxt: &mut Ctxt) {
     let i = new_fn(ctxt, |ctxt| {
-        let argtable = ctxt.push_arg();
         ctxt.f_mut().lowering = Some(FnLowerCtxt {
             namespace_node: ctxt.push_table(),
-            arg_node: argtable,
-            global_node: ctxt.push_index_str(argtable, "scope_global"),
-            singletons_node: ctxt.push_index_str(argtable, "singletons"),
+            global_node: ctxt.push_index_str(ctxt.f().arg_node, "scope_global"),
             ast_ptr: stmt,
             loop_stack: Vec::new(),
         });
 
         // load args
         for (i, a) in args.iter().enumerate() {
-            let val = ctxt.push_index_int(argtable, i);
+            let val = ctxt.push_index_int(ctxt.f().arg_node, i);
             let nn = ctxt.fl().namespace_node;
             ctxt.push_store_str(nn, a, val);
         }
