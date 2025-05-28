@@ -239,18 +239,24 @@ fn step(ctxt: &mut Ctxt) -> Option<()> {
     let l: &FnCtxt = ctxt.stack.last().unwrap();
     let stmt = ctxt.ir.fns[&l.fn_id].blocks[&l.block_id]
         .get(l.statement_idx)
-        .unwrap_or_else(|| crash(&format!("stmt overflow: ({}, {}, {})", l.fn_id, l.block_id, l.statement_idx), ctxt));
+        .unwrap_or_else(|| crash("stmt overflow", ctxt));
     step_stmt(stmt, ctxt)
 }
 
-fn crash(s: &str, ctxt: &Ctxt) -> ! {
-    let pos = ctxt.last_stmt.unwrap();
-    let stmt = ctxt.ir.fns[&pos.0].blocks[&pos.1]
+fn stringify_stmt(pos: Stmt, ctxt: &Ctxt) -> String {
+    ctxt.ir.fns[&pos.0].blocks[&pos.1]
         .get(pos.2)
         .map(|x| format!("{x}"))
-        .unwrap_or_else(|| "<empty>".to_string());
-    println!("exec IR crashing due to '{s}' at {pos:?} on stmt {stmt}");
-    println!("current state:");
-    // println!("{:?}", ctxt.stack.last().unwrap().nodes);
+        .unwrap_or_else(|| "<empty>".to_string())
+}
+
+fn stringify_last_stmt(ctxt: &Ctxt) -> String {
+    ctxt.last_stmt.map(|x| stringify_stmt(x, ctxt))
+        .unwrap_or_else(|| "<no last stmt>".to_string())
+}
+
+fn crash(s: &str, ctxt: &Ctxt) -> ! {
+    let stmt = stringify_last_stmt(ctxt);
+    println!("exec IR crashing due to '{s}' at stmt {stmt}");
     std::process::exit(1);
 }
