@@ -247,10 +247,6 @@ fn crash(s: &str, ctxt: &Ctxt) -> ! {
         .unwrap_or_else(|| "<empty>".to_string());
     println!("exec IR crashing due to '{s}' at {pos:?} on stmt {stmt}");
     println!("current state:");
-    dump(ctxt);
+    println!("{:?}", ctxt.stack.last().unwrap().nodes);
     std::process::exit(1);
-}
-
-fn dump(ctxt: &Ctxt) {
-    dbg!(ctxt);
 }
