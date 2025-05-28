@@ -232,6 +232,6 @@ fn step(ctxt: &mut Ctxt) -> Option<()> {
     let l: &FnCtxt = ctxt.stack.last().unwrap();
     let stmt = ctxt.ir.fns[&l.fn_id].blocks[&l.block_id]
         .get(l.statement_idx)
-        .unwrap();
+        .unwrap_or_else(|| panic!("stmt overflow: ({}, {}, {})", l.fn_id, l.block_id, l.statement_idx));
     step_stmt(stmt, ctxt)
 }

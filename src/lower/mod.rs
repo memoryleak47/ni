@@ -26,7 +26,7 @@ pub fn lower(ast: &AST) -> IR {
         builtin_fns: Default::default(),
     };
 
-    let main = new_fn(&mut ctxt, |ctxt| {
+    let main = new_fn_general(true, &mut ctxt, |ctxt| {
         let t = ctxt.push_table();
         ctxt.f_mut().lowering = Some(FnLowerCtxt {
             singletons_node: 0, // will be set in "add_builtins_and_singletons".

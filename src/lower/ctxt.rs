@@ -1,4 +1,5 @@
 use crate::lower::*;
+use crate::*;
 
 // able to push new statements to this current function.
 pub(in crate::lower) struct FnCtxt {
@@ -6,17 +7,8 @@ pub(in crate::lower) struct FnCtxt {
     pub current_fn: FnId,
     pub current_blk: BlockId,
     pub lowering: Option<FnLowerCtxt>, // set to None for builtin functions.
-}
-
-impl FnCtxt {
-    pub fn new(i: FnId) -> Self {
-        Self {
-            node_ctr: 0,
-            current_fn: i,
-            current_blk: 0,
-            lowering: None,
-        }
-    }
+    pub singletons_node: Node,
+    pub arg_node: Node,
 }
 
 pub(in crate::lower) struct Ctxt {
@@ -147,9 +139,31 @@ impl Ctxt {
 }
 
 pub fn new_fn(ctxt: &mut Ctxt, f: impl FnOnce(&mut Ctxt)) -> FnId {
+    new_fn_general(false, ctxt, f)
+}
+
+pub fn new_fn_general(main: bool, ctxt: &mut Ctxt, f: impl FnOnce(&mut Ctxt)) -> FnId {
     let n = ctxt.ir.fns.len();
     let mut blocks: HashMap<_, _> = Default::default();
-    blocks.insert(0, Vec::new());
+
+    // general function setup:
+    if main {
+        blocks.insert(0, vec![
+            Statement::Compute(0, Expr::Undef),
+            Statement::Compute(1, Expr::Bool(true)),
+            Statement::Compute(2, Expr::NewTable),
+            Statement::If(1, 1, 1),
+        ]);
+    } else {
+        blocks.insert(0, vec![
+            Statement::Compute(0, Expr::Arg),
+            Statement::Compute(1, Expr::Str("singletons".to_string())),
+            Statement::Compute(2, Expr::Index(0, 1)),
+            Statement::Compute(3, Expr::Bool(true)),
+            Statement::If(3, 1, 1),
+        ]);
+    }
+    blocks.insert(1, Vec::new());
 
     ctxt.ir.fns.insert(
         n,
@@ -160,9 +174,11 @@ pub fn new_fn(ctxt: &mut Ctxt, f: impl FnOnce(&mut Ctxt)) -> FnId {
     );
 
     ctxt.stack.push(FnCtxt {
-        node_ctr: 0,
+        node_ctr: 3,
         current_fn: n,
-        current_blk: 0,
+        current_blk: 1,
+        arg_node: 0,
+        singletons_node: 2,
         lowering: None,
     });
 
