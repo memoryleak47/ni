@@ -72,6 +72,8 @@ fn add_singletons(ctxt: &mut Ctxt) {
         }
     }
 
+    add_mro(ctxt.get_singleton("type"), &[], ctxt);
+
     let s = ctxt.push_str("None"); // hack: for now 'None' contains a string for correct printing.
     let none_ty = ctxt.get_singleton("NoneType");
     let none = ctxt.build_value(s, none_ty);
