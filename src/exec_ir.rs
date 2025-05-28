@@ -30,7 +30,6 @@ fn table_set(ptr: TablePtr, idx: Value, val: Value, ctxt: &mut Ctxt) {
 
 #[derive(Clone, PartialEq, Debug)]
 enum Value {
-    None,
     Undef,
     Bool(bool),
     TablePtr(TablePtr),
@@ -92,7 +91,6 @@ fn exec_expr(expr: &Expr, ctxt: &mut Ctxt) -> Value {
         Expr::Float(x) => Value::Float(*x),
         Expr::Int(x) => Value::Int(*x),
         Expr::Bool(b) => Value::Bool(*b),
-        Expr::None => Value::None,
         Expr::Undef => Value::Undef,
         Expr::Str(s) => Value::Str(s.clone()),
     }
@@ -208,7 +206,6 @@ fn step_stmt(stmt: &Statement, ctxt: &mut Ctxt) -> Option<()> {
         Print(n) => {
             let val = &ctxt.fcx().nodes[n];
             match val {
-                Value::None => println!("None"),
                 Value::Undef => panic!("print called on Undef!"),
                 Value::Bool(true) => println!("True"),
                 Value::Bool(false) => println!("False"),

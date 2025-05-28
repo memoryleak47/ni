@@ -64,7 +64,6 @@ pub enum Expr {
     Float(R64),
     Int(i64),
     Bool(bool),
-    None,
     Undef, // everything is initially Undef.
     Str(String),
 }

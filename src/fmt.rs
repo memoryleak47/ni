@@ -43,7 +43,6 @@ fn const_str(e: &Expr, constmap: &Map<Node, String>) -> Option<String> {
         | Expr::Float(_)
         | Expr::Int(_)
         | Expr::Bool(_)
-        | Expr::None
         | Expr::Str(_) => Some(e.to_string()),
         _ => None,
     }
@@ -154,7 +153,6 @@ fn display_expr(expr: &Expr, f: &mut Formatter<'_>, constmap: &Map<Node, String>
         Int(x) => write!(f, "{}", x)?,
         Bool(true) => write!(f, "True")?,
         Bool(false) => write!(f, "False")?,
-        None => write!(f, "None")?,
         Undef => write!(f, "Undef")?,
         Str(s) => write!(f, "\"{}\"", s)?,
     }

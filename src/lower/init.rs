@@ -7,7 +7,8 @@ fn add_print_builtin(ctxt: &mut Ctxt) {
         let first_arg = ctxt.push_index(arg, zero);
         let first_arg = ctxt.push_index_str(first_arg, "payload");
         ctxt.push_statement(Statement::Print(first_arg));
-        let none = ctxt.push_none();
+        let none = ctxt.push_undef();
+        // TODO the object needs to be wrapped correctly here.
         ctxt.push_store_str(arg, "ret", none);
         ctxt.push_return();
     });

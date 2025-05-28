@@ -61,7 +61,7 @@ fn lower_binop(op: BinOpKind, lhs: &ASTExpr, rhs: &ASTExpr, ctxt: &mut Ctxt) -> 
 fn lower_primitive(e: &ASTExpr, ctxt: &mut Ctxt) -> Option<Node> {
     Some(match e {
         ASTExpr::None => {
-            let payload = ctxt.push_none();
+            let payload = ctxt.push_undef();
             let ty = ctxt.get_singleton("NoneType");
             ctxt.build_value(payload, ty)
         },

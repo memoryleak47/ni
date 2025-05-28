@@ -42,7 +42,7 @@ impl Ctxt {
     }
 
     pub fn push_return_none(&mut self) {
-        let none = self.push_none();
+        let none = self.push_undef();
         let none_ty = self.get_singleton("NoneType");
         let none = self.build_value(none, none_ty);
         self.push_store_str(self.fl().arg_node, "ret", none);

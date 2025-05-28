@@ -62,10 +62,6 @@ impl Ctxt {
         self.push_compute(Expr::BinOp(BinOpKind::IsEqual, a, b))
     }
 
-    pub fn push_none(&mut self) -> Node {
-        self.push_compute(Expr::None)
-    }
-
     pub fn push_undef(&mut self) -> Node {
         self.push_compute(Expr::Undef)
     }
