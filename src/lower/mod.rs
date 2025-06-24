@@ -21,21 +21,13 @@ pub use stmt::*;
 */
 
 pub fn lower(ast: &AST) -> IR {
-    let mut entries = std::fs::read_dir("./src/sem").unwrap()
-        .map(|res| res.map(|e| e.path()))
-        .collect::<Result<Vec<_>, std::io::Error>>().unwrap();
-    entries.sort();
+    let mut s = String::new();
+    s.extend(include_str!("../sem/init.ir").chars());
 
-    let mut ir = IR {
-        procs: Map::new(),
-        main_pid: ProcId(gsymb_add("todo".to_string())),
-    };
-    for x in entries {
-        let s = std::fs::read_to_string(x).unwrap();
-        let toks = ir_tokenize(&s);
-        let ir2 = ir_assemble(&toks[..]);
-        ir.procs.extend(ir2.procs);
-    }
+    let toks = ir_tokenize(&s);
+    let mut ir = ir_assemble(&toks[..]);
+
+    // TODO actually add lowering of `ast` aswell.
 
     ir
 }
