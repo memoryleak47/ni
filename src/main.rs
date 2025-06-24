@@ -1,7 +1,7 @@
 use std::fs;
 
-pub use std::collections::HashMap as Map;
-pub use std::collections::HashSet as Set;
+pub use indexmap::IndexMap as Map;
+pub use indexmap::IndexSet as Set;
 
 pub use noisy_float::prelude::{Float, R64};
 

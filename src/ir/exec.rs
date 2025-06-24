@@ -1,7 +1,5 @@
 use crate::ir::*;
 
-use std::collections::HashMap;
-
 type TablePtr = usize;
 
 fn table_get(ptr: TablePtr, idx: Value, ctxt: &mut Ctxt) -> Value {
@@ -42,7 +40,7 @@ enum Value {
 #[derive(Debug)]
 struct FnCtxt {
     arg: Value,
-    nodes: HashMap<Node, Value>,
+    nodes: Map<Node, Value>,
     fn_id: FnId,
     block_id: BlockId,
     statement_idx: usize,

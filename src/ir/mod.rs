@@ -1,6 +1,4 @@
 pub use noisy_float::prelude::*;
-pub use std::collections::HashMap;
-pub use indexmap::IndexMap;
 
 use crate::*;
 
@@ -64,6 +62,6 @@ pub enum Terminator {
 
 #[derive(Debug, Clone)]
 pub struct IR {
-    pub procs: IndexMap<ProcId, Procedure>,
+    pub procs: Map<ProcId, Procedure>,
     pub main_proc: ProcId,
 }

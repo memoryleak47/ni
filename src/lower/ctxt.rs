@@ -15,7 +15,7 @@ pub(in crate::lower) struct Ctxt {
     pub stack: Vec<FnCtxt>,
     pub nameres_tab: NameResTable,
     pub ir: IR,
-    pub builtin_fns: HashMap<String, FnId>,
+    pub builtin_fns: Map<String, FnId>,
 }
 
 impl Ctxt {
@@ -147,7 +147,7 @@ pub fn new_fn(ctxt: &mut Ctxt, f: impl FnOnce(&mut Ctxt)) -> FnId {
 
 pub fn new_fn_general(main: bool, ctxt: &mut Ctxt, f: impl FnOnce(&mut Ctxt)) -> FnId {
     let n = ctxt.ir.fns.len();
-    let mut blocks: HashMap<_, _> = Default::default();
+    let mut blocks: Map<_, _> = Default::default();
 
     // general function setup:
     if main {
