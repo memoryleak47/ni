@@ -17,14 +17,17 @@ pub use assemble::*;
 mod nameres;
 pub use nameres::*;
 
-mod lower;
-pub use lower::*;
+mod symbol;
+pub use symbol::*;
+
+// mod lower;
+// pub use lower::*;
 
 mod ir;
 pub use ir::*;
 
-mod exec_ir;
-pub use exec_ir::*;
+// mod exec_ir;
+// pub use exec_ir::*;
 
 mod fmt;
 pub use fmt::*;
@@ -48,6 +51,7 @@ fn main() {
         return;
     }
 
+/*
     let ir = lower(&ast);
 
     if let Action::ShowIR = cli.action {
@@ -56,4 +60,5 @@ fn main() {
     }
 
     exec(&ir);
+*/
 }
