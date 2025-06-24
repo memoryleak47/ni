@@ -1,5 +1,11 @@
 use crate::*;
 
+mod tokenize;
+pub use tokenize::*;
+
+mod assemble;
+pub use assemble::*;
+
 pub type AST = Vec<ASTStatement>;
 
 #[derive(Debug, Clone)]

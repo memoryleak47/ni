@@ -8,12 +8,6 @@ pub use noisy_float::prelude::{Float, R64};
 mod ast;
 pub use ast::*;
 
-mod tokenize;
-pub use tokenize::*;
-
-mod assemble;
-pub use assemble::*;
-
 mod nameres;
 pub use nameres::*;
 
@@ -25,12 +19,6 @@ pub use symbol::*;
 
 mod ir;
 pub use ir::*;
-
-// mod exec_ir;
-// pub use exec_ir::*;
-
-mod fmt;
-pub use fmt::*;
 
 mod cli;
 pub use cli::*;
