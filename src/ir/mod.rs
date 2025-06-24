@@ -5,6 +5,12 @@ use crate::*;
 mod fmt;
 pub use fmt::*;
 
+mod tokenize;
+pub use tokenize::*;
+
+mod assemble;
+pub use assemble::*;
+
 mod exec;
 pub use exec::*;
 
