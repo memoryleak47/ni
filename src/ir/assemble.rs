@@ -58,7 +58,12 @@ fn assemble_stmt(toks: &[IRToken]) -> Option<(Statement, &[IRToken])> {
     a(toks)
 }
 
-fn assemble_stmt_let(toks: &[IRToken]) -> Option<(Statement, &[IRToken])> { None }
+fn assemble_stmt_let(toks: &[IRToken]) -> Option<(Statement, &[IRToken])> {
+    let [IRToken::Let, IRToken::Symbol(node), IRToken::Equals, toks@..] = &toks[..] else { return None };
+    let node = Node(*node);
+    let (expr, toks) = assemble_expr(toks)?;
+    Some((Statement::Let(node, expr), toks))
+}
 fn assemble_stmt_store(toks: &[IRToken]) -> Option<(Statement, &[IRToken])> { None }
 fn assemble_stmt_print(toks: &[IRToken]) -> Option<(Statement, &[IRToken])> { None }
 
@@ -69,8 +74,11 @@ fn assemble_terminator(toks: &[IRToken]) -> Option<(Terminator, &[IRToken])> {
 fn assemble_terminator_jmp(toks: &[IRToken]) -> Option<(Terminator, &[IRToken])> { None }
 fn assemble_terminator_exit(toks: &[IRToken]) -> Option<(Terminator, &[IRToken])> { None }
 
-fn assemble_expr(toks: &[IRToken]) -> Option<(Statement, &[IRToken])> {
-    None
+fn assemble_expr(toks: &[IRToken]) -> Option<(Expr, &[IRToken])> {
+    match &toks[..] {
+        [IRToken::At, toks@..] => Some((Expr::Root, &toks[1..])),
+        _ => None,
+    }
 }
 
 trait Assembler<T>: for<'a> Fn(&[IRToken]) -> Option<(T, &[IRToken])> {}

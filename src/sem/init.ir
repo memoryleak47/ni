@@ -1,4 +1,4 @@
 proc init {
-    # let tab = {};
+    let root = @;
     # @["singletons"] = tab;
 }
