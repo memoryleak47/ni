@@ -20,7 +20,7 @@ fn assemble_ir(mut toks: &[IRToken]) -> Option<(IR, &[IRToken])> {
     }
     let ir = IR {
         procs,
-        main_pid: main_pid.unwrap(),
+        main_pid: main_pid.unwrap_or_else(|| ProcId(gsymb_add("todo".to_string()))),
     };
     Some((ir, toks))
 }
@@ -41,6 +41,9 @@ fn assemble_proc(mut toks: &[IRToken]) -> Option<(/*start*/ bool, ProcId, Proced
         toks = toks2;
     }
     let (terminator, toks) = assemble_terminator(toks)?;
+
+    let [IRToken::RBrace, toks@..] = toks else { return None };
+
     let proc = Procedure {
         stmts,
         terminator
@@ -55,19 +58,19 @@ fn assemble_stmt(toks: &[IRToken]) -> Option<(Statement, &[IRToken])> {
     a(toks)
 }
 
-fn assemble_stmt_let(toks: &[IRToken]) -> Option<(Statement, &[IRToken])> { todo!() }
-fn assemble_stmt_store(toks: &[IRToken]) -> Option<(Statement, &[IRToken])> { todo!() }
-fn assemble_stmt_print(toks: &[IRToken]) -> Option<(Statement, &[IRToken])> { todo!() }
+fn assemble_stmt_let(toks: &[IRToken]) -> Option<(Statement, &[IRToken])> { None }
+fn assemble_stmt_store(toks: &[IRToken]) -> Option<(Statement, &[IRToken])> { None }
+fn assemble_stmt_print(toks: &[IRToken]) -> Option<(Statement, &[IRToken])> { None }
 
 fn assemble_terminator(toks: &[IRToken]) -> Option<(Terminator, &[IRToken])> {
     or(assemble_terminator_jmp, assemble_terminator_exit)(toks)
 }
 
-fn assemble_terminator_jmp(toks: &[IRToken]) -> Option<(Terminator, &[IRToken])> { todo!() }
-fn assemble_terminator_exit(toks: &[IRToken]) -> Option<(Terminator, &[IRToken])> { todo!() }
+fn assemble_terminator_jmp(toks: &[IRToken]) -> Option<(Terminator, &[IRToken])> { None }
+fn assemble_terminator_exit(toks: &[IRToken]) -> Option<(Terminator, &[IRToken])> { None }
 
 fn assemble_expr(toks: &[IRToken]) -> Option<(Statement, &[IRToken])> {
-    todo!()
+    None
 }
 
 trait Assembler<T>: for<'a> Fn(&[IRToken]) -> Option<(T, &[IRToken])> {}
