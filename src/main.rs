@@ -11,8 +11,8 @@ pub use ast::*;
 mod symbol;
 pub use symbol::*;
 
-// mod lower;
-// pub use lower::*;
+mod lower;
+pub use lower::*;
 
 mod ir;
 pub use ir::*;
@@ -36,7 +36,6 @@ fn main() {
         return;
     }
 
-/*
     let ir = lower(&ast);
 
     if let Action::ShowIR = cli.action {
@@ -45,5 +44,4 @@ fn main() {
     }
 
     exec(&ir);
-*/
 }

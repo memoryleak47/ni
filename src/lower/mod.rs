@@ -1,5 +1,6 @@
 use crate::*;
 
+/*
 mod init;
 pub use init::*;
 
@@ -17,8 +18,29 @@ pub use expr::*;
 
 mod stmt;
 pub use stmt::*;
+*/
 
+pub fn lower(ast: &AST) -> IR {
+    let mut entries = std::fs::read_dir("./src/sem").unwrap()
+        .map(|res| res.map(|e| e.path()))
+        .collect::<Result<Vec<_>, std::io::Error>>().unwrap();
+    entries.sort();
 
+    let mut ir = IR {
+        procs: Map::new(),
+        main_pid: ProcId(gsymb_add("todo".to_string())),
+    };
+    for x in entries {
+        let s = std::fs::read_to_string(x).unwrap();
+        let toks = ir_tokenize(&s);
+        let ir2 = ir_assemble(&toks[..]);
+        ir.procs.extend(ir2.procs);
+    }
+
+    ir
+}
+
+/*
 pub fn lower(ast: &AST) -> IR {
     let nameres_tab = nameres(ast);
 
@@ -57,3 +79,4 @@ pub fn find_namespace(v: &str, ctxt: &mut Ctxt) -> Node {
         _ => ctxt.fl().global_node,
     }
 }
+*/
