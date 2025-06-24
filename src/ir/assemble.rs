@@ -55,7 +55,9 @@ fn assemble_stmt(toks: &[IRToken]) -> Option<(Statement, &[IRToken])> {
     let a = assemble_stmt_let;
     let a = or(a, assemble_stmt_store);
     let a = or(a, assemble_stmt_print);
-    a(toks)
+    let (stmt, toks) = a(toks)?;
+    let [IRToken::Semicolon, toks@..] = toks else { return None };
+    Some((stmt, toks))
 }
 
 fn assemble_stmt_let(toks: &[IRToken]) -> Option<(Statement, &[IRToken])> {
@@ -68,15 +70,22 @@ fn assemble_stmt_store(toks: &[IRToken]) -> Option<(Statement, &[IRToken])> { No
 fn assemble_stmt_print(toks: &[IRToken]) -> Option<(Statement, &[IRToken])> { None }
 
 fn assemble_terminator(toks: &[IRToken]) -> Option<(Terminator, &[IRToken])> {
-    or(assemble_terminator_jmp, assemble_terminator_exit)(toks)
+    let (terminator, toks) = or(assemble_terminator_jmp, assemble_terminator_exit)(toks)?;
+    let [IRToken::Semicolon, toks@..] = toks else { return None };
+    Some((terminator, toks))
 }
 
-fn assemble_terminator_jmp(toks: &[IRToken]) -> Option<(Terminator, &[IRToken])> { None }
+fn assemble_terminator_jmp(toks: &[IRToken]) -> Option<(Terminator, &[IRToken])> {
+    let [IRToken::Jmp, IRToken::Symbol(s), toks@..] = toks else { return None };
+    let node = Node(*s);
+    Some((Terminator::Jmp(node), toks))
+}
+
 fn assemble_terminator_exit(toks: &[IRToken]) -> Option<(Terminator, &[IRToken])> { None }
 
 fn assemble_expr(toks: &[IRToken]) -> Option<(Expr, &[IRToken])> {
     match &toks[..] {
-        [IRToken::At, toks@..] => Some((Expr::Root, &toks[1..])),
+        [IRToken::At, toks@..] => Some((Expr::Root, toks)),
         _ => None,
     }
 }
