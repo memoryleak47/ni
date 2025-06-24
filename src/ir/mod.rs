@@ -5,10 +5,10 @@ use crate::*;
 mod fmt;
 pub use fmt::*;
 
-/*
 mod exec;
 pub use exec::*;
-*/
+
+pub type Stmt = (ProcId, /*idx*/ usize);
 
 // the same as ast::BinOpKind but without And & Or.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -63,5 +63,5 @@ pub enum Terminator {
 #[derive(Debug, Clone)]
 pub struct IR {
     pub procs: Map<ProcId, Procedure>,
-    pub main_proc: ProcId,
+    pub main_pid: ProcId,
 }

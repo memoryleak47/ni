@@ -17,7 +17,7 @@ impl Display for IR {
 }
 
 pub fn display_proc_header(pid: ProcId, ir: &IR, f: &mut Formatter<'_>) -> fmt::Result {
-    let main_prefix = if ir.main_proc == pid { "main " } else { "" };
+    let main_prefix = if ir.main_pid == pid { "main " } else { "" };
 
     write!(f, "{main_prefix}proc {pid} {{\n")
 }
