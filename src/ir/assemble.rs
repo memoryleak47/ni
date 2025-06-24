@@ -49,9 +49,30 @@ fn assemble_proc(mut toks: &[IRToken]) -> Option<(/*start*/ bool, ProcId, Proced
 }
 
 fn assemble_stmt(toks: &[IRToken]) -> Option<(Statement, &[IRToken])> {
+    let a = assemble_stmt_let;
+    let a = or(a, assemble_stmt_store);
+    let a = or(a, assemble_stmt_print);
+    a(toks)
+}
+
+fn assemble_stmt_let(toks: &[IRToken]) -> Option<(Statement, &[IRToken])> { todo!() }
+fn assemble_stmt_store(toks: &[IRToken]) -> Option<(Statement, &[IRToken])> { todo!() }
+fn assemble_stmt_print(toks: &[IRToken]) -> Option<(Statement, &[IRToken])> { todo!() }
+
+fn assemble_terminator(toks: &[IRToken]) -> Option<(Terminator, &[IRToken])> {
+    or(assemble_terminator_jmp, assemble_terminator_exit)(toks)
+}
+
+fn assemble_terminator_jmp(toks: &[IRToken]) -> Option<(Terminator, &[IRToken])> { todo!() }
+fn assemble_terminator_exit(toks: &[IRToken]) -> Option<(Terminator, &[IRToken])> { todo!() }
+
+fn assemble_expr(toks: &[IRToken]) -> Option<(Statement, &[IRToken])> {
     todo!()
 }
 
-fn assemble_terminator(toks: &[IRToken]) -> Option<(Terminator, &[IRToken])> {
-    todo!()
+trait Assembler<T>: for<'a> Fn(&[IRToken]) -> Option<(T, &[IRToken])> {}
+impl<A, T> Assembler<T> for A where A: for<'a> Fn(&[IRToken]) -> Option<(T, &[IRToken])> {}
+
+fn or<T>(a: impl Assembler<T>, b: impl Assembler<T>) -> impl Assembler<T> {
+    move |toks| a(toks).or_else(|| b(toks))
 }
