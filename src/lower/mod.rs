@@ -3,6 +3,9 @@ use crate::*;
 mod init;
 pub use init::*;
 
+mod nameres;
+pub use nameres::*;
+
 mod ctxt;
 pub use ctxt::*;
 

@@ -8,9 +8,6 @@ pub use noisy_float::prelude::{Float, R64};
 mod ast;
 pub use ast::*;
 
-mod nameres;
-pub use nameres::*;
-
 mod symbol;
 pub use symbol::*;
 
