@@ -3,6 +3,8 @@ use std::fmt::{self, Display, Formatter};
 
 const SHOW_ALL: bool = false;
 
+type NodeMap = Map<Node, (String, /*is-symbol: */ bool)>;
+
 impl Display for IR {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         for (&pid, _) in self.procs.iter() {
@@ -13,7 +15,7 @@ impl Display for IR {
     }
 }
 
-pub fn display_proc(pid: ProcId, ir: &IR, f: &mut Formatter<'_>) -> fmt::Result {
+pub fn display_proc(pid: Symbol, ir: &IR, f: &mut Formatter<'_>) -> fmt::Result {
     let main_prefix = if ir.main_pid == pid { "main " } else { "" };
 
     write!(f, "{main_prefix}proc {pid} {{\n")?;
@@ -27,16 +29,17 @@ pub fn display_proc(pid: ProcId, ir: &IR, f: &mut Formatter<'_>) -> fmt::Result 
     write!(f, "}}\n\n")
 }
 
-fn display_stmt(stmt: &Statement, nodemap: &mut Map<Node, String>, f: &mut Formatter<'_>,) -> fmt::Result {
+fn display_stmt(stmt: &Statement, nodemap: &mut NodeMap, f: &mut Formatter<'_>) -> fmt::Result {
     use Statement::*;
 
     match stmt {
         Let(n, e, visible) => {
-            let e = expr_string(e, nodemap);
+            let e_str = expr_string(e, nodemap);
             if *visible || SHOW_ALL {
-                write!(f, "    {n} = {e};\n")?;
+                write!(f, "    {n} = {e_str};\n")?;
             } else {
-                nodemap.insert(*n, e);
+                let b = matches!(e, Expr::Symbol(_));
+                nodemap.insert(*n, (e_str, b));
             }
         }
         Store(t, i, n) => {
@@ -53,7 +56,7 @@ fn display_stmt(stmt: &Statement, nodemap: &mut Map<Node, String>, f: &mut Forma
     Ok(())
 }
 
-fn display_terminator(terminator: &Terminator, nodemap: &Map<Node, String>, f: &mut Formatter<'_>) -> fmt::Result {
+fn display_terminator(terminator: &Terminator, nodemap: &NodeMap, f: &mut Formatter<'_>) -> fmt::Result {
     use Terminator::*;
 
     match terminator {
@@ -71,13 +74,12 @@ fn display_terminator(terminator: &Terminator, nodemap: &Map<Node, String>, f: &
     Ok(())
 }
 
-fn expr_string(expr: &Expr, nodemap: &Map<Node, String>) -> String {
+fn expr_string(expr: &Expr, nodemap: &NodeMap) -> String {
     use Expr::*;
     match expr {
         Index(t, i) => display_index(*t, *i, nodemap),
         Root => format!("@"),
         NewTable => format!("{{}}"),
-        Proc(pid) => format!("{pid}"),
         BinOp(kind, l, r) => {
             let l = node_string(*l, nodemap);
             let r = node_string(*r, nodemap);
@@ -88,7 +90,7 @@ fn expr_string(expr: &Expr, nodemap: &Map<Node, String>) -> String {
             let r = node_string(*r, nodemap);
             format!("{l}[{r}]")
         }
-        Symbol(s) => format!("${s}"),
+        Symbol(s) => format!("{s}"),
         Float(x) => format!("{x}"),
         Int(x) => format!("{x}"),
         Bool(true) => format!("True"),
@@ -119,15 +121,9 @@ impl Display for BinOpKind {
     }
 }
 
-impl Display for ProcId {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-fn node_string(n: Node, nodemap: &Map<Node, String>) -> String {
+fn node_string(n: Node, nodemap: &NodeMap) -> String {
     match nodemap.get(&n) {
-        Some(x) => x.to_string(),
+        Some((x, _)) => x.to_string(),
         None => n.to_string(),
     }
 }
@@ -138,22 +134,14 @@ impl Display for Node {
     }
 }
 
-fn display_index(t: Node, i: Node, nodemap: &Map<Node, String>) -> String {
+fn display_index(t: Node, i: Node, nodemap: &NodeMap) -> String {
+    let b = nodemap.get(&i).map(|(_, x)| *x).unwrap_or(false);
     let t = node_string(t, nodemap);
     let i = node_string(i, nodemap);
-    if let Some(s) = as_symb(&i) {
-        format!("{t}.{s}")
+
+    if b {
+        format!("{t}.{i}")
     } else {
         format!("{t}[{i}]")
     }
 }
-
-fn as_symb(s: &str) -> Option<String> {
-    let mut chars = s.chars();
-    if let Some('$') = chars.next() {
-        Some(chars.collect())
-    } else {
-        None
-    }
-}
-

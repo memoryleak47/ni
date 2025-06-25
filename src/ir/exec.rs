@@ -32,7 +32,6 @@ enum Value {
     Bool(bool),
     TablePtr(TablePtr),
     Str(String),
-    Proc(ProcId),
     Float(R64),
     Int(i64),
     Symbol(Symbol),
@@ -43,7 +42,7 @@ struct Ctxt<'ir> {
     heap: Vec<TableData>,
     root: Value,
     ir: &'ir IR,
-    pid: ProcId,
+    pid: Symbol,
     nodes: Map<Node, Value>,
     statement_idx: usize,
 }
@@ -66,7 +65,6 @@ fn exec_expr(expr: &Expr, ctxt: &mut Ctxt) -> Value {
         }
         Expr::Root => ctxt.root.clone(),
         Expr::NewTable => alloc_table(ctxt),
-        Expr::Proc(pid) => Value::Proc(*pid),
         Expr::BinOp(kind, l, r) => {
             let l = ctxt.nodes[l].clone();
             let r = ctxt.nodes[r].clone();
@@ -164,10 +162,9 @@ fn step_stmt(stmt: &Statement, ctxt: &mut Ctxt) {
                 Value::Undef => crash("print called on Undef!", ctxt),
                 Value::Bool(true) => println!("True"),
                 Value::Bool(false) => println!("False"),
-                Value::Symbol(s) => println!("${s}"),
+                Value::Symbol(s) => println!("{s}"),
                 Value::Str(s) => println!("{}", s),
                 Value::TablePtr(ptr) => println!("table: {}", ptr),
-                Value::Proc(pid) => println!("procedure: {}", pid),
                 Value::Float(x) => println!("{}", x),
                 Value::Int(x) => println!("{}", x),
             }
@@ -180,7 +177,7 @@ fn step_terminator(terminator: &Terminator, ctxt: &mut Ctxt) -> bool {
     match terminator {
         Jmp(n) => {
             match ctxt.nodes[n].clone() {
-                Value::Proc(pid) => {
+                Value::Symbol(pid) => {
                     ctxt.pid = pid;
                     ctxt.nodes.clear();
                     ctxt.statement_idx = 0;

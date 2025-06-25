@@ -47,7 +47,7 @@ main proc init {
 
     # setup callstack
     %frame = {};
-    %frame.parent = Undef;
+    %frame.parent = undef;
     %frame.arg = {};
     %frame.retval = {};
     %frame.retpid = fin;

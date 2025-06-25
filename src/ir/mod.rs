@@ -14,7 +14,7 @@ pub use assemble::*;
 mod exec;
 pub use exec::*;
 
-pub type Stmt = (ProcId, /*idx*/ usize);
+pub type Stmt = (Symbol, /*idx*/ usize);
 
 // the same as ast::BinOpKind but without And & Or.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -26,9 +26,6 @@ pub enum BinOpKind {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Node(pub Symbol);
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProcId(pub Symbol);
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Statement {
@@ -43,7 +40,6 @@ pub enum Expr {
 
     Root, // @
     NewTable, // equivalent to {}
-    Proc(ProcId),
     BinOp(BinOpKind, Node, Node),
 
     // literals
@@ -70,6 +66,6 @@ pub enum Terminator {
 
 #[derive(Debug, Clone)]
 pub struct IR {
-    pub procs: Map<ProcId, Proc>,
-    pub main_pid: ProcId,
+    pub procs: Map<Symbol, Proc>,
+    pub main_pid: Symbol,
 }

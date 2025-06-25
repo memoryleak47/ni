@@ -18,14 +18,14 @@ pub fn ir_assemble(mut toks: &[IRToken]) -> IR {
     }
 }
 
-fn assemble_proc(mut toks: &[IRToken]) -> (/*start*/ bool, ProcId, Proc, &[IRToken]) {
+fn assemble_proc(mut toks: &[IRToken]) -> (/*start*/ bool, Symbol, Proc, &[IRToken]) {
     let mut main = false;
     if let [IRToken::Main, ..] = toks {
         main = true;
         toks = &toks[1..];
     }
     let [IRToken::Proc, IRToken::Symbol(pid), IRToken::LBrace, toks@..] = toks else { panic!() };
-    let pid = ProcId(*pid);
+    let pid = *pid;
 
     let mut toks = toks;
     let mut stmts = Vec::new();
@@ -144,8 +144,7 @@ fn assemble_atomic_expr_or_node(toks: &[IRToken]) -> Option<(ExprOrNode, Vec<Sta
     match &toks[..] {
         [IRToken::At, toks@..] => Some((ExprOrNode::Expr(Expr::Root), Vec::new(), toks)),
         [IRToken::BinOp(BinOpKind::Mod), IRToken::Symbol(s), toks@..] => Some((ExprOrNode::Node(Node(*s)), Vec::new(), toks)),
-        [IRToken::Dollar, IRToken::Symbol(s), toks@..] => Some((ExprOrNode::Expr(Expr::Symbol(*s)), Vec::new(), toks)),
-        [IRToken::Symbol(s), toks@..] => Some((ExprOrNode::Expr(Expr::Proc(ProcId(*s))), Vec::new(), toks)),
+        [IRToken::Symbol(s), toks@..] => Some((ExprOrNode::Expr(Expr::Symbol(*s)), Vec::new(), toks)),
         [IRToken::Int(i), toks@..] => Some((ExprOrNode::Expr(Expr::Int(*i)), Vec::new(), toks)),
         [IRToken::Str(s), toks@..] => Some((ExprOrNode::Expr(Expr::Str(s.to_string())), Vec::new(), toks)),
         [IRToken::LBrace, IRToken::RBrace, toks@..] => Some((ExprOrNode::Expr(Expr::NewTable), Vec::new(), toks)),
