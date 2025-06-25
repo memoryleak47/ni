@@ -44,7 +44,10 @@ fn display_stmt(stmt: &Statement, nodemap: &mut Map<Node, String>, f: &mut Forma
             let n = node_string(*n, nodemap);
             write!(f, "    {idx} = {n};\n")?;
         }
-        Print(v) => write!(f, "    print {};\n", v)?,
+        Print(v) => {
+            let v = node_string(*v, nodemap);
+            write!(f, "    print {v};\n")?;
+        },
     }
 
     Ok(())
