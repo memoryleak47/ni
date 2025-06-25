@@ -33,7 +33,10 @@
 main proc init {
     # setup singletons
     @.singletons = {};
-    @.singletons.function = {}; # the <function> type.
+    @.singletons.function = {}; # the `function` type.
+    @.singletons.int = {};      # the `int` type.
+    @.singletons.str = {};      # the `str` type.
+    @.singletons.bool = {};     # the `bool` type.
     @.singletons.none = {};     # the unique `None` value.
 
     # setup globals
@@ -60,7 +63,7 @@ main proc init {
 
 proc print_fn {
     %f = @.frame;
-    print %f.arg[0];
+    print %f.arg[0].payload;
     %f.retval.v = @.singletons.none;
     @.frame = %f.parent;
     jmp %f.retpid;
