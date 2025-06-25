@@ -19,6 +19,11 @@ fn gsymb_fresh() -> Symbol {
     g.fresh()
 }
 
+fn gsymb_next_fresh(s: Symbol) -> Symbol {
+    let mut g = GSYMB.lock().unwrap();
+    g.next_fresh(s)
+}
+
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Symbol(pub usize);
 
@@ -64,6 +69,20 @@ impl SymbolMap {
             }
         }
     }
+
+    fn next_fresh(&mut self, s: Symbol) -> Symbol {
+        let mut s: String = self.id_to_string.get(s.0).unwrap().clone();
+        while s[1..].contains('_') {
+            s.pop();
+        }
+        for i in 2.. {
+            let s = format!("{s}_{i}");
+            if self.string_to_id.get(&s).is_none() {
+                return self.add(s);
+            }
+        }
+        unreachable!()
+    }
 }
 
 
@@ -100,6 +119,10 @@ impl Symbol {
 
     pub fn fresh() -> Symbol {
         gsymb_fresh()
+    }
+
+    pub fn next_fresh(self) -> Symbol {
+        gsymb_next_fresh(self)
     }
 }
 

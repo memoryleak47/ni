@@ -63,7 +63,7 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
     match e {
         ASTExpr::FnCall(f, args) => {
             let f = lower_expr(f, ctxt);
-            let suc = Symbol::fresh();
+            let suc = ctxt.f().current_pid.next_fresh();
             ctxt.push(format!("%new_f = {{}}"));
             ctxt.push(format!("%new_f.retpid = {suc}"));
             ctxt.push(format!("%new_f.retval = {{}}"));
