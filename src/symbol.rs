@@ -124,6 +124,10 @@ impl Symbol {
     pub fn next_fresh(self) -> Symbol {
         gsymb_next_fresh(self)
     }
+
+    pub fn new_fresh(s: String) -> Symbol {
+        Symbol::new(s).next_fresh()
+    }
 }
 
 use std::fmt::{self, Display, Debug, Formatter};

@@ -61,7 +61,7 @@ fn lower_stmt(stmt: &ASTStatement, ctxt: &mut Ctxt) {
         },
         ASTStatement::If(cond, then) => {
             let cond = lower_expr(cond, ctxt);
-            let n = Node(Symbol::fresh());
+            let n = Node(Symbol::new_fresh("ifcond".to_string()));
             let then_pid = ctxt.alloc_blk();
             let post_pid = ctxt.alloc_blk();
             ctxt.push(format!("{n} = {{}}"));
@@ -84,7 +84,7 @@ fn lower_stmt(stmt: &ASTStatement, ctxt: &mut Ctxt) {
 
             ctxt.focus_blk(pre_pid);
                 let cond = lower_expr(cond, ctxt);
-                let n = Node(Symbol::fresh());
+                let n = Node(Symbol::new_fresh("whilecond".to_string()));
                 ctxt.push(format!("{n} = {{}}"));
                 ctxt.push(format!("{n}[True] = {body_pid}"));
                 ctxt.push(format!("{n}[False] = {post_pid}"));
@@ -126,7 +126,7 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
             format!("{ns}[\"{v}\"]")
         },
         ASTExpr::Str(s) => {
-            let t = Node(Symbol::fresh());
+            let t = Node(Symbol::new_fresh("strbox".to_string()));
             ctxt.push(format!("{t} = {{}}"));
             ctxt.push(format!("{t}.type = @.singletons.str"));
             ctxt.push(format!("{t}.payload = \"{s}\""));
@@ -134,7 +134,7 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
             format!("{t}")
         },
         ASTExpr::Int(i) => {
-            let t = Node(Symbol::fresh());
+            let t = Node(Symbol::new_fresh("intbox".to_string()));
             ctxt.push(format!("{t} = {{}}"));
             ctxt.push(format!("{t}.type = @.singletons.int"));
             ctxt.push(format!("{t}.payload = {i}"));
@@ -143,7 +143,7 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
         },
         ASTExpr::Bool(b) => {
             let b = if *b { "True" } else { "False" };
-            let t = Node(Symbol::fresh());
+            let t = Node(Symbol::new_fresh("boolbox".to_string()));
             ctxt.push(format!("{t} = {{}}"));
             ctxt.push(format!("{t}.type = @.singletons.bool"));
             ctxt.push(format!("{t}.payload = {b}"));
