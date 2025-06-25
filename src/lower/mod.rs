@@ -28,9 +28,7 @@ fn lower_ast(ast: &AST) -> String {
 
     ctxt.procs.insert(userstart, Vec::new());
 
-    for stmt in &**ast {
-        lower_stmt(stmt, &mut ctxt);
-    }
+    lower_body(&**ast, &mut ctxt);
 
     ctxt.push(format!("exit"));
 
@@ -45,6 +43,12 @@ fn lower_ast(ast: &AST) -> String {
     s
 }
 
+fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
+    for x in stmts {
+        lower_stmt(x, ctxt);
+    }
+}
+
 fn lower_stmt(stmt: &ASTStatement, ctxt: &mut Ctxt) {
     match stmt {
         ASTStatement::Expr(e) => {
@@ -54,6 +58,25 @@ fn lower_stmt(stmt: &ASTStatement, ctxt: &mut Ctxt) {
             let ns = find_namespace(v, ctxt);
             let rhs = lower_expr(rhs, ctxt);
             ctxt.push(format!("{ns}[\"{v}\"] = {rhs}"));
+        },
+        ASTStatement::If(cond, then) => {
+            let cond = lower_expr(cond, ctxt);
+            let n = Node(Symbol::fresh());
+            let then_pid = ctxt.f().current_pid.next_fresh();
+            let post_pid = ctxt.f().current_pid.next_fresh();
+            ctxt.push(format!("{n} = {{}}"));
+            ctxt.push(format!("{n}[True] = {then_pid}"));
+            ctxt.push(format!("{n}[False] = {post_pid}"));
+            ctxt.push(format!("jmp {n}[{cond}]"));
+
+            ctxt.procs.insert(then_pid, vec![]);
+            ctxt.stack.last_mut().unwrap().current_pid = then_pid;
+
+            lower_body(then, ctxt);
+            ctxt.push(format!("jmp {post_pid}"));
+
+            ctxt.procs.insert(post_pid, vec![]);
+            ctxt.stack.last_mut().unwrap().current_pid = post_pid;
         },
         _ => todo!(),
     }
