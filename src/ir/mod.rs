@@ -47,6 +47,7 @@ pub enum Expr {
     BinOp(BinOpKind, Node, Node),
 
     // literals
+    Symbol(Symbol), // $symbol
     Float(R64),
     Int(i64),
     Bool(bool),

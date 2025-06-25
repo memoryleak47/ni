@@ -86,6 +86,7 @@ fn assemble_terminator_exit(toks: &[IRToken]) -> Option<(Terminator, &[IRToken])
 fn assemble_expr(toks: &[IRToken]) -> Option<(Expr, &[IRToken])> {
     match &toks[..] {
         [IRToken::At, toks@..] => Some((Expr::Root, toks)),
+        [IRToken::Dollar, IRToken::Symbol(s), toks@..] => Some((Expr::Symbol(*s), toks)),
         _ => None,
     }
 }

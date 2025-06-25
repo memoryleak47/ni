@@ -85,6 +85,7 @@ fn expr_string(expr: &Expr, nodemap: &Map<Node, String>) -> String {
             let r = node_string(*r, nodemap);
             format!("{l}[{r}]")
         }
+        Symbol(s) => format!("${s}"),
         Float(x) => format!("{x}"),
         Int(x) => format!("{x}"),
         Bool(true) => format!("True"),

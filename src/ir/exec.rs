@@ -35,6 +35,7 @@ enum Value {
     Proc(ProcId),
     Float(R64),
     Int(i64),
+    Symbol(Symbol),
 }
 
 #[derive(Debug)]
@@ -72,6 +73,7 @@ fn exec_expr(expr: &Expr, ctxt: &mut Ctxt) -> Value {
 
             exec_binop(kind.clone(), l, r, ctxt)
         }
+        Expr::Symbol(s) => Value::Symbol(*s),
         Expr::Float(x) => Value::Float(*x),
         Expr::Int(x) => Value::Int(*x),
         Expr::Bool(b) => Value::Bool(*b),
@@ -162,6 +164,7 @@ fn step_stmt(stmt: &Statement, ctxt: &mut Ctxt) {
                 Value::Undef => crash("print called on Undef!", ctxt),
                 Value::Bool(true) => println!("True"),
                 Value::Bool(false) => println!("False"),
+                Value::Symbol(s) => println!("${s}"),
                 Value::Str(s) => println!("{}", s),
                 Value::TablePtr(ptr) => println!("table: {}", ptr),
                 Value::Proc(pid) => println!("procedure: {}", pid),

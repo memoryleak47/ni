@@ -1,4 +1,5 @@
-proc init {
+main proc init {
     let root = @;
+    let nice = $wowie;
     jmp root;
 }
