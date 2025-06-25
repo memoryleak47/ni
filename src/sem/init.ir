@@ -45,6 +45,16 @@ main proc init {
     %print_fn.pid = print_fn;
     @.globals["print"] = %print_fn;
 
+    # setup callstack
+    %frame = {};
+    %frame.parent = Undef;
+    %frame.arg = {};
+    %frame.retval = {};
+    %frame.retpid = fin;
+    %frame.pylocals = @.globals;
+    %frame.irlocals = {};
+    @.frame = %frame;
+
     jmp userstart;
 }
 
