@@ -75,6 +75,27 @@ fn lower_stmt(stmt: &ASTStatement, ctxt: &mut Ctxt) {
 
             ctxt.focus_blk(post_pid);
         },
+        ASTStatement::While(cond, body) => {
+            let pre_pid = ctxt.alloc_blk();
+            let body_pid = ctxt.alloc_blk();
+            let post_pid = ctxt.alloc_blk();
+
+            ctxt.push(format!("jmp {pre_pid}"));
+
+            ctxt.focus_blk(pre_pid);
+                let cond = lower_expr(cond, ctxt);
+                let n = Node(Symbol::fresh());
+                ctxt.push(format!("{n} = {{}}"));
+                ctxt.push(format!("{n}[True] = {body_pid}"));
+                ctxt.push(format!("{n}[False] = {post_pid}"));
+                ctxt.push(format!("jmp {n}[{cond}]"));
+
+            ctxt.focus_blk(body_pid);
+                lower_body(body, ctxt);
+                ctxt.push(format!("jmp {pre_pid}"));
+
+            ctxt.focus_blk(post_pid);
+        },
         _ => todo!(),
     }
 }
@@ -85,6 +106,7 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
             let f = lower_expr(f, ctxt);
             let suc = ctxt.alloc_blk();
             ctxt.push(format!("%new_f = {{}}"));
+            ctxt.push(format!("%new_f.parent = @.frame"));
             ctxt.push(format!("%new_f.retpid = {suc}"));
             ctxt.push(format!("%new_f.retval = {{}}"));
             ctxt.push(format!("%new_f.arg = {{}}"));
