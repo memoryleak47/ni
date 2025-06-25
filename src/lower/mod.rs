@@ -3,6 +3,9 @@ use crate::*;
 mod nameres;
 pub use nameres::*;
 
+mod ctxt;
+pub use ctxt::*;
+
 fn lower_ast(ast: &AST) -> String {
     let nameres_tab = nameres(ast);
 
