@@ -25,7 +25,7 @@ fn assemble_ir(mut toks: &[IRToken]) -> Option<(IR, &[IRToken])> {
     Some((ir, toks))
 }
 
-fn assemble_proc(mut toks: &[IRToken]) -> Option<(/*start*/ bool, ProcId, Procedure, &[IRToken])> {
+fn assemble_proc(mut toks: &[IRToken]) -> Option<(/*start*/ bool, ProcId, Proc, &[IRToken])> {
     let mut main = false;
     if let [IRToken::Main, ..] = toks {
         main = true;
@@ -44,7 +44,7 @@ fn assemble_proc(mut toks: &[IRToken]) -> Option<(/*start*/ bool, ProcId, Proced
 
     let [IRToken::RBrace, toks@..] = toks else { return None };
 
-    let proc = Procedure {
+    let proc = Proc {
         stmts,
         terminator
     };

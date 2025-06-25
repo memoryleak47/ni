@@ -55,7 +55,7 @@ pub enum Expr {
 }
 
 #[derive(Debug, Clone)]
-pub struct Procedure {
+pub struct Proc {
     pub stmts: Vec<Statement>,
     pub terminator: Terminator,
 }
@@ -68,6 +68,6 @@ pub enum Terminator {
 
 #[derive(Debug, Clone)]
 pub struct IR {
-    pub procs: Map<ProcId, Procedure>,
+    pub procs: Map<ProcId, Proc>,
     pub main_pid: ProcId,
 }
