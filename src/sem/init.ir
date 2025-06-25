@@ -42,6 +42,6 @@ main proc init {
 }
 
 proc print_fn {
-    print @.arg[1];
+    print "hey!";
     jmp @.ret;
 }

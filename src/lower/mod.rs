@@ -27,8 +27,8 @@ fn lower_stmt(stmt: &ASTStatement) -> String {
 
 fn lower_expr(e: &ASTExpr) -> String {
     match e {
-        ASTExpr::FnCall(f, args) => todo!(),
-        ASTExpr::Var(v) => todo!(),
+        ASTExpr::FnCall(f, args) => format!("jmp @.globals[{}].pid", lower_expr(f)),
+        ASTExpr::Var(v) => format!("@.globals[\"{v}\"]"),
         _ => todo!(),
     }
 }
