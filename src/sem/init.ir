@@ -2,7 +2,7 @@
 #
 # struct Root {
 #   singletons :: Symbol -> any  # predefined objects, that are used internally in the runtime
-#   globals :: String -> any     # (predefined) global variables (user-facing)
+#   globals :: String -> any     # global variables (user-facing)
 #   frame :: Frame               # the callstack
 # }
 #
