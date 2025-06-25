@@ -1,16 +1,10 @@
 use crate::*;
 
-pub fn ir_assemble(toks: &[IRToken]) -> IR {
-    let (ir, toks) = assemble_ir(toks).unwrap();
-    assert!(toks.is_empty(), "{:?}", toks);
-
-    ir
-}
-
-fn assemble_ir(mut toks: &[IRToken]) -> Option<(IR, &[IRToken])> {
+pub fn ir_assemble(mut toks: &[IRToken]) -> IR {
     let mut procs = Map::new();
     let mut main_pid = None;
-    while let Some((start, pid, x, rst)) = assemble_proc(toks) {
+    while toks.len() > 0 {
+        let (start, pid, x, rst) = assemble_proc(toks);
         toks = rst;
         if start {
             assert!(main_pid.is_none());
@@ -18,20 +12,19 @@ fn assemble_ir(mut toks: &[IRToken]) -> Option<(IR, &[IRToken])> {
         }
         procs.insert(pid, x);
     }
-    let ir = IR {
+    IR {
         procs,
-        main_pid: main_pid.unwrap_or_else(|| ProcId(Symbol::new("todo".to_string()))),
-    };
-    Some((ir, toks))
+        main_pid: main_pid.unwrap(),
+    }
 }
 
-fn assemble_proc(mut toks: &[IRToken]) -> Option<(/*start*/ bool, ProcId, Proc, &[IRToken])> {
+fn assemble_proc(mut toks: &[IRToken]) -> (/*start*/ bool, ProcId, Proc, &[IRToken]) {
     let mut main = false;
     if let [IRToken::Main, ..] = toks {
         main = true;
         toks = &toks[1..];
     }
-    let [IRToken::Proc, IRToken::Symbol(pid), IRToken::LBrace, toks@..] = toks else { return None };
+    let [IRToken::Proc, IRToken::Symbol(pid), IRToken::LBrace, toks@..] = toks else { panic!() };
     let pid = ProcId(*pid);
 
     let mut toks = toks;
@@ -41,16 +34,18 @@ fn assemble_proc(mut toks: &[IRToken]) -> Option<(/*start*/ bool, ProcId, Proc, 
         stmts.push(x);
         toks = toks2;
     }
-    let (terminator, prev, toks) = assemble_terminator(toks)?;
+    let (terminator, prev, toks) = assemble_terminator(toks).unwrap_or_else(|| {
+        panic!("Couldn't parse stmt or terminator starting at:\n{toks:?}")
+    });
     stmts.extend(prev);
 
-    let [IRToken::RBrace, toks@..] = toks else { return None };
+    let [IRToken::RBrace, toks@..] = toks else { panic!("missing }}!") };
 
     let proc = Proc {
         stmts,
         terminator
     };
-    Some((main, pid, proc, toks))
+    (main, pid, proc, toks)
 }
 
 fn assemble_stmt(toks: &[IRToken]) -> Option<(Statement, Vec<Statement>, &[IRToken])> {
@@ -110,6 +105,7 @@ fn assemble_expr(toks: &[IRToken]) -> Option<(Expr, Vec<Statement>, &[IRToken])>
         [IRToken::Dollar, IRToken::Symbol(s), toks@..] => Some((Expr::Symbol(*s), Vec::new(), toks)),
         [IRToken::Symbol(s), toks@..] => Some((Expr::Proc(ProcId(*s)), Vec::new(), toks)),
         [IRToken::Int(i), toks@..] => Some((Expr::Int(*i), Vec::new(), toks)),
+        [IRToken::LBrace, IRToken::RBrace, toks@..] => Some((Expr::NewTable, Vec::new(), toks)),
         _ => None,
     }
 }

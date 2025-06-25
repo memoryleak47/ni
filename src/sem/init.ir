@@ -21,6 +21,8 @@
 
 main proc init {
     # setup singletons, globals ...
+    @.globals = {};
+    @.singletons = {};
 
     jmp userstart;
 }
