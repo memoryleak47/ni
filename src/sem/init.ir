@@ -1,16 +1,22 @@
 # @ :: Root
 #
 # struct Root {
-#   singletons :: Symbol -> any  # predefined objects, that are used internally in the runtime
-#   globals :: String -> any     # global variables (user-facing)
-#   frame :: Frame               # the callstack
+#   singletons :: Symbol -> any    # predefined objects, that are used internally in the runtime
+#   globals :: String -> Object    # global variables (user-facing)
+#   frame :: Frame                 # the callstack
 # }
 #
 # struct Frame {
 #   parent :: Frame | Undef
 #   pid :: ProcId
-#   pylocals :: String -> any    # pythons local variables
-#   irlocals :: Symbol -> any    # local variables for the IR
+#   pylocals :: String -> Object   # pythons local variables
+#   irlocals :: Symbol -> any      # local variables for the IR
+# }
+#
+# struct Object {
+#   type :: Object                 # type(obj)
+#   dict :: any                    # the dict underlying __dict__
+#   ...                            # case-specific addons
 # }
 
 main proc init {
