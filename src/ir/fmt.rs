@@ -131,7 +131,7 @@ fn node_string(n: Node, nodemap: &Map<Node, String>) -> String {
 
 impl Display for Node {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)
+        write!(f, "%{}", self.0)
     }
 }
 

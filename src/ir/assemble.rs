@@ -61,7 +61,7 @@ fn assemble_stmt(toks: &[IRToken]) -> Option<(Statement, &[IRToken])> {
 }
 
 fn assemble_stmt_let(toks: &[IRToken]) -> Option<(Statement, &[IRToken])> {
-    let [IRToken::Let, IRToken::Symbol(node), IRToken::Equals, toks@..] = &toks[..] else { return None };
+    let [IRToken::Percent, IRToken::Symbol(node), IRToken::Equals, toks@..] = &toks[..] else { return None };
     let node = Node(*node);
     let (expr, toks) = assemble_expr(toks)?;
     Some((Statement::Let(node, expr, true), toks))
@@ -89,6 +89,16 @@ fn assemble_expr(toks: &[IRToken]) -> Option<(Expr, &[IRToken])> {
         [IRToken::Dollar, IRToken::Symbol(s), toks@..] => Some((Expr::Symbol(*s), toks)),
         _ => None,
     }
+}
+
+fn assemble_expr_node(toks: &[IRToken]) -> Option<(Node, &[IRToken])> {
+    if let [IRToken::Percent, IRToken::Symbol(s), toks@..] = toks {
+        let node = Node(*s);
+        return Some((node, toks));
+    }
+
+    let (expr, toks) = assemble_expr(toks)?;
+    todo!() // TODO here we need to add a Let statement!
 }
 
 trait Assembler<T>: for<'a> Fn(&[IRToken]) -> Option<(T, &[IRToken])> {}

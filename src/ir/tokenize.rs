@@ -11,9 +11,9 @@ pub enum IRToken {
     LParen, RParen,
     LBracket, RBracket,
     LBrace, RBrace,
-    Comma, Dot, Equals, Semicolon, At, Dollar,
+    Comma, Dot, Equals, Semicolon, At, Dollar, Percent,
 
-    Let, Proc, Exit, Jmp, Main,
+    Proc, Exit, Jmp, Main,
     BinOp(BinOpKind),
 }
 
@@ -72,6 +72,7 @@ pub fn ir_tokenize(s: &str) -> Vec<IRToken> {
                 [';', ..] => { tokens.push(IRToken::Semicolon); i += 1; }
                 ['@', ..] => { tokens.push(IRToken::At); i += 1; }
                 ['$', ..] => { tokens.push(IRToken::Dollar); i += 1; }
+                ['%', ..] => { tokens.push(IRToken::Percent); i += 1; }
                 ['.', ..] => { tokens.push(IRToken::Dot); i += 1; }
 
                 _ if int_char(c) => { state = TokenizerState::InInt(c.to_string()); i += 1; },
@@ -96,7 +97,6 @@ pub fn ir_tokenize(s: &str) -> Vec<IRToken> {
                     i += 1;
                 } else {
                     tokens.push(match &*s {
-                        "let" => IRToken::Let,
                         "proc" => IRToken::Proc,
                         "exit" => IRToken::Exit,
                         "jmp" => IRToken::Jmp,

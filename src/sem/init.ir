@@ -1,5 +1,10 @@
 main proc init {
-    let root = @;
-    let nice = $wowie;
-    jmp root;
+    %thing = do_print;
+    %nice = $wowie;
+    jmp %thing;
+}
+
+proc do_print {
+    %x = 2;
+    print(%x);
 }
