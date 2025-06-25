@@ -19,7 +19,7 @@ fn gsymb_fresh() -> Symbol {
     g.fresh()
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Symbol(pub usize);
 
 // implementation of symbol map.
@@ -103,11 +103,17 @@ impl Symbol {
     }
 }
 
-use std::fmt::{self, Display, Formatter};
+use std::fmt::{self, Display, Debug, Formatter};
 
 impl Display for Symbol {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "{}", gsymb_get(*self))
+    }
+}
+
+impl Debug for Symbol {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{self}")
     }
 }
 
