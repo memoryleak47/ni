@@ -18,16 +18,30 @@
 #   dict :: any                    # the dict underlying __dict__
 #   ...                            # case-specific addons
 # }
+#
+# struct FunctionObject : Object {
+#   type = @.singletons.function
+#   pid :: ProcId
+# }
 
 main proc init {
     # setup singletons
     @.singletons = {};
-    @.singletons.type = {};
-    @.singletons.type.type = @.singletons.type;
+    @.singletons.function = {};
 
     # setup globals
     @.globals = {};
-    @.globals["print"] = {};
+
+    # setup print
+    %print_fn = {};
+    %print_fn.type = @.singletons.function;
+    %print_fn.pid = print_fn;
+    @.globals["print"] = %print_fn;
 
     jmp userstart;
+}
+
+proc print_fn {
+    print @.arg[1];
+    jmp @.ret;
 }
