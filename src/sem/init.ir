@@ -8,7 +8,9 @@
 #
 # struct Frame {
 #   parent :: Frame | Undef
-#   pid :: ProcId
+#   arg :: any                     # function args
+#   retval :: Cell                 # write return value to retval.v
+#   retpid :: ProcId | Undef       # when returning, jump back to this
 #   pylocals :: String -> Object   # pythons local variables
 #   irlocals :: Symbol -> any      # local variables for the IR
 # }
@@ -19,6 +21,10 @@
 #   ...                            # case-specific addons
 # }
 #
+# struct Cell {
+#   v :: any
+# }
+#
 # struct FunctionObject : Object {
 #   type = @.singletons.function
 #   pid :: ProcId
@@ -27,7 +33,8 @@
 main proc init {
     # setup singletons
     @.singletons = {};
-    @.singletons.function = {};
+    @.singletons.function = {}; # the <function> type.
+    @.singletons.none = {};     # the unique `None` value.
 
     # setup globals
     @.globals = {};
@@ -37,14 +44,16 @@ main proc init {
     %print_fn.type = @.singletons.function;
     %print_fn.pid = print_fn;
     @.globals["print"] = %print_fn;
-    @.ret = fin;
 
     jmp userstart;
 }
 
 proc print_fn {
-    print "hey!";
-    jmp @.ret;
+    %f = @.frame;
+    print %f.arg[1];
+    %f.retval.v = @.singletons.none;
+    @.frame = %f.parent;
+    jmp %f.retpid;
 }
 
 proc fin {
