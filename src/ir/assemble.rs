@@ -69,7 +69,12 @@ fn assemble_stmt_let(toks: &[IRToken]) -> Option<(Statement, Vec<Statement>, &[I
     Some((Statement::Let(node, expr, true), prev, toks))
 }
 fn assemble_stmt_store(toks: &[IRToken]) -> Option<(Statement, Vec<Statement>, &[IRToken])> { None }
-fn assemble_stmt_print(toks: &[IRToken]) -> Option<(Statement, Vec<Statement>, &[IRToken])> { None }
+
+fn assemble_stmt_print(toks: &[IRToken]) -> Option<(Statement, Vec<Statement>, &[IRToken])> {
+    let [IRToken::Print, toks@..] = toks else { return None };
+    let (node, prev, toks) = assemble_expr_node(toks)?;
+    Some((Statement::Print(node), prev, toks))
+}
 
 fn assemble_terminator(toks: &[IRToken]) -> Option<(Terminator, Vec<Statement>, &[IRToken])> {
     let (terminator, prev, toks) = or(assemble_terminator_jmp, assemble_terminator_exit)(toks)?;
@@ -83,12 +88,18 @@ fn assemble_terminator_jmp(toks: &[IRToken]) -> Option<(Terminator, Vec<Statemen
     Some((Terminator::Jmp(node), prev, toks))
 }
 
-fn assemble_terminator_exit(toks: &[IRToken]) -> Option<(Terminator, Vec<Statement>, &[IRToken])> { None }
+fn assemble_terminator_exit(toks: &[IRToken]) -> Option<(Terminator, Vec<Statement>, &[IRToken])> {
+    let [IRToken::Exit, toks@..] = toks else { return None };
+    let (node, prev, toks) = assemble_expr_node(toks)?;
+    Some((Terminator::Exit(node), prev, toks))
+}
 
 fn assemble_expr(toks: &[IRToken]) -> Option<(Expr, Vec<Statement>, &[IRToken])> {
     match &toks[..] {
         [IRToken::At, toks@..] => Some((Expr::Root, Vec::new(), toks)),
         [IRToken::Dollar, IRToken::Symbol(s), toks@..] => Some((Expr::Symbol(*s), Vec::new(), toks)),
+        [IRToken::Symbol(s), toks@..] => Some((Expr::Proc(ProcId(*s)), Vec::new(), toks)),
+        [IRToken::Int(i), toks@..] => Some((Expr::Int(*i), Vec::new(), toks)),
         _ => None,
     }
 }

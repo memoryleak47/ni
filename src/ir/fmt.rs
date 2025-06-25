@@ -1,6 +1,8 @@
 use crate::*;
 use std::fmt::{self, Display, Formatter};
 
+const SHOW_ALL: bool = false;
+
 impl Display for IR {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         for (&pid, _) in self.procs.iter() {
@@ -26,15 +28,13 @@ pub fn display_proc(pid: ProcId, ir: &IR, f: &mut Formatter<'_>) -> fmt::Result 
 }
 
 fn display_stmt(stmt: &Statement, nodemap: &mut Map<Node, String>, f: &mut Formatter<'_>,) -> fmt::Result {
-    write!(f, "    ")?;
-
     use Statement::*;
 
     match stmt {
         Let(n, e, visible) => {
             let e = expr_string(e, nodemap);
-            if *visible {
-                write!(f, "let {n} = {e}")?;
+            if *visible || SHOW_ALL {
+                write!(f, "    let {n} = {e};\n")?;
             } else {
                 nodemap.insert(*n, e);
             }
@@ -43,25 +43,29 @@ fn display_stmt(stmt: &Statement, nodemap: &mut Map<Node, String>, f: &mut Forma
             let t = node_string(*t, nodemap);
             let i = node_string(*i, nodemap);
             let n = node_string(*n, nodemap);
-            write!(f, "{t}[{i}] <- {n}")?;
+            write!(f, "    {t}[{i}] <- {n};\n")?;
         }
-        Print(v) => write!(f, "print({})", v)?,
+        Print(v) => write!(f, "    print {};\n", v)?,
     }
 
-    write!(f, ";\n")
+    Ok(())
 }
 
 fn display_terminator(terminator: &Terminator, nodemap: &Map<Node, String>, f: &mut Formatter<'_>) -> fmt::Result {
-    write!(f, "    ")?;
-
     use Terminator::*;
 
     match terminator {
-        Jmp(n) => write!(f, "jmp {}", n)?,
-        Exit(n) => write!(f, "exit {}", n)?,
+        Jmp(n) => {
+            let n = node_string(*n, nodemap);
+            write!(f, "    jmp {n};\n")?;
+        },
+        Exit(n) => {
+            let n = node_string(*n, nodemap);
+            write!(f, "    exit {n};\n")?;
+        },
     }
 
-    write!(f, ";\n")
+    Ok(())
 }
 
 fn expr_string(expr: &Expr, nodemap: &Map<Node, String>) -> String {
