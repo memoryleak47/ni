@@ -26,7 +26,7 @@ pub fn display_proc(pid: ProcId, ir: &IR, f: &mut Formatter<'_>) -> fmt::Result 
 }
 
 fn display_stmt(stmt: &Statement, nodemap: &mut Map<Node, String>, f: &mut Formatter<'_>,) -> fmt::Result {
-    write!(f, "  ")?;
+    write!(f, "    ")?;
 
     use Statement::*;
 
@@ -52,7 +52,7 @@ fn display_stmt(stmt: &Statement, nodemap: &mut Map<Node, String>, f: &mut Forma
 }
 
 fn display_terminator(terminator: &Terminator, nodemap: &Map<Node, String>, f: &mut Formatter<'_>) -> fmt::Result {
-    write!(f, "  ")?;
+    write!(f, "    ")?;
 
     use Terminator::*;
 
