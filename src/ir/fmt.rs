@@ -35,12 +35,12 @@ fn display_stmt(
     use Statement::*;
 
     match stmt {
-        Let(n, e) => {
-            write!(f, "let {} = ", n)?;
+        Let(n, e, _) => {
+            write!(f, "let {n} = ")?;
             display_expr(e, f)?;
         }
         Store(t, i, n) => {
-            write!(f, "{}[{}] <- {}", t, i, n)?;
+            write!(f, "{t}[{i}] <- {n}")?;
         }
         Print(v) => write!(f, "print({})", v)?,
     }

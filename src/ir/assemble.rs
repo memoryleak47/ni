@@ -64,7 +64,7 @@ fn assemble_stmt_let(toks: &[IRToken]) -> Option<(Statement, &[IRToken])> {
     let [IRToken::Let, IRToken::Symbol(node), IRToken::Equals, toks@..] = &toks[..] else { return None };
     let node = Node(*node);
     let (expr, toks) = assemble_expr(toks)?;
-    Some((Statement::Let(node, expr), toks))
+    Some((Statement::Let(node, expr, true), toks))
 }
 fn assemble_stmt_store(toks: &[IRToken]) -> Option<(Statement, &[IRToken])> { None }
 fn assemble_stmt_print(toks: &[IRToken]) -> Option<(Statement, &[IRToken])> { None }

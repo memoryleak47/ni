@@ -143,7 +143,7 @@ fn step_stmt(stmt: &Statement, ctxt: &mut Ctxt) {
 
     use Statement::*;
     match stmt {
-        Let(n, expr) => {
+        Let(n, expr, _) => {
             let val = exec_expr(expr, ctxt);
             ctxt.nodes.insert(*n, val);
         }
