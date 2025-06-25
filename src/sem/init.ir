@@ -37,6 +37,7 @@ main proc init {
     %print_fn.type = @.singletons.function;
     %print_fn.pid = print_fn;
     @.globals["print"] = %print_fn;
+    @.ret = fin;
 
     jmp userstart;
 }
@@ -44,4 +45,8 @@ main proc init {
 proc print_fn {
     print "hey!";
     jmp @.ret;
+}
+
+proc fin {
+    exit;
 }
