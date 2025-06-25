@@ -6,6 +6,12 @@ pub use nameres::*;
 mod ctxt;
 pub use ctxt::*;
 
+pub fn lower(ast: &AST) -> String {
+    let mut s = lower_ast(ast);
+    s.extend(include_str!("../sem/init.ir").chars());
+    s
+}
+
 fn lower_ast(ast: &AST) -> String {
     let nameres_tab = nameres(ast);
 
@@ -31,12 +37,4 @@ fn lower_expr(e: &ASTExpr) -> String {
         ASTExpr::Var(v) => format!("@.globals[\"{v}\"]"),
         _ => todo!(),
     }
-}
-
-pub fn lower(ast: &AST) -> IR {
-    let mut s = lower_ast(ast);
-    s.extend(include_str!("../sem/init.ir").chars());
-
-    let toks = ir_tokenize(&s);
-    ir_assemble(&toks[..])
 }

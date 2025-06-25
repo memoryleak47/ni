@@ -36,12 +36,13 @@ fn main() {
         return;
     }
 
-    let ir = lower(&ast);
-
+    let ir_string = lower(&ast);
     if let Action::ShowIR = cli.action {
-        println!("{}", ir);
+        println!("{}", ir_string);
         return;
     }
+    let toks = ir_tokenize(&ir_string);
+    let ir = ir_assemble(&toks[..]);
 
     exec(&ir);
 }
