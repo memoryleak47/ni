@@ -1,11 +1,5 @@
 main proc init {
-    %thing = do_print;
-    %nice = $wowie;
-    jmp %thing;
-}
+    # setup singletons, globals ...
 
-proc do_print {
-    %x = $ok;
-    print %x;
-    panic 42;
+    jmp userstart;
 }

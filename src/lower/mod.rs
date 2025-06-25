@@ -9,11 +9,13 @@ pub use ctxt::*;
 fn lower_ast(ast: &AST) -> String {
     let nameres_tab = nameres(ast);
 
+    let mut s = "proc userstart {\n".to_string();
     for stmt in &**ast {
-        lower_stmt(stmt);
+        s.push_str(&*lower_stmt(stmt));
     }
-
-    String::new()
+    s.push_str("    exit;\n");
+    s.push_str("}\n");
+    s
 }
 
 fn lower_stmt(stmt: &ASTStatement) -> String {
