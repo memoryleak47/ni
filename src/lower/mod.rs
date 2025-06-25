@@ -20,16 +20,16 @@ mod stmt;
 pub use stmt::*;
 */
 
+fn lower_ast(ast: &AST) -> String {
+    String::new()
+}
+
 pub fn lower(ast: &AST) -> IR {
-    let mut s = String::new();
+    let mut s = lower_ast(ast);
     s.extend(include_str!("../sem/init.ir").chars());
 
     let toks = ir_tokenize(&s);
-    let mut ir = ir_assemble(&toks[..]);
-
-    // TODO actually add lowering of `ast` aswell.
-
-    ir
+    ir_assemble(&toks[..])
 }
 
 /*
