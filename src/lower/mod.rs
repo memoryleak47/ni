@@ -27,6 +27,7 @@ fn lower_stmt(stmt: &ASTStatement) -> String {
 
 fn lower_expr(e: &ASTExpr) -> String {
     match e {
+        ASTExpr::FnCall(f, args) => todo!(),
         ASTExpr::Var(v) => todo!(),
         _ => todo!(),
     }
