@@ -107,14 +107,47 @@ fn assemble_terminator_panic(toks: &[IRToken]) -> Option<(Terminator, Vec<Statem
     Some((Terminator::Panic(node), prev, toks))
 }
 
-
 fn assemble_expr(toks: &[IRToken]) -> Option<(Expr, Vec<Statement>, &[IRToken])> {
+    let (mut expr, mut prev, mut toks) = assemble_atomic_expr(toks)?;
+    loop {
+        match toks {
+            [IRToken::Dot, IRToken::Symbol(s), toks2@..] => {
+                let expr_node = Node(Symbol::fresh());
+                prev.push(Statement::Let(expr_node, expr, false));
+
+                let node = Node(Symbol::fresh());
+                let e = Expr::Symbol(*s);
+                prev.push(Statement::Let(node, e, false));
+                expr = Expr::Index(expr_node, node);
+                toks = toks2;
+            },
+            [IRToken::LBracket, toks2@..] => {
+                let expr_node = Node(Symbol::fresh());
+                prev.push(Statement::Let(expr_node, expr, false));
+
+                let (node, prev2, toks2) = assemble_expr_node(toks2)?;
+                let [IRToken::RBracket, toks2@..] = toks2 else { return None };
+                prev.extend(prev2);
+                expr = Expr::Index(expr_node, node);
+                toks = toks2;
+            },
+            _ => return Some((expr, prev, toks)),
+        }
+    }
+}
+
+fn assemble_atomic_expr(toks: &[IRToken]) -> Option<(Expr, Vec<Statement>, &[IRToken])> {
     match &toks[..] {
         [IRToken::At, toks@..] => Some((Expr::Root, Vec::new(), toks)),
         [IRToken::Dollar, IRToken::Symbol(s), toks@..] => Some((Expr::Symbol(*s), Vec::new(), toks)),
         [IRToken::Symbol(s), toks@..] => Some((Expr::Proc(ProcId(*s)), Vec::new(), toks)),
         [IRToken::Int(i), toks@..] => Some((Expr::Int(*i), Vec::new(), toks)),
         [IRToken::LBrace, IRToken::RBrace, toks@..] => Some((Expr::NewTable, Vec::new(), toks)),
+        [IRToken::LParen, toks@..] => {
+            let (expr, prev, toks) = assemble_expr(toks)?;
+            let [IRToken::RParen, toks@..] = toks else { return None };
+            Some((expr, prev, toks))
+        },
         _ => None,
     }
 }

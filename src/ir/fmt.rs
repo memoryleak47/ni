@@ -40,10 +40,9 @@ fn display_stmt(stmt: &Statement, nodemap: &mut Map<Node, String>, f: &mut Forma
             }
         }
         Store(t, i, n) => {
-            let t = node_string(*t, nodemap);
-            let i = node_string(*i, nodemap);
+            let idx = display_index(*t, *i, nodemap);
             let n = node_string(*n, nodemap);
-            write!(f, "    {t}[{i}] <- {n};\n")?;
+            write!(f, "    {idx} = {n};\n")?;
         }
         Print(v) => write!(f, "    print {};\n", v)?,
     }
@@ -72,11 +71,7 @@ fn display_terminator(terminator: &Terminator, nodemap: &Map<Node, String>, f: &
 fn expr_string(expr: &Expr, nodemap: &Map<Node, String>) -> String {
     use Expr::*;
     match expr {
-        Index(t, i) => {
-            let t = node_string(*t, nodemap);
-            let i = node_string(*i, nodemap);
-            format!("{t}[{i}]")
-        },
+        Index(t, i) => display_index(*t, *i, nodemap),
         Root => format!("@"),
         NewTable => format!("{{}}"),
         Proc(pid) => format!("{pid}"),
@@ -139,3 +134,23 @@ impl Display for Node {
         write!(f, "%{}", self.0)
     }
 }
+
+fn display_index(t: Node, i: Node, nodemap: &Map<Node, String>) -> String {
+    let t = node_string(t, nodemap);
+    let i = node_string(i, nodemap);
+    if let Some(s) = as_symb(&i) {
+        format!("{t}.{s}")
+    } else {
+        format!("{t}[{i}]")
+    }
+}
+
+fn as_symb(s: &str) -> Option<String> {
+    let mut chars = s.chars();
+    if let Some('$') = chars.next() {
+        Some(chars.collect())
+    } else {
+        None
+    }
+}
+
