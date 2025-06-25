@@ -189,9 +189,10 @@ fn step_terminator(terminator: &Terminator, ctxt: &mut Ctxt) -> bool {
             };
             true
         }
-        Exit(n) => {
+        Exit => false,
+        Panic(n) => {
             let v = ctxt.nodes[n].clone();
-            println!("EXIT: {v:?}");
+            println!("PANIC: {v:?}");
             false
         }
     }

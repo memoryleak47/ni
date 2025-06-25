@@ -7,5 +7,5 @@ main proc init {
 proc do_print {
     %x = $ok;
     print %x;
-    exit 0;
+    panic 42;
 }

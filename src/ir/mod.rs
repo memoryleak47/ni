@@ -64,7 +64,8 @@ pub struct Proc {
 #[derive(Debug, Clone)]
 pub enum Terminator {
     Jmp(/*proc-id*/ Node),
-    Exit(/*err msg or code*/ Node),
+    Panic(/*err msg or code*/ Node),
+    Exit,
 }
 
 #[derive(Debug, Clone)]

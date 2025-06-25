@@ -59,9 +59,10 @@ fn display_terminator(terminator: &Terminator, nodemap: &Map<Node, String>, f: &
             let n = node_string(*n, nodemap);
             write!(f, "    jmp {n};\n")?;
         },
-        Exit(n) => {
+        Exit => write!(f, "    exit;\n")?,
+        Panic(n) => {
             let n = node_string(*n, nodemap);
-            write!(f, "    exit {n};\n")?;
+            write!(f, "    panic {n};\n")?;
         },
     }
 

@@ -77,7 +77,11 @@ fn assemble_stmt_print(toks: &[IRToken]) -> Option<(Statement, Vec<Statement>, &
 }
 
 fn assemble_terminator(toks: &[IRToken]) -> Option<(Terminator, Vec<Statement>, &[IRToken])> {
-    let (terminator, prev, toks) = or(assemble_terminator_jmp, assemble_terminator_exit)(toks)?;
+    let a = assemble_terminator_jmp;
+    let a = or(a, assemble_terminator_exit);
+    let a = or(a, assemble_terminator_panic);
+
+    let (terminator, prev, toks) = a(toks)?;
     let [IRToken::Semicolon, toks@..] = toks else { return None };
     Some((terminator, prev, toks))
 }
@@ -90,9 +94,15 @@ fn assemble_terminator_jmp(toks: &[IRToken]) -> Option<(Terminator, Vec<Statemen
 
 fn assemble_terminator_exit(toks: &[IRToken]) -> Option<(Terminator, Vec<Statement>, &[IRToken])> {
     let [IRToken::Exit, toks@..] = toks else { return None };
-    let (node, prev, toks) = assemble_expr_node(toks)?;
-    Some((Terminator::Exit(node), prev, toks))
+    Some((Terminator::Exit, Vec::new(), toks))
 }
+
+fn assemble_terminator_panic(toks: &[IRToken]) -> Option<(Terminator, Vec<Statement>, &[IRToken])> {
+    let [IRToken::Panic, toks@..] = toks else { return None };
+    let (node, prev, toks) = assemble_expr_node(toks)?;
+    Some((Terminator::Panic(node), prev, toks))
+}
+
 
 fn assemble_expr(toks: &[IRToken]) -> Option<(Expr, Vec<Statement>, &[IRToken])> {
     match &toks[..] {
