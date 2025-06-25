@@ -1,3 +1,18 @@
+# @ :: Root
+#
+# struct Root {
+#   singletons :: Symbol -> any  # predefined objects, that are used internally in the runtime
+#   globals :: String -> any     # (predefined) global variables (user-facing)
+#   frame :: Frame               # the callstack
+# }
+#
+# struct Frame {
+#   parent :: Frame | Undef
+#   pid :: ProcId
+#   pylocals :: String -> any    # pythons local variables
+#   irlocals :: Symbol -> any    # local variables for the IR
+# }
+
 main proc init {
     # setup singletons, globals ...
 
