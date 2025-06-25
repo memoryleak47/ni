@@ -16,7 +16,12 @@ fn lower_ast(ast: &AST) -> String {
     let nameres_tab = nameres(ast);
     let userstart = Symbol::new("userstart".to_string());
     let mut ctxt = Ctxt {
-        stack: vec![FnCtxt { current_pid: userstart }],
+        stack: vec![FnCtxt {
+            current_pid: userstart,
+            lowering: Some(FnLowerCtxt {
+                ast_ptr: 0 as *const _,
+            }),
+        }],
         nameres_tab,
         procs: Map::new(),
     };
@@ -45,6 +50,11 @@ fn lower_stmt(stmt: &ASTStatement, ctxt: &mut Ctxt) {
         ASTStatement::Expr(e) => {
             lower_expr(e, ctxt);
         },
+        ASTStatement::Assign(ASTExpr::Var(v), rhs) => {
+            let ns = find_namespace(v, ctxt);
+            let rhs = lower_expr(rhs, ctxt);
+            ctxt.push(format!("{ns}[\"{v}\"] = {rhs}"));
+        },
         _ => todo!(),
     }
 }
@@ -70,11 +80,22 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
 
             String::new() // TODO
         },
-        ASTExpr::Var(v) => format!("@.globals[\"{v}\"]"),
+        ASTExpr::Var(v) => {
+            let ns = find_namespace(v, ctxt);
+            format!("{ns}[\"{v}\"]")
+        },
         ASTExpr::Str(s) => format!("\"{s}\""),
         ASTExpr::Int(i) => format!("{i}"),
         ASTExpr::Bool(true) => format!("True"),
         ASTExpr::Bool(false) => format!("False"),
         _ => todo!("{:?}", e),
+    }
+}
+
+pub fn find_namespace(v: &str, ctxt: &mut Ctxt) -> String {
+    let k = (ctxt.fl().ast_ptr, v.to_string());
+    match ctxt.nameres_tab.get(&k) {
+        Some(VarPlace::Local) => format!("@.frame.pylocals"),
+        _ => format!("@.globals"),
     }
 }
