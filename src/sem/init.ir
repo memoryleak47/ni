@@ -34,7 +34,7 @@ main proc init {
 
     # setup print
     %print_fn = {};
-    %print_fn.type = @.singletons.function;
+    %print_fn.type = {}; # @.singletons.function;
     %print_fn.pid = print_fn;
     @.globals["print"] = %print_fn;
 

@@ -34,7 +34,7 @@ fn display_stmt(stmt: &Statement, nodemap: &mut Map<Node, String>, f: &mut Forma
         Let(n, e, visible) => {
             let e = expr_string(e, nodemap);
             if *visible || SHOW_ALL {
-                write!(f, "    let {n} = {e};\n")?;
+                write!(f, "    {n} = {e};\n")?;
             } else {
                 nodemap.insert(*n, e);
             }
