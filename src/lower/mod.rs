@@ -62,21 +62,18 @@ fn lower_stmt(stmt: &ASTStatement, ctxt: &mut Ctxt) {
         ASTStatement::If(cond, then) => {
             let cond = lower_expr(cond, ctxt);
             let n = Node(Symbol::fresh());
-            let then_pid = ctxt.f().current_pid.next_fresh();
-            let post_pid = ctxt.f().current_pid.next_fresh();
+            let then_pid = ctxt.alloc_blk();
+            let post_pid = ctxt.alloc_blk();
             ctxt.push(format!("{n} = {{}}"));
             ctxt.push(format!("{n}[True] = {then_pid}"));
             ctxt.push(format!("{n}[False] = {post_pid}"));
             ctxt.push(format!("jmp {n}[{cond}]"));
 
-            ctxt.procs.insert(then_pid, vec![]);
-            ctxt.stack.last_mut().unwrap().current_pid = then_pid;
+            ctxt.focus_blk(then_pid);
+                lower_body(then, ctxt);
+                ctxt.push(format!("jmp {post_pid}"));
 
-            lower_body(then, ctxt);
-            ctxt.push(format!("jmp {post_pid}"));
-
-            ctxt.procs.insert(post_pid, vec![]);
-            ctxt.stack.last_mut().unwrap().current_pid = post_pid;
+            ctxt.focus_blk(post_pid);
         },
         _ => todo!(),
     }
@@ -86,7 +83,7 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
     match e {
         ASTExpr::FnCall(f, args) => {
             let f = lower_expr(f, ctxt);
-            let suc = ctxt.f().current_pid.next_fresh();
+            let suc = ctxt.alloc_blk();
             ctxt.push(format!("%new_f = {{}}"));
             ctxt.push(format!("%new_f.retpid = {suc}"));
             ctxt.push(format!("%new_f.retval = {{}}"));
@@ -98,8 +95,7 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
             ctxt.push(format!("@.frame = %new_f"));
             ctxt.push(format!("jmp {f}.pid"));
 
-            ctxt.procs.insert(suc, vec![]);
-            ctxt.stack.last_mut().unwrap().current_pid = suc;
+            ctxt.focus_blk(suc);
 
             String::new() // TODO
         },

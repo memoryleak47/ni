@@ -21,8 +21,8 @@ pub(in crate::lower) struct FnLowerCtxt {
 
 impl Ctxt {
     pub fn push(&mut self, s: String) {
-        let (pid, s_ref) = self.procs.last_mut().unwrap();
-        s_ref.push(s);
+        let pid = self.stack.last_mut().unwrap().current_pid;
+        self.procs[&pid].push(s);
     }
 
     pub fn f(&self) -> &FnCtxt {
@@ -40,4 +40,15 @@ impl Ctxt {
     pub fn fl_mut(&mut self) -> &mut FnLowerCtxt {
         self.f_mut().lowering.as_mut().unwrap()
     }
+
+    pub fn alloc_blk(&mut self) -> Symbol {
+        let pid = self.f().current_pid.next_fresh();
+        self.procs.insert(pid, vec![]);
+        pid
+    }
+
+    pub fn focus_blk(&mut self, pid: Symbol) {
+        self.stack.last_mut().unwrap().current_pid = pid;
+    }
+
 }
