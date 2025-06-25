@@ -1,10 +1,10 @@
 main proc init {
-    %thing = do_print;
-    %nice = $wowie;
+#    %thing = do_print;
+#    %nice = $wowie;
     jmp %thing;
 }
 
-proc do_print {
-    %x = 2;
-    print(%x);
-}
+# proc do_print {
+#    %x = $ok;
+#    print(%x);
+#}

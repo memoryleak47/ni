@@ -4,14 +4,19 @@ use std::sync::*;
 // global symbol map.
 static GSYMB: LazyLock<Mutex<SymbolMap>> = LazyLock::new(|| Mutex::from(SymbolMap::new()));
 
-pub fn gsymb_add(x: String) -> Symbol {
+fn gsymb_add(x: String) -> Symbol {
     let mut g = GSYMB.lock().unwrap();
     g.add(x)
 }
 
-pub fn gsymb_get(x: Symbol) -> String {
+fn gsymb_get(x: Symbol) -> String {
     let g = GSYMB.lock().unwrap();
     g.get(x).to_string()
+}
+
+fn gsymb_fresh() -> Symbol {
+    let mut g = GSYMB.lock().unwrap();
+    g.fresh()
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
@@ -22,6 +27,7 @@ pub struct Symbol(pub usize);
 struct SymbolMap {
     string_to_id: BTreeMap<String, Symbol>,
     id_to_string: Vec<String>,
+    fresh_counter: usize,
 }
 
 impl SymbolMap {
@@ -29,6 +35,7 @@ impl SymbolMap {
         Self {
             string_to_id: Default::default(),
             id_to_string: Default::default(),
+            fresh_counter: 0,
         }
     }
 
@@ -45,6 +52,17 @@ impl SymbolMap {
 
     fn get(&self, id: Symbol) -> &str {
         self.id_to_string.get(id.0).unwrap()
+    }
+
+    fn fresh(&mut self) -> Symbol {
+        loop {
+            let s = format!("_{}", self.fresh_counter);
+            self.fresh_counter += 1;
+
+            if self.string_to_id.get(&s).is_none() {
+                return self.add(s);
+            }
+        }
     }
 }
 
@@ -74,3 +92,22 @@ impl Ord for Symbol {
         self.partial_cmp(other).unwrap()
     }
 }
+
+impl Symbol {
+    pub fn new(s: String) -> Symbol {
+        gsymb_add(s)
+    }
+
+    pub fn fresh() -> Symbol {
+        gsymb_fresh()
+    }
+}
+
+use std::fmt::{self, Display, Formatter};
+
+impl Display for Symbol {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", gsymb_get(*self))
+    }
+}
+

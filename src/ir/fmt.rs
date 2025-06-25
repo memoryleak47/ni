@@ -4,7 +4,7 @@ use std::fmt::{self, Display, Formatter};
 impl Display for IR {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         for (&pid, _) in self.procs.iter() {
-            display_proc(pid, self, f);
+            display_proc(pid, self, f)?;
         }
 
         Ok(())
@@ -132,11 +132,5 @@ fn node_string(n: Node, nodemap: &Map<Node, String>) -> String {
 impl Display for Node {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "%{}", self.0)
-    }
-}
-
-impl Display for Symbol {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", gsymb_get(*self))
     }
 }
