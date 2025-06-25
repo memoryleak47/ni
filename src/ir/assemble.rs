@@ -63,7 +63,16 @@ fn assemble_stmt_let(toks: &[IRToken]) -> Option<(Statement, Vec<Statement>, &[I
     let (expr, prev, toks) = assemble_expr(toks)?;
     Some((Statement::Let(node, expr, true), prev, toks))
 }
-fn assemble_stmt_store(toks: &[IRToken]) -> Option<(Statement, Vec<Statement>, &[IRToken])> { None }
+
+fn assemble_stmt_store(toks: &[IRToken]) -> Option<(Statement, Vec<Statement>, &[IRToken])> {
+    let (expr, mut prev, toks) = assemble_expr(toks)?;
+    let [IRToken::Equals, toks@..] = toks else { return None };
+    let (rhs, prev2, toks) = assemble_expr_node(toks)?;
+    prev.extend(prev2);
+
+    let Expr::Index(tab, idx) = expr else { return None };
+    Some((Statement::Store(tab, idx, rhs), prev, toks))
+}
 
 fn assemble_stmt_print(toks: &[IRToken]) -> Option<(Statement, Vec<Statement>, &[IRToken])> {
     let [IRToken::Print, toks@..] = toks else { return None };
