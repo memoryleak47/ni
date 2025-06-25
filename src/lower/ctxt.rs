@@ -1,14 +1,14 @@
 use crate::*;
 
 pub(in crate::lower) struct Ctxt {
-    // pub stack: Vec<FnCtxt>,
+    pub stack: Vec<FnCtxt>,
     pub nameres_tab: NameResTable,
     pub procs: Map<Symbol, Vec<String>>,
 }
 
 pub(in crate::lower) struct FnCtxt {
     pub current_pid: Symbol,
-    pub lowering: Option<FnLowerCtxt>, // set to None for builtin functions.
+    // pub lowering: Option<FnLowerCtxt>, // set to None for builtin functions.
 }
 
 pub(in crate::lower) struct FnLowerCtxt {

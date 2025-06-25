@@ -14,16 +14,20 @@ pub fn lower(ast: &AST) -> String {
 
 fn lower_ast(ast: &AST) -> String {
     let nameres_tab = nameres(ast);
+    let userstart = Symbol::new("userstart".to_string());
     let mut ctxt = Ctxt {
+        stack: vec![FnCtxt { current_pid: userstart }],
         nameres_tab,
         procs: Map::new(),
     };
 
-    ctxt.procs.insert(Symbol::new("userstart".to_string()), Vec::new());
+    ctxt.procs.insert(userstart, Vec::new());
 
     for stmt in &**ast {
         lower_stmt(stmt, &mut ctxt);
     }
+
+    ctxt.push(format!("exit"));
 
     let mut s = String::new();
     for (pid, stmts) in ctxt.procs {
@@ -58,7 +62,8 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
             ctxt.push(format!("@.frame = %new_f"));
             ctxt.push(format!("jmp {f}.pid"));
 
-            ctxt.procs.insert(suc, vec!["exit".to_string()]);
+            ctxt.procs.insert(suc, vec![]);
+            ctxt.stack.last_mut().unwrap().current_pid = suc;
 
             String::new() // TODO
         },
