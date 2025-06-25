@@ -60,7 +60,7 @@ main proc init {
 
 proc print_fn {
     %f = @.frame;
-    print %f.arg[1];
+    print %f.arg[0];
     %f.retval.v = @.singletons.none;
     @.frame = %f.parent;
     jmp %f.retpid;

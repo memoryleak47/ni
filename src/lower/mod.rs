@@ -58,7 +58,10 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
             ctxt.push(format!("%new_f.retpid = {suc}"));
             ctxt.push(format!("%new_f.retval = {{}}"));
             ctxt.push(format!("%new_f.arg = {{}}"));
-            ctxt.push(format!("%new_f.arg[1] = 42"));
+            for (i, a) in args.iter().enumerate() {
+                let a = lower_expr(a, ctxt);
+                ctxt.push(format!("%new_f.arg[{i}] = {a}"));
+            }
             ctxt.push(format!("@.frame = %new_f"));
             ctxt.push(format!("jmp {f}.pid"));
 
@@ -68,6 +71,10 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
             String::new() // TODO
         },
         ASTExpr::Var(v) => format!("@.globals[\"{v}\"]"),
-        _ => todo!(),
+        ASTExpr::Str(s) => format!("\"{s}\""),
+        ASTExpr::Int(i) => format!("{i}"),
+        ASTExpr::Bool(true) => format!("True"),
+        ASTExpr::Bool(false) => format!("False"),
+        _ => todo!("{:?}", e),
     }
 }
