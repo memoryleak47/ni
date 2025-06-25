@@ -142,6 +142,7 @@ fn assemble_atomic_expr(toks: &[IRToken]) -> Option<(Expr, Vec<Statement>, &[IRT
         [IRToken::Dollar, IRToken::Symbol(s), toks@..] => Some((Expr::Symbol(*s), Vec::new(), toks)),
         [IRToken::Symbol(s), toks@..] => Some((Expr::Proc(ProcId(*s)), Vec::new(), toks)),
         [IRToken::Int(i), toks@..] => Some((Expr::Int(*i), Vec::new(), toks)),
+        [IRToken::Str(s), toks@..] => Some((Expr::Str(s.to_string()), Vec::new(), toks)),
         [IRToken::LBrace, IRToken::RBrace, toks@..] => Some((Expr::NewTable, Vec::new(), toks)),
         [IRToken::LParen, toks@..] => {
             let (expr, prev, toks) = assemble_expr(toks)?;

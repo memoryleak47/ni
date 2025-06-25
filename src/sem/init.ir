@@ -20,9 +20,14 @@
 # }
 
 main proc init {
-    # setup singletons, globals ...
-    @.globals = {};
+    # setup singletons
     @.singletons = {};
+    @.singletons.type = {};
+    @.singletons.type.type = @.singletons.type;
+
+    # setup globals
+    @.globals = {};
+    @.globals["print"] = {};
 
     jmp userstart;
 }
