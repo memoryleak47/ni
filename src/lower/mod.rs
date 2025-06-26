@@ -146,9 +146,11 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
             let new_f = Symbol::new_fresh("new_frame");
             ctxt.push(format!("%{new_f} = {{}}"));
             ctxt.push(format!("%{new_f}.parent = @.frame"));
-            ctxt.push(format!("%{new_f}.retpid = {suc}"));
-            ctxt.push(format!("%{new_f}.retval = {{}}"));
             ctxt.push(format!("%{new_f}.arg = {{}}"));
+            ctxt.push(format!("%{new_f}.retval = {{}}"));
+            ctxt.push(format!("%{new_f}.retpid = {suc}"));
+            ctxt.push(format!("%{new_f}.pylocals = {{}}"));
+            ctxt.push(format!("%{new_f}.irlocals = {{}}"));
             for (i, a) in args.iter().enumerate() {
                 let a = lower_expr(a, ctxt);
                 ctxt.push(format!("%{new_f}.arg[{i}] = {a}"));
