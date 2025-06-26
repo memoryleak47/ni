@@ -143,21 +143,22 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
         ASTExpr::FnCall(f, args) => {
             let f = lower_expr(f, ctxt);
             let suc = ctxt.alloc_blk();
-            ctxt.push(format!("%new_f = {{}}"));
-            ctxt.push(format!("%new_f.parent = @.frame"));
-            ctxt.push(format!("%new_f.retpid = {suc}"));
-            ctxt.push(format!("%new_f.retval = {{}}"));
-            ctxt.push(format!("%new_f.arg = {{}}"));
+            let new_f = Symbol::new_fresh("new_frame");
+            ctxt.push(format!("%{new_f} = {{}}"));
+            ctxt.push(format!("%{new_f}.parent = @.frame"));
+            ctxt.push(format!("%{new_f}.retpid = {suc}"));
+            ctxt.push(format!("%{new_f}.retval = {{}}"));
+            ctxt.push(format!("%{new_f}.arg = {{}}"));
             for (i, a) in args.iter().enumerate() {
                 let a = lower_expr(a, ctxt);
-                ctxt.push(format!("%new_f.arg[{i}] = {a}"));
+                ctxt.push(format!("%{new_f}.arg[{i}] = {a}"));
             }
-            ctxt.push(format!("@.frame = %new_f"));
+            ctxt.push(format!("@.frame = %{new_f}"));
             ctxt.push(format!("jmp {f}.pid"));
 
             ctxt.focus_blk(suc);
 
-            String::new() // TODO
+            format!("%{new_f}.retval.v")
         },
         ASTExpr::Var(v) => {
             let ns = find_namespace(v, ctxt);
