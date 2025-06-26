@@ -202,12 +202,12 @@ fn step(ctxt: &mut Ctxt) -> bool {
     let proc = &ctxt.ir.procs[&ctxt.pid];
     match proc.stmts.get(ctxt.statement_idx) {
         Some(stmt) => {
-            ctxt.last_stmt = format!("{:?}", &stmt);
+            ctxt.last_stmt = StmtFmt { stmt_id: Some(ctxt.statement_idx), proc }.to_string();
             step_stmt(stmt, ctxt);
             true
         },
         None => {
-            ctxt.last_stmt = format!("{:?}", &proc.terminator);
+            ctxt.last_stmt = StmtFmt { stmt_id: None, proc }.to_string();
             step_terminator(&proc.terminator, ctxt)
         },
     }
@@ -215,6 +215,6 @@ fn step(ctxt: &mut Ctxt) -> bool {
 
 fn crash(s: &str, ctxt: &Ctxt) -> ! {
     let l = &ctxt.last_stmt;
-    println!("exec IR crashing due to '{s}' at stmt {l}");
+    println!("exec IR crashing due to '{s}' at stmt:\n{l}");
     std::process::exit(1);
 }

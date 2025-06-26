@@ -18,20 +18,20 @@ pub fn display_proc(pid: Symbol, ir: &IR, f: &mut Formatter<'_>) -> fmt::Result 
 
     let proc = &ir.procs[&pid];
     for i in 0..proc.stmts.len() {
-        display_stmt(i, proc, f)?;
+        display_stmt(i, proc, false, f)?;
     }
     display_terminator(proc, f)?;
     write!(f, "}}\n\n")
 }
 
-fn display_stmt(stmt_id: usize, proc: &Proc, f: &mut Formatter<'_>) -> fmt::Result {
+fn display_stmt(stmt_id: usize, proc: &Proc, force_visible: bool, f: &mut Formatter<'_>) -> fmt::Result {
     use Statement::*;
 
     let stmt = &proc.stmts[stmt_id];
     match stmt {
         Let(n, e, visible) => {
             let e_str = expr_string(e, proc);
-            if *visible {
+            if *visible || force_visible {
                 write!(f, "    {n} = {e_str};\n")?;
             }
         }
@@ -149,5 +149,19 @@ fn display_index(t: Node, i: Node, proc: &Proc) -> String {
         format!("{t}.{i}")
     } else {
         format!("{t}[{i}]")
+    }
+}
+
+pub struct StmtFmt<'a> {
+    pub stmt_id: Option<usize>, // None means terminator.
+    pub proc: &'a Proc,
+}
+
+impl<'a> Display for StmtFmt<'a> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self.stmt_id {
+            Some(i) => display_stmt(i, self.proc, true, f),
+            None => display_terminator(self.proc, f),
+        }
     }
 }
