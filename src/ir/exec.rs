@@ -45,6 +45,7 @@ struct Ctxt<'ir> {
     pid: Symbol,
     nodes: Map<Node, Value>,
     statement_idx: usize,
+    last_stmt: String,
 }
 
 #[derive(Default, Debug)]
@@ -131,6 +132,7 @@ pub fn exec(ir: &IR) {
         pid: ir.main_pid,
         nodes: Default::default(),
         statement_idx: 0,
+        last_stmt: "<none>".to_string(),
     };
     let root_table = alloc_table(&mut ctxt);
     ctxt.root = root_table;
@@ -199,13 +201,20 @@ fn step_terminator(terminator: &Terminator, ctxt: &mut Ctxt) -> bool {
 fn step(ctxt: &mut Ctxt) -> bool {
     let proc = &ctxt.ir.procs[&ctxt.pid];
     match proc.stmts.get(ctxt.statement_idx) {
-        Some(stmt) => { step_stmt(stmt, ctxt); true }
-        None => step_terminator(&proc.terminator, ctxt)
+        Some(stmt) => {
+            ctxt.last_stmt = format!("{:?}", &stmt);
+            step_stmt(stmt, ctxt);
+            true
+        },
+        None => {
+            ctxt.last_stmt = format!("{:?}", &proc.terminator);
+            step_terminator(&proc.terminator, ctxt)
+        },
     }
 }
 
 fn crash(s: &str, ctxt: &Ctxt) -> ! {
-    // let stmt = stringify_last_stmt(ctxt);
-    println!("exec IR crashing due to '{s}' at stmt ???");
+    let l = &ctxt.last_stmt;
+    println!("exec IR crashing due to '{s}' at stmt {l}");
     std::process::exit(1);
 }
