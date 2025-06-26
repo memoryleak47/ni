@@ -19,7 +19,7 @@ fn gsymb_fresh() -> Symbol {
     g.fresh()
 }
 
-fn gsymb_next_fresh(s: Symbol) -> Symbol {
+fn gsymb_next_fresh(s: String) -> Symbol {
     let mut g = GSYMB.lock().unwrap();
     g.next_fresh(s)
 }
@@ -70,7 +70,7 @@ impl SymbolMap {
         }
     }
 
-    fn next_fresh(&mut self, s: Symbol) -> Symbol {
+    fn next_fresh(&mut self, s: String) -> Symbol {
         fn clear_suffix(mut s: String) -> String {
             let mut chars: Vec<char> = s.chars().collect();
             for i in (0..chars.len()).rev() {
@@ -81,8 +81,10 @@ impl SymbolMap {
             chars.into_iter().collect()
         }
 
-        let mut s: String = self.id_to_string.get(s.0).unwrap().clone();
         let s = clear_suffix(s);
+        if self.string_to_id.get(&s).is_none() {
+            return self.add(s);
+        }
         for i in 2.. {
             let s = format!("{s}_{i}");
             if self.string_to_id.get(&s).is_none() {
@@ -130,11 +132,11 @@ impl Symbol {
     }
 
     pub fn next_fresh(self) -> Symbol {
-        gsymb_next_fresh(self)
+        gsymb_next_fresh(gsymb_get(self))
     }
 
     pub fn new_fresh(s: impl Into<String>) -> Symbol {
-        Symbol::new(s.into()).next_fresh()
+        gsymb_next_fresh(s.into())
     }
 }
 
@@ -151,4 +153,3 @@ impl Debug for Symbol {
         write!(f, "{self}")
     }
 }
-
