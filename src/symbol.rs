@@ -71,10 +71,18 @@ impl SymbolMap {
     }
 
     fn next_fresh(&mut self, s: Symbol) -> Symbol {
-        let mut s: String = self.id_to_string.get(s.0).unwrap().clone();
-        while s[1..].contains('_') {
-            s.pop();
+        fn clear_suffix(mut s: String) -> String {
+            let mut chars: Vec<char> = s.chars().collect();
+            for i in (0..chars.len()).rev() {
+                let c = chars[i];
+                if c == '_' { chars.truncate(i); }
+                if !c.is_numeric() { break; }
+            }
+            chars.into_iter().collect()
         }
+
+        let mut s: String = self.id_to_string.get(s.0).unwrap().clone();
+        let s = clear_suffix(s);
         for i in 2.. {
             let s = format!("{s}_{i}");
             if self.string_to_id.get(&s).is_none() {
