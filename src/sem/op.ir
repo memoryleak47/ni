@@ -4,8 +4,8 @@ proc op {
     %new_frame = {};
     %new_frame.parent = @.frame;
     %new_frame.arg = {};
-    %new_frame.arg.obj = lhs;
-    %new_frame.arg.attr = l_op;
+    %new_frame.arg.obj = @.frame.arg.lhs;
+    %new_frame.arg.attr = @.frame.arg.l_op;
     @.frame.irlocals.op_fn = {};
     %new_frame.retval = @.frame.irlocals.op_fn;
     %new_frame.retpid = op_2;

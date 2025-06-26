@@ -208,7 +208,11 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
             ctxt.push(format!("%{new_f}.arg = {{}}"));
             ctxt.push(format!("%{new_f}.arg.lhs = {l}"));
             ctxt.push(format!("%{new_f}.arg.rhs = {r}"));
-            ctxt.push(format!("%{new_f}.arg.l_op = {l_op}"));
+
+            ctxt.push(format!("%{new_f}.arg.l_op = {{}}"));
+            ctxt.push(format!("%{new_f}.arg.l_op.type = @.singletons.str"));
+            ctxt.push(format!("%{new_f}.arg.l_op.payload = \"{l_op}\""));
+
             ctxt.push(format!("@.frame.irlocals.opret = {{}}"));
             ctxt.push(format!("%{new_f}.retval = @.frame.irlocals.opret"));
             ctxt.push(format!("%{new_f}.retpid = {post}"));

@@ -6,7 +6,8 @@ proc attrlookup {
 # @.frame.arg.{obj: Object, attr: StrObject}
 proc type_attrlookup {
     %arg = @.frame.arg;
-    %arg.ret.v = %arg.type.dict[%arg.attr.payload];
+    @.frame.retval.v = %arg.obj.type.dict[%arg.attr.payload];
+    %retpid = @.frame.retpid;
     @.frame = @.frame.parent;
-    jmp @.frame.retpid;
+    jmp %retpid;
 }
