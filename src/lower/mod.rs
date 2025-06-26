@@ -114,7 +114,7 @@ fn lower_stmt(stmt: &ASTStatement, ctxt: &mut Ctxt) {
             ctxt.push(format!("@.frame.retval.v = @.singletons.none"));
 
             for (i, a) in args.iter().enumerate() {
-                ctxt.push(format!("@.frame.pylocals[\"{a}\"] = @.frame.arg[i]"));
+                ctxt.push(format!("@.frame.pylocals[\"{a}\"] = @.frame.arg[{i}]"));
             }
 
             lower_body(body, ctxt);
