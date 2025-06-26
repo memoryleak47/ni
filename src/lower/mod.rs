@@ -58,6 +58,8 @@ fn lower_var_assign(var: &str, val: String, ctxt: &mut Ctxt) {
 }
 
 fn lower_stmt(stmt: &ASTStatement, ctxt: &mut Ctxt) {
+    ctxt.push(format!("# {stmt:?}"));
+
     match stmt {
         ASTStatement::Expr(e) => {
             lower_expr(e, ctxt);
