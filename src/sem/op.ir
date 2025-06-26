@@ -28,5 +28,5 @@ proc op_2 {
     %new_frame.pylocals = {};
 
     @.frame = %new_frame;
-    jmp @.frame.irlocals.op_fn.v;
+    jmp @.frame.irlocals.op_fn.v.payload;
 }
