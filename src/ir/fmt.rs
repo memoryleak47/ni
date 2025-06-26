@@ -117,7 +117,7 @@ impl Display for BinOpKind {
 
 fn node_string(n: Node, proc: &Proc) -> String {
     let (expr, b) = get_def(n, proc);
-    if b {
+    if !b {
         expr_string(expr, proc)
     } else {
         format!("%{n}")

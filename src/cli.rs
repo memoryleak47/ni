@@ -2,6 +2,7 @@ pub enum Action {
     ShowTokens,
     ShowAst,
     ShowIR,
+    ShowPostIR,
     Run,
 }
 
@@ -25,6 +26,9 @@ pub fn cli() -> CliConfig {
     }
     if get_flag("--show-ir", &mut args) {
         cli.action = Action::ShowIR;
+    }
+    if get_flag("--show-post-ir", &mut args) {
+        cli.action = Action::ShowPostIR;
     }
 
     let [ref filename] = *args else {

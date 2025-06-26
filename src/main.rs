@@ -44,5 +44,10 @@ fn main() {
     let toks = ir_tokenize(&ir_string);
     let ir = ir_assemble(&toks[..]);
 
+    if let Action::ShowPostIR = cli.action {
+        println!("{}", ir_string);
+        return;
+    }
+
     exec(&ir);
 }
