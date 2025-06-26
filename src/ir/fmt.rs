@@ -136,7 +136,7 @@ fn get_def(n: Node, proc: &Proc) -> (&Expr, bool) {
             return (expr, *b);
         }
     }
-    unreachable!()
+    panic!("Can't find definition for node {n}")
 }
 
 fn display_index(t: Node, i: Node, proc: &Proc) -> String {

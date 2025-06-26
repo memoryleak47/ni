@@ -52,7 +52,7 @@ proc print_fn {
 
 # @.frame.arg{0, 1}
 proc payload_add {
-    @.frame.retval = @.frame.arg[0] + @.frame.arg[1];
+    @.frame.retval = @.frame.arg[0].payload + @.frame.arg[1].payload;
     %retpid = @.frame.retpid;
     @.frame = @.frame.parent;
     jmp %retpid;
