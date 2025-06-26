@@ -1,33 +1,38 @@
 # @.frame.arg.{lhs, rhs, l_op}
 # TODO add r_op (eg. __radd__) as a fallback.
 proc op {
+    @.frame.irlocals.lhs = @.arg.lhs;
+    @.frame.irlocals.rhs = @.arg.rhs;
+
     %new_frame = {};
     %new_frame.parent = @.frame;
-    %new_frame.arg = {};
-    %new_frame.arg.obj = @.frame.arg.lhs;
-    %new_frame.arg.attr = @.frame.arg.l_op;
-    @.frame.irlocals.op_fn = {};
-    %new_frame.retval = @.frame.irlocals.op_fn;
     %new_frame.retpid = op_2;
     %new_frame.irlocals = {};
     %new_frame.pylocals = {};
+
+    %arg = {};
+    %arg.obj = @.arg.lhs;
+    %arg.attr = @.arg.l_op;
+    @.arg = %arg;
 
     @.frame = %new_frame;
     jmp type_attrlookup;
 }
 
 proc op_2 {
+    %op_fn = @.ret;
+
     %new_frame = {};
     %new_frame.parent = @.frame;
-    %new_frame.arg = {};
-    %new_frame.arg[0] = @.frame.arg.lhs;
-    %new_frame.arg[1] = @.frame.arg.rhs;
-    %new_frame.retval = @.frame.retval;
-    %new_frame.retpid = @.frame.retpid;
+    %new_frame.retpid = pop_stack;
     %new_frame.irlocals = {};
     %new_frame.pylocals = {};
+    %new_frame.retval = @.frame.retval;
 
-    %jmptarget = @.frame.irlocals.op_fn.v.payload;
+    @.arg = {};
+    @.arg[0] = @.frame.irlocals.lhs;
+    @.arg[1] = @.frame.irlocals.rhs;
+
     @.frame = %new_frame;
-    jmp %jmptarget;
+    jmp %op_fn.payload;
 }

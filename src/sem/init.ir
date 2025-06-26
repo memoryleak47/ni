@@ -32,8 +32,6 @@ main proc init {
     # setup callstack
     %frame = {};
     %frame.parent = undef;
-    %frame.arg = {};
-    %frame.retval = {};
     %frame.retpid = fin;
     %frame.pylocals = @.globals;
     %frame.irlocals = {};
@@ -43,21 +41,23 @@ main proc init {
 }
 
 proc print_fn {
-    %f = @.frame;
-    print %f.arg[0].payload;
-    %f.retval.v = @.singletons.none;
-    @.frame = %f.parent;
-    jmp %f.retpid;
+    print @.arg[0].payload;
+    @.ret = @.singletons.none;
+    jmp pop_stack;
 }
 
-# @.frame.arg{0, 1}
+# @.arg{0, 1}
 proc payload_add {
-    @.frame.retval = @.frame.arg[0].payload + @.frame.arg[1].payload;
-    %retpid = @.frame.retpid;
-    @.frame = @.frame.parent;
-    jmp %retpid;
+    @.ret = @.arg[0].payload + @.arg[1].payload;
+    jmp pop_stack;
 }
 
 proc fin {
     exit;
+}
+
+proc pop_stack {
+    %retpid = @.frame.retpid;
+    @.frame = @.frame.parent;
+    jmp %retpid;
 }
