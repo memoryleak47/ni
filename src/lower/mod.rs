@@ -65,13 +65,13 @@ fn lower_stmt(stmt: &ASTStatement, ctxt: &mut Ctxt) {
         }
         ASTStatement::If(cond, then) => {
             let cond = lower_expr(cond, ctxt);
-            let n = Node(Symbol::new_fresh("ifcond".to_string()));
+            let n = Symbol::new_fresh("ifcond".to_string());
             let then_pid = ctxt.alloc_blk();
             let post_pid = ctxt.alloc_blk();
-            ctxt.push(format!("{n} = {{}}"));
-            ctxt.push(format!("{n}[True] = {then_pid}"));
-            ctxt.push(format!("{n}[False] = {post_pid}"));
-            ctxt.push(format!("jmp {n}[{cond}.payload]"));
+            ctxt.push(format!("%{n} = {{}}"));
+            ctxt.push(format!("%{n}[True] = {then_pid}"));
+            ctxt.push(format!("%{n}[False] = {post_pid}"));
+            ctxt.push(format!("jmp %{n}[{cond}.payload]"));
 
             ctxt.focus_blk(then_pid);
                 lower_body(then, ctxt);
@@ -88,11 +88,11 @@ fn lower_stmt(stmt: &ASTStatement, ctxt: &mut Ctxt) {
 
             ctxt.focus_blk(pre_pid);
                 let cond = lower_expr(cond, ctxt);
-                let n = Node(Symbol::new_fresh("whilecond".to_string()));
-                ctxt.push(format!("{n} = {{}}"));
-                ctxt.push(format!("{n}[True] = {body_pid}"));
-                ctxt.push(format!("{n}[False] = {post_pid}"));
-                ctxt.push(format!("jmp {n}[{cond}.payload]"));
+                let n = Symbol::new_fresh("whilecond".to_string());
+                ctxt.push(format!("%{n} = {{}}"));
+                ctxt.push(format!("%{n}[True] = {body_pid}"));
+                ctxt.push(format!("%{n}[False] = {post_pid}"));
+                ctxt.push(format!("jmp %{n}[{cond}.payload]"));
 
             ctxt.focus_blk(body_pid);
                 lower_body(body, ctxt);
@@ -155,8 +155,10 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
                 let a = lower_expr(a, ctxt);
                 ctxt.push(format!("%{new_f}.arg[{i}] = {a}"));
             }
+            let ff = Symbol::new_fresh("fn");
+            ctxt.push(format!("%{ff} = {f}"));
             ctxt.push(format!("@.frame = %{new_f}"));
-            ctxt.push(format!("jmp {f}.pid"));
+            ctxt.push(format!("jmp %{ff}.payload"));
 
             ctxt.focus_blk(suc);
 
@@ -167,29 +169,29 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
             format!("{ns}[\"{v}\"]")
         },
         ASTExpr::Str(s) => {
-            let t = Node(Symbol::new_fresh("strbox".to_string()));
-            ctxt.push(format!("{t} = {{}}"));
-            ctxt.push(format!("{t}.type = @.singletons.str"));
-            ctxt.push(format!("{t}.payload = \"{s}\""));
+            let t = Symbol::new_fresh("strbox".to_string());
+            ctxt.push(format!("%{t} = {{}}"));
+            ctxt.push(format!("%{t}.type = @.singletons.str"));
+            ctxt.push(format!("%{t}.payload = \"{s}\""));
 
-            format!("{t}")
+            format!("%{t}")
         },
         ASTExpr::Int(i) => {
-            let t = Node(Symbol::new_fresh("intbox".to_string()));
-            ctxt.push(format!("{t} = {{}}"));
-            ctxt.push(format!("{t}.type = @.singletons.int"));
-            ctxt.push(format!("{t}.payload = {i}"));
+            let t = Symbol::new_fresh("intbox".to_string());
+            ctxt.push(format!("%{t} = {{}}"));
+            ctxt.push(format!("%{t}.type = @.singletons.int"));
+            ctxt.push(format!("%{t}.payload = {i}"));
 
-            format!("{t}")
+            format!("%{t}")
         },
         ASTExpr::Bool(b) => {
             let b = if *b { "True" } else { "False" };
-            let t = Node(Symbol::new_fresh("boolbox".to_string()));
-            ctxt.push(format!("{t} = {{}}"));
-            ctxt.push(format!("{t}.type = @.singletons.bool"));
-            ctxt.push(format!("{t}.payload = {b}"));
+            let t = Symbol::new_fresh("boolbox".to_string());
+            ctxt.push(format!("%{t} = {{}}"));
+            ctxt.push(format!("%{t}.type = @.singletons.bool"));
+            ctxt.push(format!("%{t}.payload = {b}"));
 
-            format!("{t}")
+            format!("%{t}")
         },
         _ => todo!("{:?}", e),
     }

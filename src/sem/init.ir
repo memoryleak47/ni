@@ -27,7 +27,7 @@
 #
 # struct FunctionObject : Object {
 #   type = @.singletons.function
-#   pid :: ProcId
+#   payload :: ProcId
 # }
 
 main proc init {
@@ -45,7 +45,7 @@ main proc init {
     # setup print
     %print_fn = {};
     %print_fn.type = @.singletons.function;
-    %print_fn.pid = print_fn;
+    %print_fn.payload = print_fn;
     @.globals["print"] = %print_fn;
 
     # setup callstack

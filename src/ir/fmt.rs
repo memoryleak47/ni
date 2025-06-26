@@ -120,7 +120,7 @@ fn node_string(n: Node, proc: &Proc) -> String {
     if !b {
         expr_string(expr, proc)
     } else {
-        format!("%{n}")
+        format!("{n}")
     }
 }
 
