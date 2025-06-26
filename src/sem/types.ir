@@ -4,13 +4,13 @@
 #   singletons :: Symbol -> any    # predefined objects, that are used internally in the runtime
 #   globals :: String -> Object    # global variables (user-facing)
 #   frame :: Frame                 # the callstack
+#   ret :: any                     # a register used to return values in. Will be carelessly overwritten whenever.
+#   arg :: any                     # a register used to accept function arguments. Will be carelessly overwritten whenever.
 # }
 #
 # struct Frame {
 #   parent :: Frame | Undef
-#   arg :: any                     # function args
-#   retval :: Cell                 # write return value to retval.v
-#   retpid :: ProcId | Undef       # when returning, jump back to this
+#   retpid :: ProcId | Undef       # when returning, jump back to this.
 #   pylocals :: String -> Object   # pythons local variables
 #   irlocals :: Symbol -> any      # local variables for the IR
 # }
@@ -19,10 +19,6 @@
 #   type :: Object                 # type(obj)
 #   dict :: any                    # the dict underlying __dict__
 #   ...                            # case-specific addons
-# }
-#
-# struct Cell {
-#   v :: any
 # }
 #
 # struct FunctionObject : Object {
