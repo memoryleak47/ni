@@ -49,7 +49,16 @@ pub enum ASTExpr {
     List(Vec<ASTExpr>),
     None,
     FnCall(Box<ASTExpr>, Vec<ASTExpr>),
-    BinOp(BinOpKind, Box<ASTExpr>, Box<ASTExpr>),
+    BinOp(ASTBinOpKind, Box<ASTExpr>, Box<ASTExpr>),
     Index(Box<ASTExpr>, Box<ASTExpr>),
     Attribute(Box<ASTExpr>, String),
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum ASTBinOpKind {
+    Plus, Minus, Mul, Div, Mod, Pow,
+    Lt, Le, Gt, Ge,
+    IsEqual, IsNotEqual,
+    Subscript,
+}
+

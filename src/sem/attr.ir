@@ -1,0 +1,12 @@
+#
+proc attrlookup {
+    panic "todo!";
+}
+
+# @.frame.arg.{obj: Object, attr: StrObject}
+proc type_attrlookup {
+    %arg = @.frame.arg;
+    %arg.ret.v = %arg.type.dict[%arg.attr.payload];
+    @.frame = @.frame.parent;
+    jmp @.frame.retpid;
+}

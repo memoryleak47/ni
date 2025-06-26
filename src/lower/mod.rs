@@ -8,7 +8,10 @@ pub use ctxt::*;
 
 pub fn lower(ast: &AST) -> String {
     let mut s = lower_ast(ast);
+    s.extend(include_str!("../sem/types.ir").chars());
     s.extend(include_str!("../sem/init.ir").chars());
+    s.extend(include_str!("../sem/op.ir").chars());
+    s.extend(include_str!("../sem/attr.ir").chars());
     s
 }
 
@@ -193,7 +196,49 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
 
             format!("%{t}")
         },
+        ASTExpr::BinOp(kind, l, r) => {
+            let l = lower_expr(l, ctxt);
+            let r = lower_expr(r, ctxt);
+
+            let l_op = op_attrs(*kind);
+            let post = ctxt.alloc_blk();
+            let new_f = Symbol::new_fresh("new_frame");
+            ctxt.push(format!("%{new_f} = {{}}"));
+            ctxt.push(format!("%{new_f}.parent = @.frame"));
+            ctxt.push(format!("%{new_f}.arg = {{}}"));
+            ctxt.push(format!("%{new_f}.arg.lhs = {l}"));
+            ctxt.push(format!("%{new_f}.arg.rhs = {r}"));
+            ctxt.push(format!("%{new_f}.arg.l_op = {l_op}"));
+            ctxt.push(format!("@.frame.irlocals.opret = {{}}"));
+            ctxt.push(format!("%{new_f}.retval = @.frame.irlocals.opret"));
+            ctxt.push(format!("%{new_f}.retpid = {post}"));
+            ctxt.push(format!("%{new_f}.pylocals = {{}}"));
+            ctxt.push(format!("%{new_f}.irlocals = {{}}"));
+            ctxt.push(format!("@.frame = %{new_f}"));
+            ctxt.push(format!("jmp op"));
+
+            ctxt.focus_blk(post);
+                format!("@.frame.irlocals.opret")
+        },
         _ => todo!("{:?}", e),
+    }
+}
+
+pub fn op_attrs(op: ASTBinOpKind) -> &'static str {
+    match op {
+        ASTBinOpKind::Plus => "__add__",
+        ASTBinOpKind::Minus => "__sub__",
+        ASTBinOpKind::Mul => "__mul__",
+        ASTBinOpKind::Div => "__truediv__",
+        ASTBinOpKind::Mod => "__mod__",
+        ASTBinOpKind::Lt => "__lt__",
+        ASTBinOpKind::Gt => "__gt__",
+        ASTBinOpKind::Ge => "__ge__",
+        ASTBinOpKind::Le => "__le__",
+        ASTBinOpKind::IsEqual => "__eq__",
+        ASTBinOpKind::IsNotEqual => "__ne__",
+        ASTBinOpKind::Pow => "__pow__",
+        ASTBinOpKind::Subscript => "__getitem__",
     }
 }
 

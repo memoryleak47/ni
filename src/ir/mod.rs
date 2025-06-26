@@ -16,7 +16,6 @@ pub use exec::*;
 
 pub type Stmt = (Symbol, /*idx*/ usize);
 
-// the same as ast::BinOpKind but without And & Or.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum BinOpKind {
     Plus, Minus, Mul, Div, Mod, Pow,

@@ -1,35 +1,3 @@
-# @ :: Root
-#
-# struct Root {
-#   singletons :: Symbol -> any    # predefined objects, that are used internally in the runtime
-#   globals :: String -> Object    # global variables (user-facing)
-#   frame :: Frame                 # the callstack
-# }
-#
-# struct Frame {
-#   parent :: Frame | Undef
-#   arg :: any                     # function args
-#   retval :: Cell                 # write return value to retval.v
-#   retpid :: ProcId | Undef       # when returning, jump back to this
-#   pylocals :: String -> Object   # pythons local variables
-#   irlocals :: Symbol -> any      # local variables for the IR
-# }
-#
-# struct Object {
-#   type :: Object                 # type(obj)
-#   dict :: any                    # the dict underlying __dict__
-#   ...                            # case-specific addons
-# }
-#
-# struct Cell {
-#   v :: any
-# }
-#
-# struct FunctionObject : Object {
-#   type = @.singletons.function
-#   payload :: ProcId
-# }
-
 main proc init {
     # setup singletons
     @.singletons = {};
