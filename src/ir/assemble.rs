@@ -135,6 +135,14 @@ fn assemble_expr_or_node(toks: &[IRToken]) -> Option<(ExprOrNode, Vec<Statement>
                 expr = ExprOrNode::Expr(Expr::Index(n, n2));
                 toks = toks2;
             },
+            [IRToken::BinOp(k), toks2@..] => {
+                let (n, prev2) = nodify(expr);
+                prev.extend(prev2);
+                let (rhs, prev2, toks2) = assemble_to_node(toks2)?;
+                prev.extend(prev2);
+                expr = ExprOrNode::Expr(Expr::BinOp(*k, n, rhs));
+                toks = toks2;
+            },
             _ => return Some((expr, prev, toks)),
         }
     }
