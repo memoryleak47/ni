@@ -158,7 +158,7 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
 
             ctxt.focus_blk(suc);
 
-            format!("%{new_f}.retval.v")
+            format!("%{new_f}.retval.v") // TODO the node new_f will be out of scope
         },
         ASTExpr::Var(v) => {
             let ns = find_namespace(v, ctxt);
