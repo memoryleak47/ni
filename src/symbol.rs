@@ -113,8 +113,8 @@ impl Ord for Symbol {
 }
 
 impl Symbol {
-    pub fn new(s: String) -> Symbol {
-        gsymb_add(s)
+    pub fn new(s: impl Into<String>) -> Symbol {
+        gsymb_add(s.into())
     }
 
     pub fn fresh() -> Symbol {
@@ -125,8 +125,8 @@ impl Symbol {
         gsymb_next_fresh(self)
     }
 
-    pub fn new_fresh(s: String) -> Symbol {
-        Symbol::new(s).next_fresh()
+    pub fn new_fresh(s: impl Into<String>) -> Symbol {
+        Symbol::new(s.into()).next_fresh()
     }
 }
 

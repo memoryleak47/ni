@@ -49,16 +49,20 @@ fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
     }
 }
 
+fn lower_var_assign(var: &str, val: String, ctxt: &mut Ctxt) {
+    let ns = find_namespace(var, ctxt);
+    ctxt.push(format!("{ns}[\"{var}\"] = {val}"));
+}
+
 fn lower_stmt(stmt: &ASTStatement, ctxt: &mut Ctxt) {
     match stmt {
         ASTStatement::Expr(e) => {
             lower_expr(e, ctxt);
         },
-        ASTStatement::Assign(ASTExpr::Var(v), rhs) => {
-            let ns = find_namespace(v, ctxt);
-            let rhs = lower_expr(rhs, ctxt);
-            ctxt.push(format!("{ns}[\"{v}\"] = {rhs}"));
-        },
+        ASTStatement::Assign(ASTExpr::Var(var), val) => {
+            let val = lower_expr(val, ctxt);
+            lower_var_assign(&*var, val, ctxt)
+        }
         ASTStatement::If(cond, then) => {
             let cond = lower_expr(cond, ctxt);
             let n = Node(Symbol::new_fresh("ifcond".to_string()));
@@ -95,6 +99,40 @@ fn lower_stmt(stmt: &ASTStatement, ctxt: &mut Ctxt) {
                 ctxt.push(format!("jmp {pre_pid}"));
 
             ctxt.focus_blk(post_pid);
+        },
+        ASTStatement::Def(name, args, body) => {
+            let pid = Symbol::new_fresh(name.to_string());
+            ctxt.procs.insert(pid, Vec::new());
+            ctxt.stack.push(FnCtxt {
+                current_pid: pid,
+                lowering: Some(FnLowerCtxt {
+                    ast_ptr: stmt as *const _,
+                }),
+            });
+
+            // might be overwritten by something else in the meantime.
+            ctxt.push(format!("@.frame.retval.v = @.singletons.none"));
+
+            for (i, a) in args.iter().enumerate() {
+                ctxt.push(format!("@.frame.pylocals[\"{a}\"] = @.frame.arg[i]"));
+            }
+
+            lower_body(body, ctxt);
+
+            let frame = Symbol::new_fresh("frame");
+            ctxt.push(format!("%{frame} = @.frame"));
+            ctxt.push(format!("@.frame = %{frame}.parent"));
+            ctxt.push(format!("jmp %{frame}.retpid"));
+
+            ctxt.stack.pop();
+
+            
+            let val = Symbol::new_fresh("functionbox");
+            ctxt.push(format!("%{val} = {{}}"));
+            ctxt.push(format!("%{val}.type = @.singletons.function"));
+            ctxt.push(format!("%{val}.payload = {pid}"));
+
+            lower_var_assign(name, format!("%{val}"), ctxt);
         },
         _ => todo!(),
     }
