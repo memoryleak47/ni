@@ -61,3 +61,19 @@ proc pop_stack {
     @.frame = @.frame.parent;
     jmp %retpid;
 }
+
+# @.arg.{f, farg, suc}
+proc call_fn {
+    %arg = @.arg;
+
+    %frame = {};
+    %frame.parent = @.frame;
+    %frame.retpid = %arg.suc;
+    %frame.pylocals = {};
+    %frame.irlocals = {};
+
+    @.frame = %frame;
+
+    @.arg = %arg.farg;
+    jmp %arg.f;
+}
