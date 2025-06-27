@@ -1,0 +1,57 @@
+# setup singletons
+proc init_1_singletons {
+    @.singletons = {};
+    jmp init_singletons_1_function;
+}
+
+proc init_singletons_1_function {
+    # the `function` type.
+    @.singletons.function = {};
+    jmp init_singletons_2_int;
+}
+
+# the `int` type.
+proc init_singletons_2_int {
+    %int = {};
+    %int.dict = {};
+
+    %add_fn = {};
+    %add_fn.type = @.singletons.function;
+    %add_fn.payload = payload_add;
+    %int.dict["__add__"] = %add_fn;
+
+    %eq_fn = {};
+    %eq_fn.type = @.singletons.function;
+    %eq_fn.payload = payload_eq;
+    %int.dict["__eq__"] = %eq_fn;
+    @.singletons.int = %int;
+
+    jmp init_singletons_3_other_primitives;
+}
+
+proc init_singletons_3_other_primitives {
+    @.singletons.str = {};      # the `str` type.
+    @.singletons.bool = {};     # the `bool` type.
+    @.singletons.none = {};     # the unique `None` value.
+
+    jmp init_2_globals;
+}
+
+
+# @.arg{0, 1}
+proc payload_add {
+    @.ret = {};
+    @.ret.payload = @.arg[0].payload + @.arg[1].payload;
+    @.ret.type = @.arg[0].type;
+    jmp pop_stack;
+}
+
+# @.arg{0, 1}
+proc payload_eq {
+    @.ret = {};
+    @.ret.payload = @.arg[0].payload == @.arg[1].payload;
+    @.ret.type = @.singletons.bool;
+    jmp pop_stack;
+}
+
+

@@ -9,9 +9,11 @@ pub use ctxt::*;
 pub fn lower(ast: &AST) -> String {
     let mut s = lower_ast(ast);
     s.extend(include_str!("../sem/types.ir").chars());
-    s.extend(include_str!("../sem/init.ir").chars());
+    s.extend(include_str!("../sem/main.ir").chars());
     s.extend(include_str!("../sem/op.ir").chars());
     s.extend(include_str!("../sem/attr.ir").chars());
+    s.extend(include_str!("../sem/globals/mod.ir").chars());
+    s.extend(include_str!("../sem/singletons/mod.ir").chars());
     s
 }
 

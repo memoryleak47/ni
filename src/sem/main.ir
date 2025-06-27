@@ -1,0 +1,42 @@
+#
+main proc init {
+    jmp init_1_singletons;
+}
+
+proc pre_userstart {
+    # setup callstack
+    %frame = {};
+    %frame.parent = undef;
+    %frame.retpid = fin;
+    %frame.pylocals = @.globals;
+    %frame.irlocals = {};
+    @.frame = %frame;
+
+    jmp userstart;
+}
+
+proc fin {
+    exit;
+}
+
+proc pop_stack {
+    %retpid = @.frame.retpid;
+    @.frame = @.frame.parent;
+    jmp %retpid;
+}
+
+# @.arg.{f, suc, farg}
+proc call_fn {
+    %arg = @.arg;
+
+    %frame = {};
+    %frame.parent = @.frame;
+    %frame.retpid = %arg.suc;
+    %frame.pylocals = {};
+    %frame.irlocals = {};
+
+    @.frame = %frame;
+
+    @.arg = %arg.farg;
+    jmp %arg.f;
+}

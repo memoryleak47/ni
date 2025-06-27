@@ -1,0 +1,18 @@
+# setup globals
+proc init_2_globals {
+    @.globals = {};
+
+    # setup print
+    %print_fn = {};
+    %print_fn.type = @.singletons.function;
+    %print_fn.payload = print_fn;
+    @.globals["print"] = %print_fn;
+
+    jmp pre_userstart;
+}
+
+proc print_fn {
+    print @.arg[0].payload;
+    @.ret = @.singletons.none;
+    jmp pop_stack;
+}
