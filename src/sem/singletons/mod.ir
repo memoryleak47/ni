@@ -96,6 +96,10 @@ proc init_1_singletons {
 
     ### bool
     @.singletons.bool = {};
+    @.singletons.bool.dict = {};
+    @.singletons.bool.mro = {};
+    @.singletons.bool.mro[0] = @.singletons.bool;
+    @.singletons.bool.mro[1] = @.singletons.object;
 
     @.singletons.true = {};
     @.singletons.true.type = @.singletons.bool;
