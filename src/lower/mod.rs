@@ -20,6 +20,7 @@ fn lower_ast(ast: &AST) -> String {
         stack: vec![FnCtxt {
             current_pid: userstart,
             lowering: Some(FnLowerCtxt {
+                loop_stack: Vec::new(),
                 ast_ptr: 0 as *const _,
             }),
         }],
@@ -77,6 +78,8 @@ fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
                 let body_pid = ctxt.alloc_blk();
                 let post_pid = ctxt.alloc_blk();
 
+                ctxt.fl_mut().loop_stack.push((post_pid, pre_pid));
+
                 ctxt.push(format!("jmp {pre_pid}"));
 
                 ctxt.focus_blk(pre_pid);
@@ -92,6 +95,18 @@ fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
                     ctxt.push(format!("jmp {pre_pid}"));
 
                 ctxt.focus_blk(post_pid);
+
+                ctxt.fl_mut().loop_stack.pop();
+            },
+            ASTStatement::Break => {
+                let pid = ctxt.fl_mut().loop_stack.last().unwrap().0;
+                ctxt.push(format!("jmp {pid}"));
+                return;
+            },
+            ASTStatement::Continue => {
+                let pid = ctxt.fl_mut().loop_stack.last().unwrap().1;
+                ctxt.push(format!("jmp {pid}"));
+                return;
             },
             ASTStatement::Def(name, args, body) => {
                 // add a return, incase it's missing.
@@ -104,6 +119,7 @@ fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
                 ctxt.stack.push(FnCtxt {
                     current_pid: pid,
                     lowering: Some(FnLowerCtxt {
+                        loop_stack: Vec::new(),
                         ast_ptr: stmt as *const _,
                     }),
                 });

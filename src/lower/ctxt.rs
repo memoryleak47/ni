@@ -12,7 +12,7 @@ pub(in crate::lower) struct FnCtxt {
 }
 
 pub(in crate::lower) struct FnLowerCtxt {
-    // pub loop_stack: Vec<(/*break*/ Symbol, /*continue*/ Symbol)>,
+    pub loop_stack: Vec<(/*break*/ Symbol, /*continue*/ Symbol)>,
 
     // the original def stmt we are lowering.
     // set to 0 for the main function.
