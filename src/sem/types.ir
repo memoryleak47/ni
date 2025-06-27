@@ -21,15 +21,20 @@
 #   ...                            # case-specific addons
 # }
 #
-# struct FunctionObject : Object {
-#   type = @.singletons.function
-#   payload :: ProcId
-# }
-#
-# struct ClassObject : Object {
-#   type = @.singletons.type
+# struct PrimitiveObject : Object {
+#   type = @.singletons.function | @.singletons.none | @.singletons.bool | @.singletons.int | @.singletons.str
+#   payload :: ProcId | Undef | True | False | int | str
 # }
 #
 # struct InstanceObject : Object {
 #   type :: ClassObject
+# }
+#
+# struct TypeObject : Object {
+#   mro :: List<TypeObject>
+#   type = @.singletons.type
+# }
+#
+# struct ClassObject : TypeObject {
+#   type = @.singletons.type
 # }
