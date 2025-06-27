@@ -25,6 +25,11 @@ proc pop_stack {
     jmp %retpid;
 }
 
+proc pop_stack_none {
+    @.ret = @.singletons.none;
+    jmp pop_stack;
+}
+
 # @.arg.{f, suc, farg}
 proc call_fn {
     %arg = @.arg;

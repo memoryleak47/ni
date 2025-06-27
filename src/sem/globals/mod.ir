@@ -19,8 +19,7 @@ proc init_2_globals {
 
 proc print_fn {
     print @.arg[0].payload;
-    @.ret = @.singletons.none;
-    jmp pop_stack;
+    jmp pop_stack_none;
 }
 
 proc type_fn {
