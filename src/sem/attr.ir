@@ -39,3 +39,11 @@ proc py_type_attrlookup_fail {
     @.ret = @.singletons.none;
     jmp pop_stack;
 }
+
+###
+
+# @.arg.{obj: Object, parents: List<TypeObject>, suc: ProcId}
+# defines @.arg.obj.mro
+proc add_mro {
+    panic "todo!";
+}
