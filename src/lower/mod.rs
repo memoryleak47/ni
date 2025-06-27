@@ -94,6 +94,11 @@ fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
                 ctxt.focus_blk(post_pid);
             },
             ASTStatement::Def(name, args, body) => {
+                // add a return, incase it's missing.
+                let mut body: Vec<ASTStatement> = body.iter().cloned().collect();
+                body.push(ASTStatement::Return(None));
+                let body = &*body;
+
                 let pid = Symbol::new_fresh(name.to_string());
                 ctxt.procs.insert(pid, Vec::new());
                 ctxt.stack.push(FnCtxt {
@@ -108,8 +113,6 @@ fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
                 }
 
                 lower_body(body, ctxt);
-
-                // ctxt.push(format!("jmp pop_stack"));
 
                 ctxt.stack.pop();
 
