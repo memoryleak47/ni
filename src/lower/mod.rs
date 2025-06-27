@@ -130,6 +130,15 @@ fn lower_stmt(stmt: &ASTStatement, ctxt: &mut Ctxt) {
 
             lower_var_assign(name, format!("%{val}"), ctxt);
         },
+        ASTStatement::Return(obj) => {
+            let mut n = format!("@.singletons.none");
+            if let Some(o) = obj {
+                n = lower_expr(o, ctxt);
+            }
+            ctxt.push(format!("@.ret = {n}"));
+            ctxt.push(format!("jmp pop_stack"));
+        },
+        ASTStatement::Pass => {},
         _ => todo!(),
     }
 }
