@@ -151,7 +151,7 @@ pub fn exec(ir: &IR) {
     while step(&mut ctxt) {}
 }
 
-fn step_stmt(stmt: &Statement, ctxt: &mut Ctxt) {
+fn step_stmt(stmt: &Statement, ctxt: &mut Ctxt) -> bool {
     ctxt.statement_idx += 1;
 
     use Statement::*;
@@ -179,12 +179,6 @@ fn step_stmt(stmt: &Statement, ctxt: &mut Ctxt) {
                 Value::Int(x) => println!("{}", x),
             }
         }
-    }
-}
-
-fn step_terminator(terminator: &Terminator, ctxt: &mut Ctxt) -> bool {
-    use Terminator::*;
-    match terminator {
         Jmp(n) => {
             match ctxt.nodes[n].clone() {
                 Value::Symbol(pid) => {
@@ -194,31 +188,25 @@ fn step_terminator(terminator: &Terminator, ctxt: &mut Ctxt) -> bool {
                 }
                 v => crash(&format!("trying to execute non-function value! {:?}", v), ctxt),
             };
-            true
         }
-        Exit => false,
+        Exit => return false,
         Panic(n) => {
             let v = ctxt.nodes[n].clone();
             println!("PANIC: {v:?}");
-            false
+            return false;
         }
     }
+
+    true
 }
 
 // returns "false" when done.
 fn step(ctxt: &mut Ctxt) -> bool {
     let proc = &ctxt.ir.procs[&ctxt.pid];
-    match proc.stmts.get(ctxt.statement_idx) {
-        Some(stmt) => {
-            ctxt.last_stmt = StmtFmt { stmt_id: Some(ctxt.statement_idx), proc }.to_string();
-            step_stmt(stmt, ctxt);
-            true
-        },
-        None => {
-            ctxt.last_stmt = StmtFmt { stmt_id: None, proc }.to_string();
-            step_terminator(&proc.terminator, ctxt)
-        },
-    }
+    let stmt = &proc.stmts.get(ctxt.statement_idx).unwrap();
+    ctxt.last_stmt = StmtFmt { stmt_id: ctxt.statement_idx, proc }.to_string();
+
+    step_stmt(stmt, ctxt)
 }
 
 fn crash(s: &str, ctxt: &Ctxt) -> ! {

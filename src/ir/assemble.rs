@@ -34,17 +34,10 @@ fn assemble_proc(mut toks: &[IRToken]) -> (/*start*/ bool, Symbol, Proc, &[IRTok
         stmts.push(x);
         toks = toks2;
     }
-    let (terminator, prev, toks) = assemble_terminator(toks).unwrap_or_else(|| {
-        panic!("Couldn't parse stmt or terminator starting at:\n{toks:?}")
-    });
-    stmts.extend(prev);
 
     let [IRToken::RBrace, toks@..] = toks else { panic!("missing }}!") };
 
-    let proc = Proc {
-        stmts,
-        terminator
-    };
+    let proc = Proc { stmts };
     (main, pid, proc, toks)
 }
 
@@ -52,6 +45,10 @@ fn assemble_stmt(toks: &[IRToken]) -> Option<(Statement, Vec<Statement>, &[IRTok
     let a = assemble_stmt_let;
     let a = or(a, assemble_stmt_store);
     let a = or(a, assemble_stmt_print);
+    let a = or(a, assemble_stmt_jmp);
+    let a = or(a, assemble_stmt_exit);
+    let a = or(a, assemble_stmt_panic);
+
     let (stmt, prev, toks) = a(toks)?;
     let [IRToken::Semicolon, toks@..] = toks else { return None };
     Some((stmt, prev, toks))
@@ -80,31 +77,21 @@ fn assemble_stmt_print(toks: &[IRToken]) -> Option<(Statement, Vec<Statement>, &
     Some((Statement::Print(node), prev, toks))
 }
 
-fn assemble_terminator(toks: &[IRToken]) -> Option<(Terminator, Vec<Statement>, &[IRToken])> {
-    let a = assemble_terminator_jmp;
-    let a = or(a, assemble_terminator_exit);
-    let a = or(a, assemble_terminator_panic);
-
-    let (terminator, prev, toks) = a(toks)?;
-    let [IRToken::Semicolon, toks@..] = toks else { return None };
-    Some((terminator, prev, toks))
-}
-
-fn assemble_terminator_jmp(toks: &[IRToken]) -> Option<(Terminator, Vec<Statement>, &[IRToken])> {
+fn assemble_stmt_jmp(toks: &[IRToken]) -> Option<(Statement, Vec<Statement>, &[IRToken])> {
     let [IRToken::Jmp, toks@..] = toks else { return None };
     let (node, prev, toks) = assemble_to_node(toks)?;
-    Some((Terminator::Jmp(node), prev, toks))
+    Some((Statement::Jmp(node), prev, toks))
 }
 
-fn assemble_terminator_exit(toks: &[IRToken]) -> Option<(Terminator, Vec<Statement>, &[IRToken])> {
+fn assemble_stmt_exit(toks: &[IRToken]) -> Option<(Statement, Vec<Statement>, &[IRToken])> {
     let [IRToken::Exit, toks@..] = toks else { return None };
-    Some((Terminator::Exit, Vec::new(), toks))
+    Some((Statement::Exit, Vec::new(), toks))
 }
 
-fn assemble_terminator_panic(toks: &[IRToken]) -> Option<(Terminator, Vec<Statement>, &[IRToken])> {
+fn assemble_stmt_panic(toks: &[IRToken]) -> Option<(Statement, Vec<Statement>, &[IRToken])> {
     let [IRToken::Panic, toks@..] = toks else { return None };
     let (node, prev, toks) = assemble_to_node(toks)?;
-    Some((Terminator::Panic(node), prev, toks))
+    Some((Statement::Panic(node), prev, toks))
 }
 
 enum ExprOrNode {

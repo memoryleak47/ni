@@ -20,7 +20,6 @@ pub fn display_proc(pid: Symbol, ir: &IR, f: &mut Formatter<'_>) -> fmt::Result 
     for i in 0..proc.stmts.len() {
         display_stmt(i, proc, false, f)?;
     }
-    display_terminator(proc, f)?;
     write!(f, "}}\n\n")
 }
 
@@ -44,16 +43,6 @@ fn display_stmt(stmt_id: usize, proc: &Proc, force_visible: bool, f: &mut Format
             let v = node_string(*v, proc);
             write!(f, "    print {v};\n")?;
         },
-    }
-
-    Ok(())
-}
-
-fn display_terminator(proc: &Proc, f: &mut Formatter<'_>) -> fmt::Result {
-    use Terminator::*;
-
-    let terminator = &proc.terminator;
-    match terminator {
         Jmp(n) => {
             let n = node_string(*n, proc);
             write!(f, "    jmp {n};\n")?;
@@ -150,15 +139,12 @@ fn display_index(t: Node, i: Node, proc: &Proc) -> String {
 }
 
 pub struct StmtFmt<'a> {
-    pub stmt_id: Option<usize>, // None means terminator.
+    pub stmt_id: usize,
     pub proc: &'a Proc,
 }
 
 impl<'a> Display for StmtFmt<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        match self.stmt_id {
-            Some(i) => display_stmt(i, self.proc, true, f),
-            None => display_terminator(self.proc, f),
-        }
+        display_stmt(self.stmt_id, self.proc, true, f)
     }
 }

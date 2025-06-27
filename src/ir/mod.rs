@@ -31,6 +31,9 @@ pub enum Statement {
     Let(Node, Expr, /*visible*/ bool), // create a new node with the value returned from the Expr.
     Store(/*table: */ Node, /*index: */ Node, Node), // store the value from the Node in the table `table` at index `index`.
     Print(Node),
+    Jmp(/*proc-id*/ Node),
+    Panic(/*err msg or code*/ Node),
+    Exit,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -51,14 +54,6 @@ pub enum Expr {
 #[derive(Debug, Clone)]
 pub struct Proc {
     pub stmts: Vec<Statement>,
-    pub terminator: Terminator,
-}
-
-#[derive(Debug, Clone)]
-pub enum Terminator {
-    Jmp(/*proc-id*/ Node),
-    Panic(/*err msg or code*/ Node),
-    Exit,
 }
 
 #[derive(Debug, Clone)]
