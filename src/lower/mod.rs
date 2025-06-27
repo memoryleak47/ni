@@ -45,102 +45,99 @@ fn lower_ast(ast: &AST) -> String {
 }
 
 fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
-    for x in stmts {
-        lower_stmt(x, ctxt);
+    for stmt in stmts {
+        ctxt.push(format!("# {stmt:?}"));
+
+        match stmt {
+            ASTStatement::Expr(e) => {
+                lower_expr(e, ctxt);
+            },
+            ASTStatement::Assign(ASTExpr::Var(var), val) => {
+                let val = lower_expr(val, ctxt);
+                lower_var_assign(&*var, val, ctxt)
+            }
+            ASTStatement::If(cond, then) => {
+                let cond = lower_expr(cond, ctxt);
+                let n = Symbol::new_fresh("ifcond".to_string());
+                let then_pid = ctxt.alloc_blk();
+                let post_pid = ctxt.alloc_blk();
+                ctxt.push(format!("%{n} = {{}}"));
+                ctxt.push(format!("%{n}[True] = {then_pid}"));
+                ctxt.push(format!("%{n}[False] = {post_pid}"));
+                ctxt.push(format!("jmp %{n}[{cond}.payload]"));
+
+                ctxt.focus_blk(then_pid);
+                    lower_body(then, ctxt);
+                    ctxt.push(format!("jmp {post_pid}"));
+
+                ctxt.focus_blk(post_pid);
+            },
+            ASTStatement::While(cond, body) => {
+                let pre_pid = ctxt.alloc_blk();
+                let body_pid = ctxt.alloc_blk();
+                let post_pid = ctxt.alloc_blk();
+
+                ctxt.push(format!("jmp {pre_pid}"));
+
+                ctxt.focus_blk(pre_pid);
+                    let cond = lower_expr(cond, ctxt);
+                    let n = Symbol::new_fresh("whilecond".to_string());
+                    ctxt.push(format!("%{n} = {{}}"));
+                    ctxt.push(format!("%{n}[True] = {body_pid}"));
+                    ctxt.push(format!("%{n}[False] = {post_pid}"));
+                    ctxt.push(format!("jmp %{n}[{cond}.payload]"));
+
+                ctxt.focus_blk(body_pid);
+                    lower_body(body, ctxt);
+                    ctxt.push(format!("jmp {pre_pid}"));
+
+                ctxt.focus_blk(post_pid);
+            },
+            ASTStatement::Def(name, args, body) => {
+                let pid = Symbol::new_fresh(name.to_string());
+                ctxt.procs.insert(pid, Vec::new());
+                ctxt.stack.push(FnCtxt {
+                    current_pid: pid,
+                    lowering: Some(FnLowerCtxt {
+                        ast_ptr: stmt as *const _,
+                    }),
+                });
+
+                for (i, a) in args.iter().enumerate() {
+                    ctxt.push(format!("@.frame.pylocals[\"{a}\"] = @.arg[{i}]"));
+                }
+
+                lower_body(body, ctxt);
+
+                // ctxt.push(format!("jmp pop_stack"));
+
+                ctxt.stack.pop();
+
+                let val = Symbol::new_fresh("functionbox");
+                ctxt.push(format!("%{val} = {{}}"));
+                ctxt.push(format!("%{val}.type = @.singletons.function"));
+                ctxt.push(format!("%{val}.payload = {pid}"));
+
+                lower_var_assign(name, format!("%{val}"), ctxt);
+            },
+            ASTStatement::Return(obj) => {
+                let mut n = format!("@.singletons.none");
+                if let Some(o) = obj {
+                    n = lower_expr(o, ctxt);
+                }
+                ctxt.push(format!("@.ret = {n}"));
+                ctxt.push(format!("jmp pop_stack"));
+                return;
+            },
+            ASTStatement::Pass => {},
+            _ => todo!(),
+        }
     }
 }
 
 fn lower_var_assign(var: &str, val: String, ctxt: &mut Ctxt) {
     let ns = find_namespace(var, ctxt);
     ctxt.push(format!("{ns}[\"{var}\"] = {val}"));
-}
-
-fn lower_stmt(stmt: &ASTStatement, ctxt: &mut Ctxt) {
-    ctxt.push(format!("# {stmt:?}"));
-
-    match stmt {
-        ASTStatement::Expr(e) => {
-            lower_expr(e, ctxt);
-        },
-        ASTStatement::Assign(ASTExpr::Var(var), val) => {
-            let val = lower_expr(val, ctxt);
-            lower_var_assign(&*var, val, ctxt)
-        }
-        ASTStatement::If(cond, then) => {
-            let cond = lower_expr(cond, ctxt);
-            let n = Symbol::new_fresh("ifcond".to_string());
-            let then_pid = ctxt.alloc_blk();
-            let post_pid = ctxt.alloc_blk();
-            ctxt.push(format!("%{n} = {{}}"));
-            ctxt.push(format!("%{n}[True] = {then_pid}"));
-            ctxt.push(format!("%{n}[False] = {post_pid}"));
-            ctxt.push(format!("jmp %{n}[{cond}.payload]"));
-
-            ctxt.focus_blk(then_pid);
-                lower_body(then, ctxt);
-                ctxt.push(format!("jmp {post_pid}"));
-
-            ctxt.focus_blk(post_pid);
-        },
-        ASTStatement::While(cond, body) => {
-            let pre_pid = ctxt.alloc_blk();
-            let body_pid = ctxt.alloc_blk();
-            let post_pid = ctxt.alloc_blk();
-
-            ctxt.push(format!("jmp {pre_pid}"));
-
-            ctxt.focus_blk(pre_pid);
-                let cond = lower_expr(cond, ctxt);
-                let n = Symbol::new_fresh("whilecond".to_string());
-                ctxt.push(format!("%{n} = {{}}"));
-                ctxt.push(format!("%{n}[True] = {body_pid}"));
-                ctxt.push(format!("%{n}[False] = {post_pid}"));
-                ctxt.push(format!("jmp %{n}[{cond}.payload]"));
-
-            ctxt.focus_blk(body_pid);
-                lower_body(body, ctxt);
-                ctxt.push(format!("jmp {pre_pid}"));
-
-            ctxt.focus_blk(post_pid);
-        },
-        ASTStatement::Def(name, args, body) => {
-            let pid = Symbol::new_fresh(name.to_string());
-            ctxt.procs.insert(pid, Vec::new());
-            ctxt.stack.push(FnCtxt {
-                current_pid: pid,
-                lowering: Some(FnLowerCtxt {
-                    ast_ptr: stmt as *const _,
-                }),
-            });
-
-            for (i, a) in args.iter().enumerate() {
-                ctxt.push(format!("@.frame.pylocals[\"{a}\"] = @.arg[{i}]"));
-            }
-
-            lower_body(body, ctxt);
-
-            ctxt.push(format!("jmp pop_stack"));
-
-            ctxt.stack.pop();
-
-            let val = Symbol::new_fresh("functionbox");
-            ctxt.push(format!("%{val} = {{}}"));
-            ctxt.push(format!("%{val}.type = @.singletons.function"));
-            ctxt.push(format!("%{val}.payload = {pid}"));
-
-            lower_var_assign(name, format!("%{val}"), ctxt);
-        },
-        ASTStatement::Return(obj) => {
-            let mut n = format!("@.singletons.none");
-            if let Some(o) = obj {
-                n = lower_expr(o, ctxt);
-            }
-            ctxt.push(format!("@.ret = {n}"));
-            ctxt.push(format!("jmp pop_stack"));
-        },
-        ASTStatement::Pass => {},
-        _ => todo!(),
-    }
 }
 
 fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
