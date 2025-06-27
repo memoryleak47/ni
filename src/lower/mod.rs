@@ -240,7 +240,7 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
             let suc = ctxt.alloc_blk();
             let arg = Symbol::new_fresh("arg");
             ctxt.push(format!("%{arg} = {{}}"));
-            ctxt.push(format!("%{arg}.f = op"));
+            ctxt.push(format!("%{arg}.f = py_op"));
             ctxt.push(format!("%{arg}.suc = {suc}"));
             ctxt.push(format!("%{arg}.farg = {{}}"));
 

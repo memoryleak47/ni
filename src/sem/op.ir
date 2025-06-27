@@ -1,6 +1,6 @@
 # @.frame.arg.{lhs: Object, rhs: Object, l_op: StringObject}
 # TODO add r_op (eg. __radd__) as a fallback.
-proc op {
+proc py_op {
     @.frame.irlocals.lhs = @.arg.lhs;
     @.frame.irlocals.rhs = @.arg.rhs;
 
@@ -9,14 +9,14 @@ proc op {
     %farg.attr = @.arg.l_op;
 
     @.arg = {};
-    @.arg.f = type_attrlookup;
-    @.arg.suc = op_2;
+    @.arg.f = py_type_attrlookup;
+    @.arg.suc = py_op_2;
     @.arg.farg = %farg;
 
     jmp call_fn;
 }
 
-proc op_2 {
+proc py_op_2 {
     %op_fn = @.ret;
 
     %farg = {};

@@ -1,10 +1,10 @@
 #
-proc attrlookup {
+proc py_attrlookup {
     panic "todo!";
 }
 
 # @.frame.arg.{obj: Object, attr: StrObject}
-proc type_attrlookup {
+proc py_type_attrlookup {
     @.ret = @.arg.obj.type.dict[@.arg.attr.payload];
     jmp pop_stack;
 }
