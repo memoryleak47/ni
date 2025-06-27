@@ -87,9 +87,6 @@ fn expr_string(expr: &Expr, proc: &Proc) -> String {
         Symbol(s) => format!("{s}"),
         Float(x) => format!("{x}"),
         Int(x) => format!("{x}"),
-        Bool(true) => format!("True"),
-        Bool(false) => format!("False"),
-        Undef => format!("Undef"),
         Str(s) => format!("\"{s}\""),
     }
 }

@@ -8,11 +8,11 @@ fn table_get(ptr: TablePtr, idx: Value, ctxt: &mut Ctxt) -> Value {
         .iter()
         .find(|(x, _)| *x == idx)
         .map(|(_, v)| v.clone())
-        .unwrap_or(Value::Undef)
+        .unwrap_or(ctxt.undef_v.clone())
 }
 
 fn table_set(ptr: TablePtr, idx: Value, val: Value, ctxt: &mut Ctxt) {
-    if idx == Value::Undef {
+    if idx == ctxt.undef_v {
         crash("setting index with Undef is forbidden!", ctxt);
     }
 
@@ -21,15 +21,13 @@ fn table_set(ptr: TablePtr, idx: Value, val: Value, ctxt: &mut Ctxt) {
         .get_mut(ptr)
         .expect("table_set got dangling pointer!");
     data.entries.retain(|(x, _)| *x != idx);
-    if val != Value::Undef {
+    if val != ctxt.undef_v {
         data.entries.push((idx.clone(), val));
     }
 }
 
 #[derive(Clone, PartialEq, Debug)]
 enum Value {
-    Undef,
-    Bool(bool),
     TablePtr(TablePtr),
     Str(String),
     Float(R64),
@@ -46,6 +44,10 @@ struct Ctxt<'ir> {
     nodes: Map<Node, Value>,
     statement_idx: usize,
     last_stmt: String,
+
+    true_v: Value,
+    false_v: Value,
+    undef_v: Value,
 }
 
 #[derive(Default, Debug)]
@@ -75,14 +77,17 @@ fn exec_expr(expr: &Expr, ctxt: &mut Ctxt) -> Value {
         Expr::Symbol(s) => Value::Symbol(*s),
         Expr::Float(x) => Value::Float(*x),
         Expr::Int(x) => Value::Int(*x),
-        Expr::Bool(b) => Value::Bool(*b),
-        Expr::Undef => Value::Undef,
         Expr::Str(s) => Value::Str(s.clone()),
     }
 }
 
 fn exec_binop(kind: BinOpKind, l: Value, r: Value, ctxt: &mut Ctxt) -> Value {
     use BinOpKind::*;
+
+    let boolify = |b: bool| -> Value {
+        if b { ctxt.true_v.clone() }
+        else { ctxt.false_v.clone() }
+    };
 
     match (kind, l, r) {
         // int
@@ -92,10 +97,10 @@ fn exec_binop(kind: BinOpKind, l: Value, r: Value, ctxt: &mut Ctxt) -> Value {
         (Div, Value::Int(l), Value::Int(r)) => Value::Int(l / r),
         (Mod, Value::Int(l), Value::Int(r)) => Value::Int(l % r),
         (Pow, Value::Int(l), Value::Int(r)) => Value::Int(l.pow(r as _)),
-        (Lt, Value::Int(l), Value::Int(r)) => Value::Bool(l < r),
-        (Le, Value::Int(l), Value::Int(r)) => Value::Bool(l <= r),
-        (Gt, Value::Int(l), Value::Int(r)) => Value::Bool(l > r),
-        (Ge, Value::Int(l), Value::Int(r)) => Value::Bool(l >= r),
+        (Lt, Value::Int(l), Value::Int(r)) => boolify(l < r),
+        (Le, Value::Int(l), Value::Int(r)) => boolify(l <= r),
+        (Gt, Value::Int(l), Value::Int(r)) => boolify(l > r),
+        (Ge, Value::Int(l), Value::Int(r)) => boolify(l >= r),
 
         // float
         (Plus, Value::Float(l), Value::Float(r)) => Value::Float(l + r),
@@ -104,15 +109,15 @@ fn exec_binop(kind: BinOpKind, l: Value, r: Value, ctxt: &mut Ctxt) -> Value {
         (Div, Value::Float(l), Value::Float(r)) => Value::Float(l / r),
         (Mod, Value::Float(l), Value::Float(r)) => Value::Float(l % r),
         (Pow, Value::Float(l), Value::Float(r)) => Value::Float(l.powf(r)),
-        (Lt, Value::Float(l), Value::Float(r)) => Value::Bool(l < r),
-        (Le, Value::Float(l), Value::Float(r)) => Value::Bool(l <= r),
-        (Gt, Value::Float(l), Value::Float(r)) => Value::Bool(l > r),
-        (Ge, Value::Float(l), Value::Float(r)) => Value::Bool(l >= r),
+        (Lt, Value::Float(l), Value::Float(r)) => boolify(l < r),
+        (Le, Value::Float(l), Value::Float(r)) => boolify(l <= r),
+        (Gt, Value::Float(l), Value::Float(r)) => boolify(l > r),
+        (Ge, Value::Float(l), Value::Float(r)) => boolify(l >= r),
 
         (Plus, Value::Str(l), Value::Str(r)) => Value::Str(format!("{}{}", l, r)),
 
-        (IsEqual, l, r) => Value::Bool(l == r),
-        (IsNotEqual, l, r) => Value::Bool(l != r),
+        (IsEqual, l, r) => boolify(l == r),
+        (IsNotEqual, l, r) => boolify(l != r),
         (kind, l, r) => crash(&format!("type error! \"{l:?} {kind} {r:?}\""), ctxt),
     }
 }
@@ -125,14 +130,20 @@ fn alloc_table(ctxt: &mut Ctxt) -> Value {
 }
 
 pub fn exec(ir: &IR) {
+    let undef_v = Value::Symbol(Symbol::new("Undef"));
+    let true_v = Value::Symbol(Symbol::new("True"));
+    let false_v = Value::Symbol(Symbol::new("False"));
     let mut ctxt = Ctxt {
         ir,
         heap: Vec::new(),
-        root: Value::Undef,
+        root: undef_v.clone(),
         pid: ir.main_pid,
         nodes: Default::default(),
         statement_idx: 0,
         last_stmt: "<none>".to_string(),
+        undef_v,
+        true_v,
+        false_v,
     };
     let root_table = alloc_table(&mut ctxt);
     ctxt.root = root_table;
@@ -161,9 +172,6 @@ fn step_stmt(stmt: &Statement, ctxt: &mut Ctxt) {
         Print(n) => {
             let val = &ctxt.nodes[n];
             match val {
-                Value::Undef => crash("print called on Undef!", ctxt),
-                Value::Bool(true) => println!("True"),
-                Value::Bool(false) => println!("False"),
                 Value::Symbol(s) => println!("{s}"),
                 Value::Str(s) => println!("{}", s),
                 Value::TablePtr(ptr) => println!("table: {}", ptr),

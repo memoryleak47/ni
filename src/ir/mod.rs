@@ -45,8 +45,6 @@ pub enum Expr {
     Symbol(Symbol), // $symbol
     Float(R64),
     Int(i64),
-    Bool(bool),
-    Undef, // everything is initially Undef.
     Str(String),
 }
 
