@@ -62,7 +62,7 @@ proc pop_stack {
     jmp %retpid;
 }
 
-# @.arg.{f, farg, suc}
+# @.arg.{f, suc, farg}
 proc call_fn {
     %arg = @.arg;
 

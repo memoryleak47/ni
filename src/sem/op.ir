@@ -4,35 +4,29 @@ proc op {
     @.frame.irlocals.lhs = @.arg.lhs;
     @.frame.irlocals.rhs = @.arg.rhs;
 
-    %new_frame = {};
-    %new_frame.parent = @.frame;
-    %new_frame.retpid = op_2;
-    %new_frame.irlocals = {};
-    %new_frame.pylocals = {};
+    %farg = {};
+    %farg.obj = @.arg.lhs;
+    %farg.attr = @.arg.l_op;
 
-    %arg = {};
-    %arg.obj = @.arg.lhs;
-    %arg.attr = @.arg.l_op;
-    @.arg = %arg;
+    @.arg = {};
+    @.arg.f = type_attrlookup;
+    @.arg.suc = op_2;
+    @.arg.farg = %farg;
 
-    @.frame = %new_frame;
-    jmp type_attrlookup;
+    jmp call_fn;
 }
 
 proc op_2 {
     %op_fn = @.ret;
 
-    %new_frame = {};
-    %new_frame.parent = @.frame;
-    %new_frame.retpid = pop_stack;
-    %new_frame.irlocals = {};
-    %new_frame.pylocals = {};
-    %new_frame.retval = @.frame.retval;
+    %farg = {};
+    %farg[0] = @.frame.irlocals.lhs;
+    %farg[1] = @.frame.irlocals.rhs;
 
     @.arg = {};
-    @.arg[0] = @.frame.irlocals.lhs;
-    @.arg[1] = @.frame.irlocals.rhs;
+    @.arg.f = %op_fn.payload;
+    @.arg.suc = pop_stack;
+    @.arg.farg = %farg;
 
-    @.frame = %new_frame;
-    jmp %op_fn.payload;
+    jmp call_fn;
 }
