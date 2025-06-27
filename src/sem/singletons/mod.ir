@@ -1,6 +1,26 @@
 # setup singletons
 proc init_1_singletons {
     @.singletons = {};
+
+    # alloc %type, %object
+    %type = {};
+    %object = {};
+
+    # fill %type
+    %type.type = %type;
+    %type.mro = {};
+    %type.mro[0] = %type;
+    %type.mro[1] = %object;
+
+    # fill %object
+    %object.type = %type;
+    %object.mro = {};
+    %object.mro[0] = %object;
+
+    # store them in @.singletons
+    @.singletons.type = %type;
+    @.singletons.object = %object;
+
     jmp init_singletons_1_int;
 }
 
@@ -75,7 +95,6 @@ proc init_singletons_1_int {
 }
 
 proc init_singletons_2_other_primitives {
-    @.singletons.type = {};
     @.singletons.str = {};              # the `str` type.
     @.singletons.bool = {};             # the `bool` type.
     @.singletons.none = {};             # the unique `None` value.
