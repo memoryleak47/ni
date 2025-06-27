@@ -90,9 +90,11 @@ proc init_1_singletons {
 
     @.singletons.int = %int;
 
+    ### function & str
     @.singletons.function = {};
     @.singletons.str = {};
 
+    ### bool
     @.singletons.bool = {};
 
     @.singletons.true = {};
@@ -103,6 +105,27 @@ proc init_1_singletons {
     @.singletons.false.type = @.singletons.bool;
     @.singletons.false.payload = False;
 
+    @.singletons.not = {};
+    @.singletons.not[@.singletons.false] = @.singletons.true;
+    @.singletons.not[@.singletons.true] = @.singletons.false;
+
+    @.singletons.and = {};
+    @.singletons.and[@.singletons.true] = {};
+    @.singletons.and[@.singletons.false] = {};
+    @.singletons.and[@.singletons.true] [@.singletons.true] = @.singletons.true;
+    @.singletons.and[@.singletons.false][@.singletons.true] = @.singletons.false;
+    @.singletons.and[@.singletons.true] [@.singletons.false] = @.singletons.false;
+    @.singletons.and[@.singletons.false][@.singletons.false] = @.singletons.false;
+
+    @.singletons.or = {};
+    @.singletons.or[@.singletons.true] = {};
+    @.singletons.or[@.singletons.false] = {};
+    @.singletons.or[@.singletons.true] [@.singletons.true] = @.singletons.true;
+    @.singletons.or[@.singletons.false][@.singletons.true] = @.singletons.true;
+    @.singletons.or[@.singletons.true] [@.singletons.false] = @.singletons.true;
+    @.singletons.or[@.singletons.false][@.singletons.false] = @.singletons.false;
+
+    ### none
     @.singletons.none_type = {};
     @.singletons.none = {};
     @.singletons.none.payload = None;
@@ -114,6 +137,14 @@ proc init_1_singletons {
     %eq_fn.type = @.singletons.function;
     %eq_fn.payload = std_eq;
     @.singletons.object.dict["__eq__"] = %eq_fn;
+
+    #### primitivity checks.
+    @.singletons.primitive = {};
+    @.singletons.primitive[@.singletons.function] = Yes;
+    @.singletons.primitive[@.singletons.str] = Yes;
+    @.singletons.primitive[@.singletons.int] = Yes;
+    @.singletons.primitive[@.singletons.none_type] = Yes;
+    @.singletons.primitive[@.singletons.bool] = Yes;
 
     jmp init_2_globals;
 }
@@ -194,28 +225,36 @@ proc payload_ge {
 
 # @.arg{0, 1}
 proc std_eq {
+    %a = @.singletons.primitive[@.arg[0].type];
+    %b = @.singletons.primitive[@.arg[0].type];
+
+    %tab = {};
+    %tab[Undef] = std_eq_prim;
+    %tab[%a] = std_eq_nonprim;
+    %tab[%b] = std_eq_nonprim;
+    jmp %tab[Undef];
+}
+
+proc std_eq_prim {
     %a = @.arg[0].payload;
     %b = @.arg[1].payload;
-
-    %a_ty = @.arg[0].type;
-    %b_ty = @.arg[1].type;
 
     %tab = {};
     %tab[%a] = @.singletons.false;
     %tab[%b] = @.singletons.true;
-    %a_eq_b = %tab[%a];
 
-    %tab_ty = {};
-    %tab_ty[%a_ty] = @.singletons.false;
-    %tab_ty[%b_ty] = @.singletons.true;
-    %a_ty_eq_b_ty = %tab_ty[%a_ty];
+    @.ret = %tab[%a];
+    jmp pop_stack;
+}
 
-    %ftab = {};
-    %ftab[@.singletons.false] = @.singletons.true;
-    %ftab[%a_eq_b] = @.singletons.false;
-    %ftab[%a_ty_eq_b_ty] = @.singletons.false;
+proc std_eq_nonprim {
+    %a = @.arg[0];
+    %b = @.arg[1];
 
-    @.ret = %ftab[@.singletons.false];
+    %tab = {};
+    %tab[%a] = @.singletons.false;
+    %tab[%b] = @.singletons.true;
 
+    @.ret = %tab[%a];
     jmp pop_stack;
 }
