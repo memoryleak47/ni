@@ -1,4 +1,6 @@
 # @.arg.{obj: Object, attr: string}
+# TODO does this need to be a function?
+# isn't an actual proc enough?
 proc py_attrlookup {
     @.ret = @.arg.obj.dict[@.arg.attr];
     jmp pop_stack;

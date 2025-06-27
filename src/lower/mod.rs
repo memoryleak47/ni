@@ -135,6 +135,7 @@ fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
                 let val = Symbol::new_fresh("functionbox");
                 ctxt.push(format!("%{val} = {{}}"));
                 ctxt.push(format!("%{val}.type = @.singletons.function"));
+                ctxt.push(format!("%{val}.dict = {{}}"));
                 ctxt.push(format!("%{val}.payload = {pid}"));
 
                 lower_var_assign(name, format!("%{val}"), ctxt);
