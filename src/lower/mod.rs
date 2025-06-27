@@ -257,6 +257,7 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
             ctxt.focus_blk(suc);
                 format!("@.ret")
         },
+        ASTExpr::None => format!("@.singletons.none"),
         _ => todo!("{:?}", e),
     };
     let irl = ctxt.alloc_irlocal("expr_val");
