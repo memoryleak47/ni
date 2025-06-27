@@ -48,7 +48,9 @@ proc print_fn {
 
 # @.arg{0, 1}
 proc payload_add {
-    @.ret = @.arg[0].payload + @.arg[1].payload;
+    @.ret = {};
+    @.ret.payload = @.arg[0].payload + @.arg[1].payload;
+    @.ret.type = @.singletons.int;
     jmp pop_stack;
 }
 
