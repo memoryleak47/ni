@@ -1,4 +1,4 @@
-# @.frame.arg.{lhs, rhs, l_op}
+# @.frame.arg.{lhs: Object, rhs: Object, l_op: StringObject}
 # TODO add r_op (eg. __radd__) as a fallback.
 proc op {
     @.frame.irlocals.lhs = @.arg.lhs;

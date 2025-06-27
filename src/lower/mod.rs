@@ -115,23 +115,16 @@ fn lower_stmt(stmt: &ASTStatement, ctxt: &mut Ctxt) {
                 }),
             });
 
-            // might be overwritten by something else in the meantime.
-            ctxt.push(format!("@.frame.retval.v = @.singletons.none"));
-
             for (i, a) in args.iter().enumerate() {
-                ctxt.push(format!("@.frame.pylocals[\"{a}\"] = @.frame.arg[{i}]"));
+                ctxt.push(format!("@.frame.pylocals[\"{a}\"] = @.arg[{i}]"));
             }
 
             lower_body(body, ctxt);
 
-            let frame = Symbol::new_fresh("frame");
-            ctxt.push(format!("%{frame} = @.frame"));
-            ctxt.push(format!("@.frame = %{frame}.parent"));
-            ctxt.push(format!("jmp %{frame}.retpid"));
+            ctxt.push(format!("jmp pop_stack"));
 
             ctxt.stack.pop();
 
-            
             let val = Symbol::new_fresh("functionbox");
             ctxt.push(format!("%{val} = {{}}"));
             ctxt.push(format!("%{val}.type = @.singletons.function"));
@@ -148,26 +141,20 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
         ASTExpr::FnCall(f, args) => {
             let f = lower_expr(f, ctxt);
             let suc = ctxt.alloc_blk();
-            let new_f = Symbol::new_fresh("new_frame");
-            ctxt.push(format!("%{new_f} = {{}}"));
-            ctxt.push(format!("%{new_f}.parent = @.frame"));
-            ctxt.push(format!("%{new_f}.arg = {{}}"));
-            ctxt.push(format!("%{new_f}.retval = {{}}"));
-            ctxt.push(format!("%{new_f}.retpid = {suc}"));
-            ctxt.push(format!("%{new_f}.pylocals = {{}}"));
-            ctxt.push(format!("%{new_f}.irlocals = {{}}"));
+            let arg = Symbol::new_fresh("arg");
+            ctxt.push(format!("%{arg} = {{}}"));
+            ctxt.push(format!("%{arg}.f = {f}.payload"));
+            ctxt.push(format!("%{arg}.suc = {suc}"));
+            ctxt.push(format!("%{arg}.farg = {{}}"));
             for (i, a) in args.iter().enumerate() {
                 let a = lower_expr(a, ctxt);
-                ctxt.push(format!("%{new_f}.arg[{i}] = {a}"));
+                ctxt.push(format!("%{arg}.farg[{i}] = {a}"));
             }
-            let ff = Symbol::new_fresh("fn");
-            ctxt.push(format!("%{ff} = {f}"));
-            ctxt.push(format!("@.frame = %{new_f}"));
-            ctxt.push(format!("jmp %{ff}.payload"));
+            ctxt.push(format!("jmp call_fn"));
 
             ctxt.focus_blk(suc);
 
-            format!("%{new_f}.retval.v") // TODO the node new_f will be out of scope
+            format!("@.ret")
         },
         ASTExpr::Var(v) => {
             let ns = find_namespace(v, ctxt);
@@ -203,28 +190,24 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
             let r = lower_expr(r, ctxt);
 
             let l_op = op_attrs(*kind);
-            let post = ctxt.alloc_blk();
-            let new_f = Symbol::new_fresh("new_frame");
-            ctxt.push(format!("%{new_f} = {{}}"));
-            ctxt.push(format!("%{new_f}.parent = @.frame"));
-            ctxt.push(format!("%{new_f}.arg = {{}}"));
-            ctxt.push(format!("%{new_f}.arg.lhs = {l}"));
-            ctxt.push(format!("%{new_f}.arg.rhs = {r}"));
+            let suc = ctxt.alloc_blk();
+            let arg = Symbol::new_fresh("arg");
+            ctxt.push(format!("%{arg} = {{}}"));
+            ctxt.push(format!("%{arg}.f = op"));
+            ctxt.push(format!("%{arg}.suc = {suc}"));
+            ctxt.push(format!("%{arg}.farg = {{}}"));
 
-            ctxt.push(format!("%{new_f}.arg.l_op = {{}}"));
-            ctxt.push(format!("%{new_f}.arg.l_op.type = @.singletons.str"));
-            ctxt.push(format!("%{new_f}.arg.l_op.payload = \"{l_op}\""));
+            ctxt.push(format!("%{arg}.farg.lhs = {l}"));
+            ctxt.push(format!("%{arg}.farg.rhs = {r}"));
 
-            ctxt.push(format!("@.frame.irlocals.opret = {{}}"));
-            ctxt.push(format!("%{new_f}.retval = @.frame.irlocals.opret"));
-            ctxt.push(format!("%{new_f}.retpid = {post}"));
-            ctxt.push(format!("%{new_f}.pylocals = {{}}"));
-            ctxt.push(format!("%{new_f}.irlocals = {{}}"));
-            ctxt.push(format!("@.frame = %{new_f}"));
-            ctxt.push(format!("jmp op"));
+            ctxt.push(format!("%{arg}.farg.l_op = {{}}"));
+            ctxt.push(format!("%{arg}.farg.l_op.type = @.singletons.str"));
+            ctxt.push(format!("%{arg}.farg.l_op.payload = \"{l_op}\""));
 
-            ctxt.focus_blk(post);
-                format!("@.frame.irlocals.opret")
+            ctxt.push(format!("jmp call_fn"));
+
+            ctxt.focus_blk(suc);
+                format!("@.ret")
         },
         _ => todo!("{:?}", e),
     }
