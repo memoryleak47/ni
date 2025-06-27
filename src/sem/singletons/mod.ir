@@ -8,12 +8,16 @@ proc init_1_singletons {
 
     # fill %type
     %type.type = %type;
+    %type.dict = {};
+
     %type.mro = {};
     %type.mro[0] = %type;
     %type.mro[1] = %object;
 
     # fill %object
     %object.type = %type;
+    %object.dict = {};
+
     %object.mro = {};
     %object.mro[0] = %object;
 
@@ -28,6 +32,10 @@ proc init_1_singletons {
 proc init_singletons_1_int {
     %int = {};
     %int.dict = {};
+
+    %int.mro = {};
+    %int.mro[0] = %int;
+    %int.mro[1] = @.singletons.object;
 
     %add_fn = {};
     %add_fn.type = @.singletons.function;
