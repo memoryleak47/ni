@@ -189,7 +189,7 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
             let suc = ctxt.alloc_blk();
             let arg = ctxt.alloc_irlocal("arg");
             ctxt.push(format!("{arg} = {{}}"));
-            ctxt.push(format!("{arg}.f = {f}.payload"));
+            ctxt.push(format!("{arg}.f = {f}"));
             ctxt.push(format!("{arg}.suc = {suc}"));
             ctxt.push(format!("{arg}.args = {{}}"));
             for (i, a) in args.iter().enumerate() {

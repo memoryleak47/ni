@@ -11,5 +11,5 @@ proc py_call {
     @.frame = %frame;
 
     @.arg = %arg.args;
-    jmp %arg.f;
+    jmp %arg.f.payload;
 }
