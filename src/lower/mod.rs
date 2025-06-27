@@ -114,7 +114,7 @@ fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
                 body.push(ASTStatement::Return(None));
                 let body = &*body;
 
-                let pid = Symbol::new_fresh(name.to_string());
+                let pid = Symbol::new_fresh(format!("f_{name}"));
                 ctxt.procs.insert(pid, Vec::new());
                 ctxt.stack.push(FnCtxt {
                     current_pid: pid,
