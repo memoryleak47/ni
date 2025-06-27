@@ -68,11 +68,6 @@ fn expr_string(expr: &Expr, proc: &Proc) -> String {
             let r = node_string(*r, proc);
             format!("{l} {kind} {r}")
         }
-        Index(l, r) => {
-            let l = node_string(*l, proc);
-            let r = node_string(*r, proc);
-            format!("{l}[{r}]")
-        }
         Symbol(s) => format!("{s}"),
         Float(x) => format!("{x}"),
         Int(x) => format!("{x}"),
