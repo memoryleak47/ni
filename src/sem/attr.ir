@@ -15,7 +15,7 @@ proc py_type_attrlookup {
 }
 
 proc py_type_attrlookup_body1 {
-    @.ret = @.arg.obj.mro[@.frame.irlocals.i];
+    @.ret = @.arg.obj.type.mro[@.frame.irlocals.i];
 
     %tab = {};
     %tab[@.ret] = py_type_attrlookup_body_2;
