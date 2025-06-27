@@ -7,7 +7,8 @@ mod ctxt;
 pub use ctxt::*;
 
 pub fn lower(ast: &AST) -> String {
-    let mut s = lower_ast(ast);
+    let mut s = String::from("#\n");
+    s.extend(lower_ast(ast).chars());
     s.extend(include_str!(concat!(env!("OUT_DIR"), "/concat.ir")).chars());
 
     s
