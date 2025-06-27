@@ -20,7 +20,6 @@ pub type Stmt = (Symbol, /*idx*/ usize);
 pub enum BinOpKind {
     Plus, Minus, Mul, Div, Mod, Pow,
     Lt, Le, Gt, Ge,
-    IsEqual, IsNotEqual,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

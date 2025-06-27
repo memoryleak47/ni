@@ -189,8 +189,16 @@ proc payload_ge {
 
 # @.arg{0, 1}
 proc payload_eq {
+    %a = @.arg[0].payload;
+    %b = @.arg[1].payload;
+
+    %tab = {};
+    %tab[%a] = False;
+    %tab[%b] = True;
+
     @.ret = {};
-    @.ret.payload = @.arg[0].payload == @.arg[1].payload;
+    @.ret.payload = %tab[%a];
     @.ret.type = @.singletons.bool;
+
     jmp pop_stack;
 }

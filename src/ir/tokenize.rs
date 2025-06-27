@@ -52,8 +52,6 @@ pub fn ir_tokenize(s: &str) -> Vec<IRToken> {
                 ['%', ..] => { tokens.push(IRToken::BinOp(BinOpKind::Mod)); i += 1; }
                 ['<', '=', ..] => { tokens.push(IRToken::BinOp(BinOpKind::Le)); i += 2; }
                 ['>', '=', ..] => { tokens.push(IRToken::BinOp(BinOpKind::Ge)); i += 2; }
-                ['=', '=', ..] => { tokens.push(IRToken::BinOp(BinOpKind::IsEqual)); i += 2; }
-                ['!', '=', ..] => { tokens.push(IRToken::BinOp(BinOpKind::IsNotEqual)); i += 2; }
                 ['<', ..] => { tokens.push(IRToken::BinOp(BinOpKind::Lt)); i += 1; }
                 ['>', ..] => { tokens.push(IRToken::BinOp(BinOpKind::Gt)); i += 1; }
                 ['"', ..] => { state = TokenizerState::InStr('"', String::new()); i += 1; }
