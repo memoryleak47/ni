@@ -1,0 +1,30 @@
+# @.arg.{obj: Object, parents: List<TypeObject>}
+# defines @.arg.obj.mro
+proc add_mro {
+    @.frame.irlocals.i = 0;
+
+    @.arg.obj.mro = {};
+    @.arg.obj.mro[0] = @.arg.obj;
+    @.arg.obj.mro[1] = @.singletons.object; # might be overwritten later.
+
+    %p = @.arg.parents[0];
+
+    %tab = {};
+    %tab[%p] = add_mro_loop;
+    %tab[Undef] = pop_stack;
+
+    jmp %tab[%p];
+}
+
+proc add_mro_loop {
+    %v = @.arg.parents[0].mro[@.frame.irlocals.i];
+
+    %tab = {};
+    %tab[%v] = add_mro_loop;
+    %tab[Undef] = pop_stack;
+
+    @.arg.obj.mro[@.frame.irlocals.i + 1] = %v;
+    @.frame.irlocals.i = @.frame.irlocals.i + 1;
+
+    jmp %tab[%v];
+}
