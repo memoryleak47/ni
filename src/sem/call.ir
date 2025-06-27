@@ -21,10 +21,39 @@ proc py_call_fn {
 }
 
 proc py_call_class {
-    @.ret = {};
-    @.ret.type = @.arg.f;
-    @.ret.dict = {};
-    jmp @.arg.suc;
+    @.frame.irlocals.arg_bkp = @.arg;
+
+    @.arg = {};
+    @.arg.f = py_type_attrlookup;
+    @.arg.farg = {};
+    @.arg.farg.obj = @.frame.irlocals.arg_bkp.f;
+    @.arg.farg.attr = "__init__";
+    @.arg.suc = py_call_class_1;
+    jmp call_fn;
+}
+
+proc py_call_class_1 {
+    %constr = @.ret; # the @.ret register currently stores the constructor.
+
+    %tab = {};
+    %tab[@.ret] = @.ret;
+    %tab[@.singletons.none] = pop_stack;
+    %opt_constr = %tab[@.ret];
+
+    @.frame.irlocals.obj = {};
+    @.frame.irlocals.obj.type = @.frame.irlocals.arg_bkp.f;
+    @.frame.irlocals.obj.dict = {};
+
+    @.arg = {};
+    @.arg.f = %opt_constr;
+    @.arg.farg = @.frame.irlocals.arg_bkp.args;
+    @.arg.suc = py_call_class_2;
+    jmp call_fn;
+}
+
+proc py_call_class_2 {
+    @.ret = @.frame.irlocals.obj;
+    jmp @.frame.irlocals.arg_bkp.suc;
 }
 
 proc py_call_other {
