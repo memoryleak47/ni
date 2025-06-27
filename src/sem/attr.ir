@@ -37,7 +37,7 @@ proc py_type_attrlookup_body_2 {
 
 ###
 
-# @.arg.{obj: Object, parents: List<TypeObject>, suc: ProcId}
+# @.arg.{obj: Object, parents: List<TypeObject>}
 # defines @.arg.obj.mro
 proc add_mro {
     @.frame.irlocals.i = 0;

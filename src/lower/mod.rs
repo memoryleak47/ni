@@ -167,9 +167,20 @@ fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
                 ctxt.push(format!("{cl} = {{}}"));
                 ctxt.push(format!("{cl}.type = @.singletons.type"));
                 ctxt.push(format!("{cl}.dict = {dict}"));
-                // TODO
-                // add_mro(val, &args, ctxt);
 
+                let suc = ctxt.alloc_blk();
+                ctxt.push(format!("@.arg = {{}}"));
+                ctxt.push(format!("@.arg.f = add_mro"));
+                ctxt.push(format!("@.arg.farg = {{}}"));
+                ctxt.push(format!("@.arg.farg.obj = {cl}"));
+                ctxt.push(format!("@.arg.farg.parents = {{}}"));
+                for (i, a) in args.iter().enumerate() {
+                    ctxt.push(format!("@.arg.farg.parents[{i}] = {a}"));
+                }
+                ctxt.push(format!("@.arg.suc = {suc}"));
+                ctxt.push(format!("jmp call_fn"));
+
+                ctxt.focus_blk(suc);
                 ctxt.push(format!("@.frame.pylocals = {old_namespace}"));
 
                 lower_var_assign(name, format!("{cl}"), ctxt);
