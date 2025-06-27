@@ -15,8 +15,9 @@
 #   irlocals :: Symbol -> any      # local variables for the IR
 # }
 #
+# includes PrimitiveObjects, TypeObjects (including classes), and instances of classes
 # struct Object {
-#   type :: Object                 # type(obj)
+#   type :: TypeObject             # type(obj)
 #   dict :: any                    # the dict underlying __dict__
 #   ...                            # case-specific addons
 # }
@@ -26,15 +27,7 @@
 #   payload :: ProcId | Undef | True | False | int | str
 # }
 #
-# struct InstanceObject : Object {
-#   type :: ClassObject
-# }
-#
 # struct TypeObject : Object {
 #   mro :: List<TypeObject>
-#   type = @.singletons.type
-# }
-#
-# struct ClassObject : TypeObject {
 #   type = @.singletons.type
 # }
