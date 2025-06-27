@@ -150,6 +150,28 @@ fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
             },
             ASTStatement::Pass => {},
             ASTStatement::Scope(..) => {}, // Scope is handled in nameres.
+            ASTStatement::Class(name, args, body) => {
+                let mut args: Vec<String> = args.iter().map(|x| lower_expr(x, ctxt)).collect();
+
+                let dict = ctxt.alloc_irlocal("class_dict");
+                let old_namespace = ctxt.alloc_irlocal("old_namespace");
+                ctxt.push(format!("{old_namespace} = @.frame.pylocals"));
+                ctxt.push(format!("{dict} = {{}}"));
+                ctxt.push(format!("@.frame.pylocals = {dict}"));
+
+                lower_body(body, ctxt);
+
+                let cl = ctxt.alloc_irlocal("class_obj");
+                ctxt.push(format!("{cl} = {{}}"));
+                ctxt.push(format!("{cl}.type = @.singletons.type"));
+                ctxt.push(format!("{cl}.dict = {dict}"));
+                // TODO
+                // add_mro(val, &args, ctxt);
+
+                ctxt.push(format!("@.frame.pylocals = {old_namespace}"));
+
+                lower_var_assign(name, format!("{cl}"), ctxt);
+            },
             _ => todo!(),
         }
     }
