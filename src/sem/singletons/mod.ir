@@ -51,9 +51,10 @@ proc init_singletons_2_int {
 }
 
 proc init_singletons_3_other_primitives {
-    @.singletons.str = {};      # the `str` type.
-    @.singletons.bool = {};     # the `bool` type.
-    @.singletons.none = {};     # the unique `None` value.
+    @.singletons.str = {};              # the `str` type.
+    @.singletons.bool = {};             # the `bool` type.
+    @.singletons.none = {};             # the unique `None` value.
+    @.singletons.none.payload = None;
 
     jmp init_2_globals;
 }
