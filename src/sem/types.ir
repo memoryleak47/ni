@@ -25,3 +25,11 @@
 #   type = @.singletons.function
 #   payload :: ProcId
 # }
+#
+# struct ClassObject : Object {
+#   type = @.singletons.type
+# }
+#
+# struct InstanceObject : Object {
+#   type :: ClassObject
+# }
