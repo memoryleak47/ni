@@ -1,6 +1,4 @@
 # @.arg.{obj: Object, attr: string}
-# TODO does this need to be a function?
-# isn't an actual proc enough?
 proc py_attrlookup {
     @.ret = @.arg.obj.dict[@.arg.attr];
     %jmptab = {};
@@ -11,6 +9,33 @@ proc py_attrlookup {
 
 # @.arg.{obj: Object, attr: string}
 proc py_type_attrlookup {
-    @.ret = @.arg.obj.type.dict[@.arg.attr];
+    @.frame.irlocals.i = 0;
+
+    jmp py_type_attrlookup_pre;
+}
+
+proc py_type_attrlookup_pre {
+    %cond = @.frame.irlocals.i < @.arg.obj.mro.length;
+
+    %tab = {};
+    %tab[True] = py_type_attrlookup_body;
+    %tab[False] = py_type_attrlookup_fail;
+
+    jmp %tab[%cond];
+}
+
+proc py_type_attrlookup_body {
+    @.ret = @.arg.obj.mro[@.frame.irlocals.i].dict[@.arg.attr];
+
+    %tab = {};
+    %tab[@.ret] = pop_stack;
+    %tab[Undef] = py_type_attrlookup_pre;
+
+    @.frame.irlocals.i = @.frame.irlocals.i + 1;
+    jmp %tab[@.ret];
+}
+
+proc py_type_attrlookup_fail {
+    @.ret = @.singletons.none;
     jmp pop_stack;
 }
