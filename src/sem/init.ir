@@ -12,8 +12,12 @@ main proc init {
             %add_fn = {};
             %add_fn.type = @.singletons.function;
             %add_fn.payload = payload_add;
-
             %int.dict["__add__"] = %add_fn;
+
+            %eq_fn = {};
+            %eq_fn.type = @.singletons.function;
+            %eq_fn.payload = payload_eq;
+            %int.dict["__eq__"] = %eq_fn;
         @.singletons.int = %int;
 
         @.singletons.str = {};      # the `str` type.
@@ -50,7 +54,15 @@ proc print_fn {
 proc payload_add {
     @.ret = {};
     @.ret.payload = @.arg[0].payload + @.arg[1].payload;
-    @.ret.type = @.singletons.int;
+    @.ret.type = @.arg[0].type;
+    jmp pop_stack;
+}
+
+# @.arg{0, 1}
+proc payload_eq {
+    @.ret = {};
+    @.ret.payload = @.arg[0].payload == @.arg[1].payload;
+    @.ret.type = @.singletons.bool;
     jmp pop_stack;
 }
 
