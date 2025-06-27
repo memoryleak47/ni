@@ -149,6 +149,7 @@ fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
                 return;
             },
             ASTStatement::Pass => {},
+            ASTStatement::Scope(..) => {}, // Scope is handled in nameres.
             _ => todo!(),
         }
     }
