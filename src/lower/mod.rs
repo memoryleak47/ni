@@ -172,6 +172,11 @@ fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
 
                 lower_var_assign(name, format!("{cl}"), ctxt);
             },
+            ASTStatement::Assign(ASTExpr::Attribute(e, v), rhs) => {
+                let e = lower_expr(e, ctxt);
+                let rhs = lower_expr(rhs, ctxt);
+                ctxt.push(format!("{e}.dict[\"{v}\"] = {rhs}"));
+            },
             _ => todo!(),
         }
     }
@@ -206,6 +211,10 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
         ASTExpr::Var(v) => {
             let ns = find_namespace(v, ctxt);
             format!("{ns}[\"{v}\"]")
+        },
+        ASTExpr::Attribute(e, a) => {
+            let e = lower_expr(e, ctxt);
+            format!("{e}.dict[\"{a}\"]")
         },
         ASTExpr::Str(s) => {
             let t = Symbol::new_fresh("strbox".to_string());
