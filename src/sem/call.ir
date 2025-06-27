@@ -1,3 +1,15 @@
+# @.arg.{f: Callable, args: List<Object>, suc: Pid}
 proc py_call {
-    panic "todo!";
+    %arg = @.arg;
+
+    %frame = {};
+    %frame.parent = @.frame;
+    %frame.retpid = %arg.suc;
+    %frame.pylocals = {};
+    %frame.irlocals = {};
+
+    @.frame = %frame;
+
+    @.arg = %arg.args;
+    jmp %arg.f;
 }

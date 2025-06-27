@@ -191,13 +191,13 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
             ctxt.push(format!("{arg} = {{}}"));
             ctxt.push(format!("{arg}.f = {f}.payload"));
             ctxt.push(format!("{arg}.suc = {suc}"));
-            ctxt.push(format!("{arg}.farg = {{}}"));
+            ctxt.push(format!("{arg}.args = {{}}"));
             for (i, a) in args.iter().enumerate() {
                 let a = lower_expr(a, ctxt);
-                ctxt.push(format!("{arg}.farg[{i}] = {a}"));
+                ctxt.push(format!("{arg}.args[{i}] = {a}"));
             }
             ctxt.push(format!("@.arg = {arg}"));
-            ctxt.push(format!("jmp call_fn"));
+            ctxt.push(format!("jmp py_call"));
 
             ctxt.focus_blk(suc);
 
