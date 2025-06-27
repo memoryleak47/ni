@@ -12,10 +12,6 @@ fn table_get(ptr: TablePtr, idx: Value, ctxt: &mut Ctxt) -> Value {
 }
 
 fn table_set(ptr: TablePtr, idx: Value, val: Value, ctxt: &mut Ctxt) {
-    if idx == ctxt.undef_v {
-        crash("setting index with Undef is forbidden!", ctxt);
-    }
-
     let data: &mut TableData = ctxt
         .heap
         .get_mut(ptr)

@@ -3,7 +3,10 @@
 # isn't an actual proc enough?
 proc py_attrlookup {
     @.ret = @.arg.obj.dict[@.arg.attr];
-    jmp pop_stack;
+    %jmptab = {};
+    %jmptab[@.ret] = pop_stack;
+    %jmptab[@.singletons.none] = py_type_attrlookup;
+    jmp %jmptab[@.ret];
 }
 
 # @.arg.{obj: Object, attr: string}
