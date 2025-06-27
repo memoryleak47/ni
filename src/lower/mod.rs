@@ -214,7 +214,20 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
         },
         ASTExpr::Attribute(e, a) => {
             let e = lower_expr(e, ctxt);
-            format!("{e}.dict[\"{a}\"]")
+
+            let suc = ctxt.alloc_blk();
+            let arg = Symbol::new_fresh("arg");
+            ctxt.push(format!("%{arg} = {{}}"));
+            ctxt.push(format!("%{arg}.f = py_attrlookup"));
+            ctxt.push(format!("%{arg}.suc = {suc}"));
+            ctxt.push(format!("%{arg}.farg = {{}}"));
+            ctxt.push(format!("%{arg}.farg.obj = {e}"));
+            ctxt.push(format!("%{arg}.farg.attr = \"{a}\""));
+            ctxt.push(format!("@.arg = %{arg}"));
+            ctxt.push(format!("jmp call_fn"));
+
+            ctxt.focus_blk(suc);
+                format!("@.ret")
         },
         ASTExpr::Str(s) => {
             let t = Symbol::new_fresh("strbox".to_string());

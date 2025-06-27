@@ -6,7 +6,7 @@ proc py_op {
 
     %farg = {};
     %farg.obj = @.arg.lhs;
-    %farg.attr = @.arg.l_op;
+    %farg.attr = @.arg.l_op.payload;
 
     @.arg = {};
     @.arg.f = py_type_attrlookup;
