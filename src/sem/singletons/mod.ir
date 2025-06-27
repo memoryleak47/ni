@@ -20,10 +20,31 @@ proc init_singletons_2_int {
     %add_fn.payload = payload_add;
     %int.dict["__add__"] = %add_fn;
 
+    %lt_fn = {};
+    %lt_fn.type = @.singletons.function;
+    %lt_fn.payload = payload_lt;
+    %int.dict["__lt__"] = %lt_fn;
+
+    %lte_fn = {};
+    %lte_fn.type = @.singletons.function;
+    %lte_fn.payload = payload_lte;
+    %int.dict["__lte__"] = %lte_fn;
+
+    %gt_fn = {};
+    %gt_fn.type = @.singletons.function;
+    %gt_fn.payload = payload_gt;
+    %int.dict["__gt__"] = %gt_fn;
+
+    %gte_fn = {};
+    %gte_fn.type = @.singletons.function;
+    %gte_fn.payload = payload_gte;
+    %int.dict["__gte__"] = %gte_fn;
+
     %eq_fn = {};
     %eq_fn.type = @.singletons.function;
     %eq_fn.payload = payload_eq;
     %int.dict["__eq__"] = %eq_fn;
+
     @.singletons.int = %int;
 
     jmp init_singletons_3_other_primitives;
@@ -47,11 +68,41 @@ proc payload_add {
 }
 
 # @.arg{0, 1}
+proc payload_lt {
+    @.ret = {};
+    @.ret.payload = @.arg[0].payload < @.arg[1].payload;
+    @.ret.type = @.singletons.bool;
+    jmp pop_stack;
+}
+
+# @.arg{0, 1}
+proc payload_lte {
+    @.ret = {};
+    @.ret.payload = @.arg[0].payload <= @.arg[1].payload;
+    @.ret.type = @.singletons.bool;
+    jmp pop_stack;
+}
+
+# @.arg{0, 1}
+proc payload_gt {
+    @.ret = {};
+    @.ret.payload = @.arg[0].payload > @.arg[1].payload;
+    @.ret.type = @.singletons.bool;
+    jmp pop_stack;
+}
+
+# @.arg{0, 1}
+proc payload_gte {
+    @.ret = {};
+    @.ret.payload = @.arg[0].payload >= @.arg[1].payload;
+    @.ret.type = @.singletons.bool;
+    jmp pop_stack;
+}
+
+# @.arg{0, 1}
 proc payload_eq {
     @.ret = {};
     @.ret.payload = @.arg[0].payload == @.arg[1].payload;
     @.ret.type = @.singletons.bool;
     jmp pop_stack;
 }
-
-

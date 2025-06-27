@@ -12,6 +12,7 @@ do
     res1=$(RUSTFLAGS=-Awarnings cargo r --release -q "tests/${i}.py")
     if [[ ! "$?" == 0 ]]; then
         echo error!
+        echo $res1
         exit
     fi
     echo "$res1"
