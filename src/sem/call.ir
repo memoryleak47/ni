@@ -26,7 +26,7 @@ proc py_call_class {
     @.arg = {};
     @.arg.f = py_type_attrlookup;
     @.arg.farg = {};
-    @.arg.farg.obj = @.frame.irlocals.arg_bkp.f;
+    @.arg.farg.ty = @.frame.irlocals.arg_bkp.f;
     @.arg.farg.attr = "__init__";
     @.arg.suc = py_call_class_1;
     jmp call_fn;
@@ -36,7 +36,7 @@ proc py_call_class_1 {
     %constr = @.ret; # the @.ret register currently stores the constructor.
 
     %tab = {};
-    %tab[@.ret] = @.ret;
+    %tab[@.ret] = @.ret.payload; # we just assume this is a function for now.
     %tab[@.singletons.none] = pop_stack;
     %opt_constr = %tab[@.ret];
 
