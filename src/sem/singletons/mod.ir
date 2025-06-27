@@ -92,9 +92,21 @@ proc init_1_singletons {
 
     @.singletons.function = {};
     @.singletons.str = {};
+
     @.singletons.bool = {};
+
+    @.singletons.true = {};
+    @.singletons.true.type = @.singletons.bool;
+    @.singletons.true.payload = True;
+
+    @.singletons.false = {};
+    @.singletons.false.type = @.singletons.bool;
+    @.singletons.false.payload = False;
+
+    @.singletons.none_type = {};
     @.singletons.none = {};
     @.singletons.none.payload = None;
+    @.singletons.none.type = @.singletons.none_type;
 
 
     #### define general `==` operator for object.
@@ -189,23 +201,21 @@ proc std_eq {
     %b_ty = @.arg[1].type;
 
     %tab = {};
-    %tab[%a] = False;
-    %tab[%b] = True;
+    %tab[%a] = @.singletons.false;
+    %tab[%b] = @.singletons.true;
     %a_eq_b = %tab[%a];
 
     %tab_ty = {};
-    %tab_ty[%a_ty] = False;
-    %tab_ty[%b_ty] = True;
+    %tab_ty[%a_ty] = @.singletons.false;
+    %tab_ty[%b_ty] = @.singletons.true;
     %a_ty_eq_b_ty = %tab_ty[%a_ty];
 
     %ftab = {};
-    %ftab[False] = True;
-    %ftab[%a_eq_b] = False;
-    %ftab[%a_ty_eq_b_ty] = False;
+    %ftab[@.singletons.false] = @.singletons.true;
+    %ftab[%a_eq_b] = @.singletons.false;
+    %ftab[%a_ty_eq_b_ty] = @.singletons.false;
 
-    @.ret = {};
-    @.ret.payload = %ftab[False];
-    @.ret.type = @.singletons.bool;
+    @.ret = %ftab[@.singletons.false];
 
     jmp pop_stack;
 }

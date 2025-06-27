@@ -259,13 +259,10 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
             format!("%{t}")
         },
         ASTExpr::Bool(b) => {
-            let b = if *b { "True" } else { "False" };
-            let t = Symbol::new_fresh("boolbox".to_string());
-            ctxt.push(format!("%{t} = {{}}"));
-            ctxt.push(format!("%{t}.type = @.singletons.bool"));
-            ctxt.push(format!("%{t}.payload = {b}"));
-
-            format!("%{t}")
+            match *b {
+                true => format!("@.singletons.true"),
+                false => format!("@.singletons.false"),
+            }
         },
         ASTExpr::BinOp(kind, l, r) => {
             let l = lower_expr(l, ctxt);

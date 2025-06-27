@@ -35,7 +35,7 @@ fn assemble_proc(mut toks: &[IRToken]) -> (/*start*/ bool, Symbol, Proc, &[IRTok
         toks = toks2;
     }
 
-    let [IRToken::RBrace, toks@..] = toks else { panic!("missing }}!") };
+    let [IRToken::RBrace, toks@..] = toks else { panic!("Can't parse stmt (or '}}' missing?)\n{toks:?}") };
 
     let proc = Proc { stmts };
     (main, pid, proc, toks)
