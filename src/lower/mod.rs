@@ -150,6 +150,7 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
                 let a = lower_expr(a, ctxt);
                 ctxt.push(format!("%{arg}.farg[{i}] = {a}"));
             }
+            ctxt.push(format!("@.arg = %{arg}"));
             ctxt.push(format!("jmp call_fn"));
 
             ctxt.focus_blk(suc);
@@ -203,6 +204,7 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
             ctxt.push(format!("%{arg}.farg.l_op = {{}}"));
             ctxt.push(format!("%{arg}.farg.l_op.type = @.singletons.str"));
             ctxt.push(format!("%{arg}.farg.l_op.payload = \"{l_op}\""));
+            ctxt.push(format!("@.arg = %{arg}"));
 
             ctxt.push(format!("jmp call_fn"));
 
