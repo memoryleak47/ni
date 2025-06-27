@@ -1,17 +1,11 @@
 # setup singletons
 proc init_1_singletons {
     @.singletons = {};
-    jmp init_singletons_1_function;
-}
-
-proc init_singletons_1_function {
-    # the `function` type.
-    @.singletons.function = {};
-    jmp init_singletons_2_int;
+    jmp init_singletons_1_int;
 }
 
 # the `int` type.
-proc init_singletons_2_int {
+proc init_singletons_1_int {
     %int = {};
     %int.dict = {};
 
@@ -77,14 +71,17 @@ proc init_singletons_2_int {
 
     @.singletons.int = %int;
 
-    jmp init_singletons_3_other_primitives;
+    jmp init_singletons_2_other_primitives;
 }
 
-proc init_singletons_3_other_primitives {
+proc init_singletons_2_other_primitives {
+    @.singletons.type = {};
     @.singletons.str = {};              # the `str` type.
     @.singletons.bool = {};             # the `bool` type.
     @.singletons.none = {};             # the unique `None` value.
     @.singletons.none.payload = None;
+
+    @.singletons.function = {};
 
     jmp init_2_globals;
 }

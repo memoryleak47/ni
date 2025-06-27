@@ -2,14 +2,31 @@
 proc py_call {
     %arg = @.arg;
 
-    %frame = {};
-    %frame.parent = @.frame;
-    %frame.retpid = %arg.suc;
-    %frame.pylocals = {};
-    %frame.irlocals = {};
+    %ty = @.arg.f.type;
+    %typemap = {};
+    %typemap[%ty] = py_call_other;
+    %typemap[@.singletons.function] = py_call_fn;
+    %typemap[@.singletons.type] = py_call_class;
+    jmp %typemap[%ty];
+}
 
-    @.frame = %frame;
+proc py_call_fn {
+    %arg = @.arg;
 
-    @.arg = %arg.args;
-    jmp %arg.f.payload;
+    @.arg = {};
+    @.arg.f = %arg.f.payload;
+    @.arg.farg = %arg.args;
+    @.arg.suc = %arg.suc;
+    jmp call_fn;
+}
+
+proc py_call_class {
+    @.ret = {};
+    @.ret.type = @.arg.f;
+    @.ret.dict = {};
+    jmp @.arg.suc;
+}
+
+proc py_call_other {
+    panic "todo!";
 }
