@@ -203,7 +203,10 @@ fn step_stmt(stmt: &Statement, ctxt: &mut Ctxt) -> bool {
 // returns "false" when done.
 fn step(ctxt: &mut Ctxt) -> bool {
     let pid = ctxt.pid;
-    let proc = &ctxt.ir.procs.get(&pid).unwrap_or_else(|| panic!("Can't run unknown proc symbol '{pid}'"));
+    let proc = match ctxt.ir.procs.get(&pid) {
+        Some(p) => p,
+        None => crash(&format!("Can't run unknown proc symbol '{pid}'"), ctxt),
+    };
     let stmt = &proc.stmts.get(ctxt.statement_idx).unwrap();
     ctxt.last_stmt = StmtFmt { stmt_id: ctxt.statement_idx, proc }.to_string();
 
