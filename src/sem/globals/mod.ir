@@ -8,11 +8,22 @@ proc init_2_globals {
     %print_fn.payload = print_fn;
     @.globals["print"] = %print_fn;
 
+    # setup type
+    %type_fn = {};
+    %type_fn.type = @.singletons.function;
+    %type_fn.payload = type_fn;
+    @.globals["type"] = %type_fn;
+
     jmp pre_userstart;
 }
 
 proc print_fn {
     print @.arg[0].payload;
     @.ret = @.singletons.none;
+    jmp pop_stack;
+}
+
+proc type_fn {
+    @.ret = @.arg[0].type;
     jmp pop_stack;
 }
