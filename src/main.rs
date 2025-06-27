@@ -22,25 +22,31 @@ pub use cli::*;
 
 fn main() {
     let cli = cli();
-    let contents = fs::read_to_string(cli.filename).unwrap();
-    let toks = tokenize(&contents);
-    if let Action::ShowTokens = cli.action {
-        println!("{:?}", toks);
-        return;
-    }
+    let contents = fs::read_to_string(&cli.filename).unwrap();
+    let ir_string = if !cli.filename.ends_with(".ir") {
+        let toks = tokenize(&contents);
+        if let Action::ShowTokens = cli.action {
+            println!("{:?}", toks);
+            return;
+        }
 
-    let ast = assemble(&toks);
+        let ast = assemble(&toks);
 
-    if let Action::ShowAst = cli.action {
-        println!("{:?}", ast);
-        return;
-    }
+        if let Action::ShowAst = cli.action {
+            println!("{:?}", ast);
+            return;
+        }
 
-    let ir_string = lower(&ast);
-    if let Action::ShowIR = cli.action {
-        println!("{}", ir_string);
-        return;
-    }
+        let ir_string = lower(&ast);
+        if let Action::ShowIR = cli.action {
+            println!("{}", ir_string);
+            return;
+        }
+
+        ir_string
+    } else {
+        contents
+    };
     let toks = ir_tokenize(&ir_string);
     let ir = ir_assemble(&toks[..]);
 
