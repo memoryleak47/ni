@@ -137,20 +137,20 @@ fn lower_stmt(stmt: &ASTStatement, ctxt: &mut Ctxt) {
 }
 
 fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
-    match e {
+    let out = match e {
         ASTExpr::FnCall(f, args) => {
             let f = lower_expr(f, ctxt);
             let suc = ctxt.alloc_blk();
-            let arg = Symbol::new_fresh("arg");
-            ctxt.push(format!("%{arg} = {{}}"));
-            ctxt.push(format!("%{arg}.f = {f}.payload"));
-            ctxt.push(format!("%{arg}.suc = {suc}"));
-            ctxt.push(format!("%{arg}.farg = {{}}"));
+            let arg = ctxt.alloc_irlocal("arg");
+            ctxt.push(format!("{arg} = {{}}"));
+            ctxt.push(format!("{arg}.f = {f}.payload"));
+            ctxt.push(format!("{arg}.suc = {suc}"));
+            ctxt.push(format!("{arg}.farg = {{}}"));
             for (i, a) in args.iter().enumerate() {
                 let a = lower_expr(a, ctxt);
-                ctxt.push(format!("%{arg}.farg[{i}] = {a}"));
+                ctxt.push(format!("{arg}.farg[{i}] = {a}"));
             }
-            ctxt.push(format!("@.arg = %{arg}"));
+            ctxt.push(format!("@.arg = {arg}"));
             ctxt.push(format!("jmp call_fn"));
 
             ctxt.focus_blk(suc);
@@ -212,7 +212,10 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
                 format!("@.ret")
         },
         _ => todo!("{:?}", e),
-    }
+    };
+    let irl = ctxt.alloc_irlocal("expr_val");
+    ctxt.push(format!("{irl} = {out}"));
+    format!("{irl}")
 }
 
 pub fn op_attrs(op: ASTBinOpKind) -> &'static str {

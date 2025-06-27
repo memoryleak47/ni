@@ -51,4 +51,8 @@ impl Ctxt {
         self.stack.last_mut().unwrap().current_pid = pid;
     }
 
+    pub fn alloc_irlocal(&mut self, name: impl Into<String>) -> String {
+        let sym = Symbol::new_fresh(name.into());
+        format!("@.frame.irlocals.{sym}")
+    }
 }
