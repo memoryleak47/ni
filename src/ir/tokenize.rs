@@ -5,8 +5,6 @@ pub enum IRToken {
     Symbol(Symbol),
     Int(i64),
     Str(String),
-    Bool(bool),
-    Undef,
 
     LParen, RParen,
     LBracket, RBracket,
