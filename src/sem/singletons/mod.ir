@@ -25,11 +25,7 @@ proc init_1_singletons {
     @.singletons.type = %type;
     @.singletons.object = %object;
 
-    jmp init_singletons_1_int;
-}
-
-# the `int` type.
-proc init_singletons_1_int {
+    ############ the int type:
     %int = {};
     %int.dict = {};
 
@@ -82,11 +78,6 @@ proc init_singletons_1_int {
     %ge_fn.payload = payload_ge;
     %int.dict["__ge__"] = %ge_fn;
 
-    %eq_fn = {};
-    %eq_fn.type = @.singletons.function;
-    %eq_fn.payload = payload_eq;
-    %int.dict["__eq__"] = %eq_fn;
-
     %ne_fn = {};
     %ne_fn.type = @.singletons.function;
     %ne_fn.payload = payload_ne;
@@ -99,16 +90,18 @@ proc init_singletons_1_int {
 
     @.singletons.int = %int;
 
-    jmp init_singletons_2_other_primitives;
-}
-
-proc init_singletons_2_other_primitives {
-    @.singletons.str = {};              # the `str` type.
-    @.singletons.bool = {};             # the `bool` type.
-    @.singletons.none = {};             # the unique `None` value.
+    @.singletons.function = {};
+    @.singletons.str = {};
+    @.singletons.bool = {};
+    @.singletons.none = {};
     @.singletons.none.payload = None;
 
-    @.singletons.function = {};
+
+    #### define general `==` operator for object.
+    %eq_fn = {};
+    %eq_fn.type = @.singletons.function;
+    %eq_fn.payload = std_eq;
+    @.singletons.object.dict["__eq__"] = %eq_fn;
 
     jmp init_2_globals;
 }
@@ -188,16 +181,30 @@ proc payload_ge {
 }
 
 # @.arg{0, 1}
-proc payload_eq {
+proc std_eq {
     %a = @.arg[0].payload;
     %b = @.arg[1].payload;
+
+    %a_ty = @.arg[0].type;
+    %b_ty = @.arg[1].type;
 
     %tab = {};
     %tab[%a] = False;
     %tab[%b] = True;
+    %a_eq_b = %tab[%a];
+
+    %tab_ty = {};
+    %tab_ty[%a_ty] = False;
+    %tab_ty[%b_ty] = True;
+    %a_ty_eq_b_ty = %tab_ty[%a_ty];
+
+    %ftab = {};
+    %ftab[False] = True;
+    %ftab[%a_eq_b] = False;
+    %ftab[%a_ty_eq_b_ty] = False;
 
     @.ret = {};
-    @.ret.payload = %tab[%a];
+    @.ret.payload = %ftab[False];
     @.ret.type = @.singletons.bool;
 
     jmp pop_stack;
