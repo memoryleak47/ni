@@ -1,5 +1,5 @@
 # @.frame.arg.{lhs: Object, rhs: Object, l_op: StringObject, suc: ProcId}
-# TODO add r_op (eg. __radd__) as a fallback.
+# returns @.ret :: Object | Undef
 proc py_op {
     %arg = @.arg;
     @.frame.irlocals.py_op_arg = %arg;
@@ -13,6 +13,7 @@ proc py_op {
 }
 
 proc py_op_2 {
+    # we will crash, if %op_fn is Undef.
     %op_fn = @.ret;
     %arg = @.frame.irlocals.py_op_arg;
 

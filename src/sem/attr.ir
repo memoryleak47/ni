@@ -1,4 +1,5 @@
 # @.arg.{obj: Object, attr: string, suc: ProcId}
+# returns @.ret :: Object | Undef
 proc py_attrlookup {
     @.arg.ty = @.arg.obj.type;
 

@@ -21,37 +21,42 @@ proc py_call_fn {
 }
 
 proc py_call_class {
-    @.frame.irlocals.arg_bkp = @.arg;
+    @.frame.irlocals.py_call_arg = @.arg;
 
     @.arg = {};
-    @.arg.ty = @.frame.irlocals.arg_bkp.f;
+    @.arg.ty = @.frame.irlocals.py_call_arg.f;
     @.arg.attr = "__init__";
     @.arg.suc = py_call_class_1;
     jmp py_type_attrlookup;
 }
 
 proc py_call_class_1 {
-    %constr = @.ret; # the @.ret register currently stores the constructor.
-
-    %tab = {};
-    %tab[@.ret] = @.ret.payload; # we just assume this is a function for now.
-    %tab[@.singletons.none] = @.arg.suc;
-    %opt_constr = %tab[@.ret];
+    # %constr :: FunctionObject | Undef
+    %constr = @.ret;
 
     @.frame.irlocals.obj = {};
-    @.frame.irlocals.obj.type = @.frame.irlocals.arg_bkp.f;
+    @.frame.irlocals.obj.type = @.frame.irlocals.py_call_arg.f;
     @.frame.irlocals.obj.dict = {};
 
+    %tab = {};
+    %tab[%constr] = py_call_class_w_constructor;
+    %tab[Undef] = py_call_class_done;
+    jmp %tab[%constr];
+}
+
+proc py_call_class_w_constructor {
+    %constr = @.ret.payload;
+
     @.arg = {};
-    @.arg.f = %opt_constr;
-    @.arg.farg = @.frame.irlocals.arg_bkp.args;
-    @.arg.suc = py_call_class_2;
+    @.arg.f = %constr;
+    @.arg.farg = @.frame.irlocals.py_call_arg.args;
+    @.arg.suc = py_call_class_done;
     jmp call_fn;
 }
 
-proc py_call_class_2 {
+proc py_call_class_done {
     @.ret = @.frame.irlocals.obj;
-    jmp @.frame.irlocals.arg_bkp.suc;
+    jmp @.frame.irlocals.py_call_arg.suc;
 }
 
 proc py_call_other {
