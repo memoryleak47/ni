@@ -15,7 +15,7 @@
 #   irlocals :: Symbol -> any      # local variables for the IR
 # }
 #
-# includes PrimitiveObjects, TypeObjects (including classes), and instances of classes
+# includes PrimitiveObjects, TypeObjects (including classes), MethodObjects, and instances of classes
 # struct Object {
 #   type :: TypeObject             # type(obj)
 #   dict :: any                    # the dict underlying __dict__
@@ -30,4 +30,10 @@
 # struct TypeObject : Object {
 #   mro :: List<TypeObject>
 #   type = @.singletons.type
+# }
+#
+# struct MethodObject : Object {
+#   type = @.singletons.method
+#   fn :: ProcId
+#   self :: Object
 # }
