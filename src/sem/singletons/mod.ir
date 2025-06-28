@@ -35,57 +35,57 @@ proc init_1_singletons {
 
     %add_fn = {};
     %add_fn.type = @.singletons.function;
-    %add_fn.payload = payload_add;
+    %add_fn.payload = fn_payload_add;
     %int.dict["__add__"] = %add_fn;
 
     %sub_fn = {};
     %sub_fn.type = @.singletons.function;
-    %sub_fn.payload = payload_sub;
+    %sub_fn.payload = fn_payload_sub;
     %int.dict["__sub__"] = %sub_fn;
 
     %mul_fn = {};
     %mul_fn.type = @.singletons.function;
-    %mul_fn.payload = payload_mul;
+    %mul_fn.payload = fn_payload_mul;
     %int.dict["__mul__"] = %mul_fn;
 
     %truediv_fn = {};
     %truediv_fn.type = @.singletons.function;
-    %truediv_fn.payload = payload_truediv;
+    %truediv_fn.payload = fn_payload_truediv;
     %int.dict["__truediv__"] = %truediv_fn;
 
     %mod_fn = {};
     %mod_fn.type = @.singletons.function;
-    %mod_fn.payload = payload_mod;
+    %mod_fn.payload = fn_payload_mod;
     %int.dict["__mod__"] = %mod_fn;
 
     %lt_fn = {};
     %lt_fn.type = @.singletons.function;
-    %lt_fn.payload = payload_lt;
+    %lt_fn.payload = fn_payload_lt;
     %int.dict["__lt__"] = %lt_fn;
 
     %le_fn = {};
     %le_fn.type = @.singletons.function;
-    %le_fn.payload = payload_le;
+    %le_fn.payload = fn_payload_le;
     %int.dict["__le__"] = %le_fn;
 
     %gt_fn = {};
     %gt_fn.type = @.singletons.function;
-    %gt_fn.payload = payload_gt;
+    %gt_fn.payload = fn_payload_gt;
     %int.dict["__gt__"] = %gt_fn;
 
     %ge_fn = {};
     %ge_fn.type = @.singletons.function;
-    %ge_fn.payload = payload_ge;
+    %ge_fn.payload = fn_payload_ge;
     %int.dict["__ge__"] = %ge_fn;
 
     %ne_fn = {};
     %ne_fn.type = @.singletons.function;
-    %ne_fn.payload = payload_ne;
+    %ne_fn.payload = fn_payload_ne;
     %int.dict["__ne__"] = %ne_fn;
 
     %pow_fn = {};
     %pow_fn.type = @.singletons.function;
-    %pow_fn.payload = payload_pow;
+    %pow_fn.payload = fn_payload_pow;
     %int.dict["__pow__"] = %pow_fn;
 
     @.singletons.int = %int;
@@ -155,7 +155,7 @@ proc init_1_singletons {
 
 
 # @.arg{0, 1}
-proc payload_add {
+proc fn_payload_add {
     @.ret = {};
     @.ret.payload = @.arg[0].payload + @.arg[1].payload;
     @.ret.type = @.arg[0].type;
@@ -163,7 +163,7 @@ proc payload_add {
 }
 
 # @.arg{0, 1}
-proc payload_sub {
+proc fn_payload_sub {
     @.ret = {};
     @.ret.payload = @.arg[0].payload - @.arg[1].payload;
     @.ret.type = @.arg[0].type;
@@ -172,7 +172,7 @@ proc payload_sub {
 
 
 # @.arg{0, 1}
-proc payload_mul {
+proc fn_payload_mul {
     @.ret = {};
     @.ret.payload = @.arg[0].payload * @.arg[1].payload;
     @.ret.type = @.arg[0].type;
@@ -180,7 +180,7 @@ proc payload_mul {
 }
 
 # @.arg{0, 1}
-proc payload_truediv {
+proc fn_payload_truediv {
     @.ret = {};
     @.ret.payload = @.arg[0].payload / @.arg[1].payload;
     @.ret.type = @.arg[0].type;
@@ -188,7 +188,7 @@ proc payload_truediv {
 }
 
 # @.arg{0, 1}
-proc payload_mod {
+proc fn_payload_mod {
     @.ret = {};
     @.ret.payload = @.arg[0].payload % @.arg[1].payload;
     @.ret.type = @.arg[0].type;
@@ -196,7 +196,7 @@ proc payload_mod {
 }
 
 # @.arg{0, 1}
-proc payload_lt {
+proc fn_payload_lt {
     @.ret = {};
     @.ret.payload = @.arg[0].payload < @.arg[1].payload;
     @.ret.type = @.singletons.bool;
@@ -204,7 +204,7 @@ proc payload_lt {
 }
 
 # @.arg{0, 1}
-proc payload_le {
+proc fn_payload_le {
     @.ret = {};
     @.ret.payload = @.arg[0].payload <= @.arg[1].payload;
     @.ret.type = @.singletons.bool;
@@ -212,7 +212,7 @@ proc payload_le {
 }
 
 # @.arg{0, 1}
-proc payload_gt {
+proc fn_payload_gt {
     @.ret = {};
     @.ret.payload = @.arg[0].payload > @.arg[1].payload;
     @.ret.type = @.singletons.bool;
@@ -220,7 +220,7 @@ proc payload_gt {
 }
 
 # @.arg{0, 1}
-proc payload_ge {
+proc fn_payload_ge {
     @.ret = {};
     @.ret.payload = @.arg[0].payload >= @.arg[1].payload;
     @.ret.type = @.singletons.bool;
@@ -228,7 +228,7 @@ proc payload_ge {
 }
 
 # @.arg{0, 1}
-proc std_eq {
+proc fn_std_eq {
     %a = @.singletons.primitive[@.arg[0].type];
     %b = @.singletons.primitive[@.arg[0].type];
 

@@ -1,19 +1,16 @@
-# @.frame.arg.{lhs: Object, rhs: Object, l_op: StringObject}
+# @.frame.arg.{lhs: Object, rhs: Object, l_op: StringObject, suc: ProcId}
 # TODO add r_op (eg. __radd__) as a fallback.
 proc py_op {
-    @.frame.irlocals.lhs = @.arg.lhs;
-    @.frame.irlocals.rhs = @.arg.rhs;
-
-    %farg = {};
-    %farg.ty = @.arg.lhs.type;
-    %farg.attr = @.arg.l_op.payload;
+    %arg = @.arg;
+    @.frame.irlocals.lhs = %arg.lhs;
+    @.frame.irlocals.rhs = %arg.rhs;
 
     @.arg = {};
-    @.arg.f = py_type_attrlookup;
+    @.arg.ty = %arg.lhs.type;
+    @.arg.attr = %arg.l_op.payload;
     @.arg.suc = py_op_2;
-    @.arg.farg = %farg;
 
-    jmp call_fn;
+    jmp py_type_attrlookup;
 }
 
 proc py_op_2 {
@@ -25,7 +22,7 @@ proc py_op_2 {
 
     @.arg = {};
     @.arg.f = %op_fn.payload;
-    @.arg.suc = pop_stack;
+    @.arg.suc = @.arg.ret;
     @.arg.farg = %farg;
 
     jmp call_fn;

@@ -170,15 +170,13 @@ fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
 
                 let suc = ctxt.alloc_blk();
                 ctxt.push(format!("@.arg = {{}}"));
-                ctxt.push(format!("@.arg.f = add_mro"));
-                ctxt.push(format!("@.arg.farg = {{}}"));
-                ctxt.push(format!("@.arg.farg.obj = {cl}"));
-                ctxt.push(format!("@.arg.farg.parents = {{}}"));
+                ctxt.push(format!("@.arg.obj = {cl}"));
+                ctxt.push(format!("@.arg.parents = {{}}"));
                 for (i, a) in args.iter().enumerate() {
-                    ctxt.push(format!("@.arg.farg.parents[{i}] = {a}"));
+                    ctxt.push(format!("@.arg.parents[{i}] = {a}"));
                 }
                 ctxt.push(format!("@.arg.suc = {suc}"));
-                ctxt.push(format!("jmp call_fn"));
+                ctxt.push(format!("jmp add_mro"));
 
                 ctxt.focus_blk(suc);
                 ctxt.push(format!("@.frame.pylocals = {old_namespace}"));
@@ -272,19 +270,17 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
             let suc = ctxt.alloc_blk();
             let arg = Symbol::new_fresh("arg");
             ctxt.push(format!("%{arg} = {{}}"));
-            ctxt.push(format!("%{arg}.f = py_op"));
             ctxt.push(format!("%{arg}.suc = {suc}"));
-            ctxt.push(format!("%{arg}.farg = {{}}"));
 
-            ctxt.push(format!("%{arg}.farg.lhs = {l}"));
-            ctxt.push(format!("%{arg}.farg.rhs = {r}"));
+            ctxt.push(format!("%{arg}.lhs = {l}"));
+            ctxt.push(format!("%{arg}.rhs = {r}"));
 
-            ctxt.push(format!("%{arg}.farg.l_op = {{}}"));
-            ctxt.push(format!("%{arg}.farg.l_op.type = @.singletons.str"));
-            ctxt.push(format!("%{arg}.farg.l_op.payload = \"{l_op}\""));
+            ctxt.push(format!("%{arg}.l_op = {{}}"));
+            ctxt.push(format!("%{arg}.l_op.type = @.singletons.str"));
+            ctxt.push(format!("%{arg}.l_op.payload = \"{l_op}\""));
             ctxt.push(format!("@.arg = %{arg}"));
 
-            ctxt.push(format!("jmp call_fn"));
+            ctxt.push(format!("jmp py_op"));
 
             ctxt.focus_blk(suc);
                 format!("@.ret")

@@ -24,12 +24,10 @@ proc py_call_class {
     @.frame.irlocals.arg_bkp = @.arg;
 
     @.arg = {};
-    @.arg.f = py_type_attrlookup;
-    @.arg.farg = {};
-    @.arg.farg.ty = @.frame.irlocals.arg_bkp.f;
-    @.arg.farg.attr = "__init__";
+    @.arg.ty = @.frame.irlocals.arg_bkp.f;
+    @.arg.attr = "__init__";
     @.arg.suc = py_call_class_1;
-    jmp call_fn;
+    jmp py_type_attrlookup;
 }
 
 proc py_call_class_1 {
@@ -37,7 +35,7 @@ proc py_call_class_1 {
 
     %tab = {};
     %tab[@.ret] = @.ret.payload; # we just assume this is a function for now.
-    %tab[@.singletons.none] = pop_stack;
+    %tab[@.singletons.none] = @.arg.suc;
     %opt_constr = %tab[@.ret];
 
     @.frame.irlocals.obj = {};

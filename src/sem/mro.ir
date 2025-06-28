@@ -1,4 +1,4 @@
-# @.arg.{obj: Object, parents: List<TypeObject>}
+# @.arg.{obj: Object, parents: List<TypeObject>, suc: ProcId}
 # defines @.arg.obj.mro
 proc add_mro {
     @.frame.irlocals.i = 0;
@@ -11,7 +11,7 @@ proc add_mro {
 
     %tab = {};
     %tab[%p] = add_mro_loop;
-    %tab[Undef] = pop_stack;
+    %tab[Undef] = @.arg.suc;
 
     jmp %tab[%p];
 }
@@ -21,7 +21,7 @@ proc add_mro_loop {
 
     %tab = {};
     %tab[%v] = add_mro_loop;
-    %tab[Undef] = pop_stack;
+    %tab[Undef] = @.arg.suc;
 
     @.arg.obj.mro[@.frame.irlocals.i + 1] = %v;
     @.frame.irlocals.i = @.frame.irlocals.i + 1;

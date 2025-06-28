@@ -39,7 +39,7 @@ struct Ctxt<'ir> {
     pid: Symbol,
     nodes: Map<Node, Value>,
     statement_idx: usize,
-    last_stmt: String,
+    last_stmt: Option<(/*pid*/ Symbol, usize)>,
 
     true_v: Value,
     false_v: Value,
@@ -136,7 +136,7 @@ pub fn exec(ir: &IR) {
         pid: ir.main_pid,
         nodes: Default::default(),
         statement_idx: 0,
-        last_stmt: "<none>".to_string(),
+        last_stmt: None,
         undef_v,
         true_v,
         false_v,
@@ -204,13 +204,15 @@ fn step(ctxt: &mut Ctxt) -> bool {
         None => crash(&format!("Can't run unknown proc symbol '{pid}'"), ctxt),
     };
     let stmt = &proc.stmts.get(ctxt.statement_idx).unwrap();
-    ctxt.last_stmt = StmtFmt { stmt_id: ctxt.statement_idx, proc }.to_string();
+    ctxt.last_stmt = Some((pid, ctxt.statement_idx));
 
     step_stmt(stmt, ctxt)
 }
 
 fn crash(s: &str, ctxt: &Ctxt) -> ! {
-    let l = &ctxt.last_stmt;
-    println!("exec IR crashing due to '{s}' at stmt:\n{l}");
+    let Some((pid, stmt_id)) = &ctxt.last_stmt else { panic!("crash on first stmt!") };
+    let proc = &ctxt.ir.procs[pid];
+    let stmt_str = StmtFmt { stmt_id: *stmt_id, proc }.to_string();
+    println!("exec IR crashing due to '{s}' at stmt:\n{stmt_str}\nin proc {pid}");
     std::process::exit(1);
 }

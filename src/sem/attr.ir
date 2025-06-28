@@ -1,15 +1,15 @@
-# @.arg.{obj: Object, attr: string}
+# @.arg.{obj: Object, attr: string, suc: ProcId}
 proc py_attrlookup {
     @.arg.ty = @.arg.obj.type;
 
     @.ret = @.arg.obj.dict[@.arg.attr];
     %jmptab = {};
-    %jmptab[@.ret] = pop_stack;
+    %jmptab[@.ret] = @.arg.suc;
     %jmptab[Undef] = py_type_attrlookup;
     jmp %jmptab[@.ret];
 }
 
-# @.arg.{ty: TypeObject, attr: string}
+# @.arg.{ty: TypeObject, attr: string, suc: ProcId}
 proc py_type_attrlookup {
     @.frame.irlocals.i = 0;
 
@@ -21,7 +21,7 @@ proc py_type_attrlookup_body1 {
 
     %tab = {};
     %tab[@.ret] = py_type_attrlookup_body_2;
-    %tab[Undef] = pop_stack_none;
+    %tab[Undef] = @.arg.suc;
 
     jmp %tab[@.ret];
 }
@@ -30,7 +30,7 @@ proc py_type_attrlookup_body_2 {
     @.ret = @.ret.dict[@.arg.attr];
 
     %tab = {};
-    %tab[@.ret] = pop_stack;
+    %tab[@.ret] = @.arg.suc;
     %tab[Undef] = py_type_attrlookup_body1;
 
     @.frame.irlocals.i = @.frame.irlocals.i + 1;

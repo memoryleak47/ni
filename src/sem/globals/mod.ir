@@ -5,24 +5,24 @@ proc init_2_globals {
     # setup print
     %print_fn = {};
     %print_fn.type = @.singletons.function;
-    %print_fn.payload = print_fn;
+    %print_fn.payload = fn_print;
     @.globals["print"] = %print_fn;
 
     # setup type
     %type_fn = {};
     %type_fn.type = @.singletons.function;
-    %type_fn.payload = type_fn;
+    %type_fn.payload = fn_type;
     @.globals["type"] = %type_fn;
 
     jmp pre_userstart;
 }
 
-proc print_fn {
+proc fn_print {
     print @.arg[0].payload;
     jmp pop_stack_none;
 }
 
-proc type_fn {
+proc fn_type {
     @.ret = @.arg[0].type;
     jmp pop_stack;
 }
