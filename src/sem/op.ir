@@ -2,8 +2,7 @@
 # TODO add r_op (eg. __radd__) as a fallback.
 proc py_op {
     %arg = @.arg;
-    @.frame.irlocals.lhs = %arg.lhs;
-    @.frame.irlocals.rhs = %arg.rhs;
+    @.frame.irlocals.py_op_arg = %arg;
 
     @.arg = {};
     @.arg.ty = %arg.lhs.type;
@@ -15,14 +14,15 @@ proc py_op {
 
 proc py_op_2 {
     %op_fn = @.ret;
+    %arg = @.frame.irlocals.py_op_arg;
 
     %farg = {};
-    %farg[0] = @.frame.irlocals.lhs;
-    %farg[1] = @.frame.irlocals.rhs;
+    %farg[0] = %arg.lhs;
+    %farg[1] = %arg.rhs;
 
     @.arg = {};
     @.arg.f = %op_fn.payload;
-    @.arg.suc = @.arg.ret;
+    @.arg.suc = %arg.suc;
     @.arg.farg = %farg;
 
     jmp call_fn;

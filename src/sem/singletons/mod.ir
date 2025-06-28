@@ -139,7 +139,7 @@ proc init_1_singletons {
     #### define general `==` operator for object.
     %eq_fn = {};
     %eq_fn.type = @.singletons.function;
-    %eq_fn.payload = std_eq;
+    %eq_fn.payload = fn_std_eq;
     @.singletons.object.dict["__eq__"] = %eq_fn;
 
     #### primitivity checks.
