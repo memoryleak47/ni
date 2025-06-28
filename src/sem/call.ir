@@ -45,11 +45,22 @@ proc py_call_class_1 {
 }
 
 proc py_call_class_w_constructor {
-    %constr = @.ret.payload;
+    @.frame.irlocals.py_call_f = @.ret.payload;
 
     @.arg = {};
-    @.arg.f = %constr;
-    @.arg.farg = @.frame.irlocals.py_call_arg.args;
+    @.arg.self = @.frame.irlocals.obj;
+    @.arg.args = @.frame.irlocals.py_call_arg.args;
+    @.arg.suc = py_call_class_w_constructor_2;
+
+    jmp self_prefix_args;
+}
+
+proc py_call_class_w_constructor_2 {
+    %prefixed_args = @.ret;
+
+    @.arg = {};
+    @.arg.f = @.frame.irlocals.py_call_f;
+    @.arg.farg = %prefixed_args;
     @.arg.suc = py_call_class_done;
     jmp call_fn;
 }
@@ -61,4 +72,28 @@ proc py_call_class_done {
 
 proc py_call_other {
     panic "todo!";
+}
+
+
+##########
+
+# @.arg.{self: Object, args: List<Object>, suc: ProcId}
+# @.ret = [self, ..args]
+proc self_prefix_args {
+    @.ret = {};
+    @.ret[0] = @.arg.self;
+    @.frame.irlocals.prefix_i = 0;
+
+    jmp self_prefix_args_loop;
+}
+
+proc self_prefix_args_loop {
+    %v = @.arg.args[@.frame.irlocals.prefix_i];
+    @.ret[@.frame.irlocals.prefix_i + 1] = %v;
+    @.frame.irlocals.prefix_i = @.frame.irlocals.prefix_i + 1;
+
+    %tab = {};
+    %tab[%v] = self_prefix_args_loop;
+    %tab[Undef] = @.arg.suc;
+    jmp %tab[%v];
 }
