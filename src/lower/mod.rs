@@ -229,13 +229,11 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
             let suc = ctxt.alloc_blk();
             let arg = Symbol::new_fresh("arg");
             ctxt.push(format!("%{arg} = {{}}"));
-            ctxt.push(format!("%{arg}.f = py_attrlookup"));
+            ctxt.push(format!("%{arg}.obj = {e}"));
+            ctxt.push(format!("%{arg}.attr = \"{a}\""));
             ctxt.push(format!("%{arg}.suc = {suc}"));
-            ctxt.push(format!("%{arg}.farg = {{}}"));
-            ctxt.push(format!("%{arg}.farg.obj = {e}"));
-            ctxt.push(format!("%{arg}.farg.attr = \"{a}\""));
             ctxt.push(format!("@.arg = %{arg}"));
-            ctxt.push(format!("jmp call_fn"));
+            ctxt.push(format!("jmp py_attrlookup"));
 
             ctxt.focus_blk(suc);
                 format!("@.ret")
