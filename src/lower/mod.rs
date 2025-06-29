@@ -294,6 +294,7 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
             let t = Symbol::new_fresh("listbox".to_string());
             ctxt.push(format!("%{t} = {{}}"));
             ctxt.push(format!("%{t}.type = @.singletons.list"));
+            ctxt.push(format!("%{t}.dict = {{}}"));
             ctxt.push(format!("%{t}.payload = {{}}"));
             for (i, a) in elems.iter().enumerate() {
                 let a = lower_expr(a, ctxt);
