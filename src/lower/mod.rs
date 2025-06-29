@@ -284,14 +284,19 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
                 format!("@.ret")
         },
         ASTExpr::None => format!("@.singletons.none"),
-        ASTExpr::List(l) => {
+        ASTExpr::List(elems) => {
+            let len = elems.len();
             let t = Symbol::new_fresh("listbox".to_string());
             ctxt.push(format!("%{t} = {{}}"));
             ctxt.push(format!("%{t}.type = @.singletons.list"));
             ctxt.push(format!("%{t}.payload = {{}}"));
-            for (i, a) in l.iter().enumerate() {
-                ctxt.push(format!("%{t}.payload = {i}"));
+            for (i, a) in elems.iter().enumerate() {
+                let a = lower_expr(a, ctxt);
+                ctxt.push(format!("%{t}.payload[{i}] = {a}"));
             }
+            ctxt.push(format!("%{t}.length = {{}}"));
+            ctxt.push(format!("%{t}.length.type = @.singletons.int"));
+            ctxt.push(format!("%{t}.length.payload = {len}"));
 
             format!("%{t}")
         },
