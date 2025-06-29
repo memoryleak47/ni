@@ -6,6 +6,7 @@
 #   frame :: Frame                 # the callstack
 #   ret :: any                     # a register used to return values in. Will be carelessly overwritten whenever.
 #   arg :: any                     # a register used to accept function arguments. Will be carelessly overwritten whenever.
+#   handler :: Handler             # the exception handler
 # }
 #
 # struct Frame {
@@ -13,6 +14,12 @@
 #   retpid :: ProcId | Undef       # when returning, jump back to this.
 #   pylocals :: String -> Object   # pythons local variables
 #   irlocals :: Symbol -> any      # local variables for the IR
+# }
+#
+# struct Handler {
+#   parent :: Handler | Undef
+#   pid :: ProcId                  # where to jump to incase of an exception
+#   frame :: Frame                 # the frame to restore incase of an exception
 # }
 #
 # includes PrimitiveObjects, TypeObjects (including classes), MethodObjects, and instances of classes
