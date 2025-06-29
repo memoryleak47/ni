@@ -108,6 +108,11 @@ proc init_1_singletons {
     %getitem_fn.payload = fn_list_getitem;
     @.singletons.list.dict["__getitem__"] = %getitem_fn;
 
+    %setitem_fn = {};
+    %setitem_fn.type = @.singletons.function;
+    %setitem_fn.payload = fn_list_setitem;
+    @.singletons.list.dict["__setitem__"] = %setitem_fn;
+
     ### bool
     @.singletons.bool = {};
     @.singletons.bool.dict = {};
@@ -284,4 +289,14 @@ proc fn_list_getitem {
     @.ret = %list[%idx];
 
     jmp pop_stack;
+}
+
+proc fn_list_setitem {
+    %list = @.arg[0].payload;
+    %idx = @.arg[1].payload;
+    %v = @.arg[2];
+
+    %list[%idx] = %v;
+
+    jmp pop_stack_none;
 }

@@ -58,6 +58,16 @@ fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
                 let val = lower_expr(val, ctxt);
                 lower_var_assign(&*var, val, ctxt)
             }
+            ASTStatement::Assign(ASTExpr::Attribute(e, v), rhs) => {
+                let e = lower_expr(e, ctxt);
+                let rhs = lower_expr(rhs, ctxt);
+                ctxt.push(format!("{e}.dict[\"{v}\"] = {rhs}"));
+            },
+            ASTStatement::Assign(ASTExpr::BinOp(ASTBinOpKind::Subscript, e, v), rhs) => {
+                let e_setattr = Box::new(ASTExpr::Attribute(e.clone(), "__setitem__".to_string()));
+                let real_stmt = ASTStatement::Expr(ASTExpr::FnCall(e_setattr, vec![(**v).clone(), rhs.clone()]));
+                lower_body(&[real_stmt], ctxt);
+            },
             ASTStatement::If(cond, then) => {
                 let cond = lower_expr(cond, ctxt);
                 let n = Symbol::new_fresh("ifcond".to_string());
@@ -182,11 +192,6 @@ fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
                 ctxt.push(format!("@.frame.pylocals = {old_namespace}"));
 
                 lower_var_assign(name, format!("{cl}"), ctxt);
-            },
-            ASTStatement::Assign(ASTExpr::Attribute(e, v), rhs) => {
-                let e = lower_expr(e, ctxt);
-                let rhs = lower_expr(rhs, ctxt);
-                ctxt.push(format!("{e}.dict[\"{v}\"] = {rhs}"));
             },
             _ => todo!(),
         }
