@@ -90,6 +90,12 @@ fn assemble_atomic_expr(toks: &[Token]) -> Result<(ASTExpr, &[Token]), String> {
             let (list, toks) = assemble_general_list(assemble_expr, Token::LBracket, Token::RBracket)(toks)?;
             Ok((ASTExpr::List(list), toks))
         },
+        Some(Token::LParen) => {
+            let (children, toks) = assemble_paren_list(assemble_expr)(toks)?;
+            assert!(children.len() == 1, "tuples aren't supported yet!");
+            let c = children[0].clone();
+            Ok((c, toks))
+        },
         _ => Err(String::new()),
     }
 }
