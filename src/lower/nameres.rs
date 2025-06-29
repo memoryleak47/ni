@@ -1,5 +1,6 @@
 use crate::*;
 
+#[derive(Debug)]
 pub enum VarPlace {
     Global, // unknown: check global module namespace and then builtins.
     // TODO add
