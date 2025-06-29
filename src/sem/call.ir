@@ -39,7 +39,7 @@ proc py_call_class {
 proc py_call_class_1 {
     %arg = @.frame.irlocals.py_call_arg;
 
-    # %arg.constr :: FunctionObject | Undef
+    # %arg.constr :: MethodObject | Undef
     %arg.constr = @.ret;
 
     %tab = {};
