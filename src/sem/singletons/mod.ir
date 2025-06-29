@@ -113,6 +113,11 @@ proc init_1_singletons {
     %setitem_fn.payload = fn_list_setitem;
     @.singletons.list.dict["__setitem__"] = %setitem_fn;
 
+    %append_fn = {};
+    %append_fn.type = @.singletons.function;
+    %append_fn.payload = fn_list_append;
+    @.singletons.list.dict["append"] = %append_fn;
+
     ### bool
     @.singletons.bool = {};
     @.singletons.bool.dict = {};
@@ -297,6 +302,21 @@ proc fn_list_setitem {
     %v = @.arg[2];
 
     %list[%idx] = %v;
+
+    jmp pop_stack_none;
+}
+
+proc fn_list_append {
+    %list = @.arg[0];
+    %v = @.arg[1];
+
+    %old_len = %list.length.payload;
+    %intbox = {};
+    %intbox.type = @.singletons.int;
+    %intbox.payload = %old_len + 1;
+
+    %list.length = %intbox;
+    %list.payload[%old_len] = %v;
 
     jmp pop_stack_none;
 }
