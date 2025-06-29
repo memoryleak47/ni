@@ -197,6 +197,8 @@ fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
                 lower_var_assign(name, format!("{cl}"), ctxt);
                 ctxt.fl_mut().ast_ptr = old_ptr;
             },
+            ASTStatement::Try(body, opt_except) => todo!(),
+            ASTStatement::Raise(body) => todo!(),
             _ => todo!(),
         }
     }

@@ -106,7 +106,7 @@ fn assemble_stmt(toks: &[Token]) -> Result<(ASTStatement, &[Token]), String> {
     let a = or(a, assemble_class_stmt);
     let a = or(a, assemble_expr_stmt);
     let a = or(a, assemble_branch_stmt);
-    let a = or(a, assemble_noarg_branch_stmt);
+    let a = or(a, assemble_try_stmt);
     let a = or(a, assemble_raise_stmt);
     a(toks)
 }
@@ -118,15 +118,19 @@ fn assemble_raise_stmt(toks: &[Token]) -> Result<(ASTStatement, &[Token]), Strin
     Ok((ASTStatement::Raise(expr), toks))
 }
 
-fn assemble_noarg_branch_stmt(toks: &[Token]) -> Result<(ASTStatement, &[Token]), String> {
-    let f = match toks.get(0) {
-        Some(Token::Try) => ASTStatement::Try,
-        Some(Token::Except) => ASTStatement::Except,
-        _ => return Err(String::new()),
-    };
-    let toks = &toks[1..];
+fn assemble_try_stmt(toks: &[Token]) -> Result<(ASTStatement, &[Token]), String> {
+    let [Token::Try, toks@..] = toks else { return Err("".to_string()) };
     let (body, toks) = assemble_indented_ast(toks)?;
-    Ok((f(body), toks))
+
+    let mut opt_except = None;
+    let mut toks = toks;
+    if let [Token::Except, toks2@..] = toks {
+        let (except, toks2) = assemble_indented_ast(toks2)?;
+        toks = toks2;
+        opt_except = Some(except);
+    }
+
+    Ok((ASTStatement::Try(body, opt_except), toks))
 }
 
 fn assemble_branch_stmt(toks: &[Token]) -> Result<(ASTStatement, &[Token]), String> {

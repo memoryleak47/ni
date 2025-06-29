@@ -29,8 +29,7 @@ pub enum ASTStatement {
     Expr(ASTExpr),
     Pass,
     Scope(ScopeKind, Vec<String>),
-    Try(AST),
-    Except(AST),
+    Try(AST, /*except*/ Option<AST>),
     Raise(ASTExpr),
 }
 
