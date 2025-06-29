@@ -37,3 +37,9 @@
 #   payload :: ProcId
 #   self :: Object
 # }
+#
+# struct ListObject : Object {
+#   type = @.singletons.list
+#   payload :: {int -> Object}
+#   length :: IntObject
+# }
