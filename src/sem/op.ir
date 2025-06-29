@@ -13,8 +13,8 @@ proc py_op {
 }
 
 proc py_op_2 {
-    # we will crash, if %op_fn is Undef.
-    %op_fn = @.ret;
+    # %op_fn :: MethodObject | Undef
+    %op_fn = @.ret; # we will crash later, if %op_fn is Undef.
     %arg = @.frame.irlocals.py_op_arg;
 
     %farg = {};
