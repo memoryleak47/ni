@@ -165,6 +165,9 @@ fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
             ASTStatement::Class(name, args, body) => {
                 let mut args: Vec<String> = args.iter().map(|x| lower_expr(x, ctxt)).collect();
 
+                let old_ptr = ctxt.fl().ast_ptr;
+                ctxt.fl_mut().ast_ptr = stmt as _;
+
                 let dict = ctxt.alloc_irlocal("class_dict");
                 let old_namespace = ctxt.alloc_irlocal("old_namespace");
                 ctxt.push(format!("{old_namespace} = @.frame.pylocals"));
@@ -192,6 +195,7 @@ fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
                 ctxt.push(format!("@.frame.pylocals = {old_namespace}"));
 
                 lower_var_assign(name, format!("{cl}"), ctxt);
+                ctxt.fl_mut().ast_ptr = old_ptr;
             },
             _ => todo!(),
         }
