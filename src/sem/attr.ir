@@ -1,8 +1,6 @@
 # @.arg.{obj: Object, attr: string, suc: ProcId}
 # returns @.ret :: Object | Undef
 proc py_attrlookup {
-    @.arg.ty = @.arg.obj.type;
-
     @.ret = @.arg.obj.dict[@.arg.attr];
     %jmptab = {};
     %jmptab[@.ret] = @.arg.suc;
@@ -10,30 +8,50 @@ proc py_attrlookup {
     jmp %jmptab[@.ret];
 }
 
-# @.arg.{ty: TypeObject, attr: string, suc: ProcId}
+# @.arg.{obj: Object, attr: string, suc: ProcId}
 proc py_type_attrlookup {
-    @.frame.irlocals.i = 0;
+    @.arg.mro = @.arg.obj.type.mro;
+    @.arg.i = 0;
 
     jmp py_type_attrlookup_body1;
 }
 
 proc py_type_attrlookup_body1 {
-    @.ret = @.arg.ty.mro[@.frame.irlocals.i];
+    @.arg.parent_ty = @.arg.mro[@.arg.i];
 
     %tab = {};
-    %tab[@.ret] = py_type_attrlookup_body_2;
+    %tab[@.arg.parent_ty] = py_type_attrlookup_body_2;
     %tab[Undef] = @.arg.suc;
 
-    jmp %tab[@.ret];
+    jmp %tab[@.arg.parent_ty];
 }
 
 proc py_type_attrlookup_body_2 {
-    @.ret = @.ret.dict[@.arg.attr];
+    @.arg.parent_v = @.arg.parent_ty.dict[@.arg.attr];
 
     %tab = {};
-    %tab[@.ret] = @.arg.suc;
+    %tab[@.arg.parent_v] = py_type_attrlookup_found;
     %tab[Undef] = py_type_attrlookup_body1;
 
-    @.frame.irlocals.i = @.frame.irlocals.i + 1;
-    jmp %tab[@.ret];
+    @.arg.i = @.arg.i + 1;
+    jmp %tab[@.arg.parent_v];
+}
+
+proc py_type_attrlookup_found {
+    @.ret = @.arg.parent_v;
+
+    %tab = {};
+    %tab[@.ret.type] = @.arg.suc;
+    %tab[@.singletons.function] = py_type_attrlookup_build_method;
+    jmp %tab[@.ret.type];
+}
+
+proc py_type_attrlookup_build_method {
+    %methodbox = {};
+    %methodbox.type = @.singletons.method;
+    %methodbox.payload = @.ret.payload;
+    %methodbox.self = @.arg.obj;
+    @.ret = %methodbox;
+
+    jmp @.arg.suc;
 }

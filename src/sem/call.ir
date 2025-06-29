@@ -1,17 +1,19 @@
 # @.arg.{f: Callable, args: List<Object>, suc: Pid}
 proc py_call {
-    %arg = @.arg;
+    @.frame.irlocals.py_call_arg = @.arg;
+    %arg = @.frame.irlocals.py_call_arg;
 
-    %ty = @.arg.f.type;
+    %ty = %arg.f.type;
     %typemap = {};
     %typemap[%ty] = py_call_other;
     %typemap[@.singletons.function] = py_call_fn;
     %typemap[@.singletons.type] = py_call_class;
+    %typemap[@.singletons.method] = py_call_method;
     jmp %typemap[%ty];
 }
 
 proc py_call_fn {
-    %arg = @.arg;
+    %arg = @.frame.irlocals.py_call_arg;
 
     @.arg = {};
     @.arg.f = %arg.f.payload;
@@ -21,56 +23,87 @@ proc py_call_fn {
 }
 
 proc py_call_class {
-    @.frame.irlocals.py_call_arg = @.arg;
+    %arg = @.frame.irlocals.py_call_arg;
+
+    %arg.obj = {};
+    %arg.obj.type = %arg.f;
+    %arg.obj.dict = {};
 
     @.arg = {};
-    @.arg.ty = @.frame.irlocals.py_call_arg.f;
+    @.arg.obj = %arg.obj;
     @.arg.attr = "__init__";
     @.arg.suc = py_call_class_1;
     jmp py_type_attrlookup;
 }
 
 proc py_call_class_1 {
-    # %constr :: FunctionObject | Undef
-    %constr = @.ret;
+    %arg = @.frame.irlocals.py_call_arg;
 
-    @.frame.irlocals.obj = {};
-    @.frame.irlocals.obj.type = @.frame.irlocals.py_call_arg.f;
-    @.frame.irlocals.obj.dict = {};
+    # %arg.constr :: FunctionObject | Undef
+    %arg.constr = @.ret;
 
     %tab = {};
-    %tab[%constr] = py_call_class_w_constructor;
+    %tab[%arg.constr] = py_call_class_w_constructor;
     %tab[Undef] = py_call_class_done;
-    jmp %tab[%constr];
+    jmp %tab[%arg.constr];
 }
 
 proc py_call_class_w_constructor {
-    @.frame.irlocals.py_call_f = @.ret.payload;
+    %arg = @.frame.irlocals.py_call_arg;
 
     @.arg = {};
     @.arg.self = @.frame.irlocals.obj;
-    @.arg.args = @.frame.irlocals.py_call_arg.args;
+    @.arg.args = %arg.args;
     @.arg.suc = py_call_class_w_constructor_2;
 
     jmp self_prefix_args;
 }
 
+
 proc py_call_class_w_constructor_2 {
-    %prefixed_args = @.ret;
+    %arg = @.frame.irlocals.py_call_arg;
+    %arg.prefixed_args = @.ret;
 
     @.arg = {};
-    @.arg.f = @.frame.irlocals.py_call_f;
-    @.arg.farg = %prefixed_args;
+    @.arg.f = %arg.constr;
+    @.arg.farg = %arg.prefixed_args;
     @.arg.suc = py_call_class_done;
     jmp call_fn;
 }
 
 proc py_call_class_done {
-    @.ret = @.frame.irlocals.obj;
-    jmp @.frame.irlocals.py_call_arg.suc;
+    %arg = @.frame.irlocals.py_call_arg;
+
+    @.ret = %arg.obj;
+    jmp %arg.suc;
+}
+
+proc py_call_method {
+    %arg = @.frame.irlocals.py_call_arg;
+
+    @.arg = {};
+    @.arg.self = %arg.f.self;
+    @.arg.args = %arg.args;
+    @.arg.suc = py_call_method_2;
+
+    jmp self_prefix_args;
+}
+
+proc py_call_method_2 {
+    %arg = @.frame.irlocals.py_call_arg;
+
+    %arg.prefixed_args = @.ret;
+
+    @.arg = {};
+    @.arg.f = %arg.f.payload;
+    @.arg.farg = %arg.prefixed_args;
+    @.arg.suc = %arg.suc;
+    jmp call_fn;
 }
 
 proc py_call_other {
+    %arg = @.frame.irlocals.py_call_arg;
+
     panic "todo!";
 }
 

@@ -90,8 +90,9 @@ proc init_1_singletons {
 
     @.singletons.int = %int;
 
-    ### function & str
+    ### function, method & str
     @.singletons.function = {};
+    @.singletons.method = {};
     @.singletons.str = {};
 
     ### bool

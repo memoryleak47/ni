@@ -5,7 +5,7 @@ proc py_op {
     @.frame.irlocals.py_op_arg = %arg;
 
     @.arg = {};
-    @.arg.ty = %arg.lhs.type;
+    @.arg.obj = %arg.lhs;
     @.arg.attr = %arg.l_op.payload;
     @.arg.suc = py_op_2;
 

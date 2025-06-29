@@ -274,7 +274,7 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
             ctxt.push(format!("%{arg}.rhs = {r}"));
 
             ctxt.push(format!("%{arg}.l_op = {{}}"));
-            ctxt.push(format!("%{arg}.l_op.type = @.singletons.str"));
+            ctxt.push(format!("%{arg}.l_op.obj = @.singletons.str"));
             ctxt.push(format!("%{arg}.l_op.payload = \"{l_op}\""));
             ctxt.push(format!("@.arg = %{arg}"));
 
