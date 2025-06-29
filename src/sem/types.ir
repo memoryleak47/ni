@@ -34,6 +34,6 @@
 #
 # struct MethodObject : Object {
 #   type = @.singletons.method
-#   pid :: ProcId
+#   payload :: ProcId
 #   self :: Object
 # }
