@@ -197,8 +197,39 @@ fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
                 lower_var_assign(name, format!("{cl}"), ctxt);
                 ctxt.fl_mut().ast_ptr = old_ptr;
             },
-            ASTStatement::Try(body, opt_except) => todo!(),
-            ASTStatement::Raise(body) => todo!(),
+            ASTStatement::Try(body, opt_except) => {
+                let except = opt_except.as_deref().unwrap_or(&[]);
+                let h = ctxt.alloc_irlocal("handler");
+                let suc = ctxt.alloc_blk();
+                let except_pid = ctxt.alloc_blk();
+                
+                // push handler stack
+                ctxt.push(format!("{h} = {{}}"));
+                ctxt.push(format!("{h}.parent = @.handler"));
+                ctxt.push(format!("{h}.frame = @.frame"));
+                ctxt.push(format!("{h}.pid = {except_pid}"));
+                ctxt.push(format!("@.handler = {h}"));
+
+                lower_body(body, ctxt);
+
+                // pop handler stack
+                ctxt.push(format!("@.handler = @.handler.parent"));
+
+                ctxt.push(format!("jmp {suc}"));
+
+                ctxt.focus_blk(except_pid);
+                    lower_body(except, ctxt);
+                    ctxt.push(format!("jmp {suc}"));
+
+                ctxt.focus_blk(suc);
+            },
+            ASTStatement::Raise(body) => {
+                let h = ctxt.alloc_irlocal("handler");
+                ctxt.push(format!("{h} = @.handler"));
+                ctxt.push(format!("@.frame = {h}.frame"));
+                ctxt.push(format!("@.handler = {h}.parent"));
+                ctxt.push(format!("jmp {h}.pid"));
+            }
             _ => todo!(),
         }
     }
