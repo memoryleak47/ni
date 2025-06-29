@@ -90,11 +90,23 @@ proc init_1_singletons {
 
     @.singletons.int = %int;
 
-    ### function, method, list & str
+    ### function, method & str
     @.singletons.function = {};
     @.singletons.method = {};
     @.singletons.str = {};
+
+    ### list
     @.singletons.list = {};
+    @.singletons.list.type = @.singletons.type;
+    @.singletons.list.dict = {};
+    @.singletons.list.mro = {};
+    @.singletons.list.mro[0] = @.singletons.list;
+    @.singletons.list.mro[1] = @.singletons.object;
+
+    %getitem_fn = {};
+    %getitem_fn.type = @.singletons.function;
+    %getitem_fn.payload = fn_list_getitem;
+    @.singletons.list.dict["__getitem__"] = %getitem_fn;
 
     ### bool
     @.singletons.bool = {};
@@ -262,5 +274,14 @@ proc std_eq_nonprim {
     %tab[%b] = @.singletons.true;
 
     @.ret = %tab[%a];
+    jmp pop_stack;
+}
+
+proc fn_list_getitem {
+    %list = @.arg[0].payload;
+    %idx = @.arg[1].payload;
+
+    @.ret = %list[%idx];
+
     jmp pop_stack;
 }
