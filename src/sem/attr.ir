@@ -10,6 +10,7 @@ proc py_attrlookup {
 
 # @.arg.{obj: Object, attr: string, suc: ProcId}
 proc py_type_attrlookup {
+    @.ret = Undef;
     @.arg.mro = @.arg.obj.type.mro;
     @.arg.i = 0;
 
