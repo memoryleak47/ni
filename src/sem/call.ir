@@ -3,6 +3,8 @@ proc py_call {
     @.frame.irlocals.py_call_arg = @.arg;
     %arg = @.frame.irlocals.py_call_arg;
 
+    %arg.method_suc = %arg.suc; # might be overwritten
+
     %ty = %arg.f.type;
     %typemap = {};
     %typemap[%ty] = py_call_other;
@@ -39,36 +41,19 @@ proc py_call_class {
 proc py_call_class_1 {
     %arg = @.frame.irlocals.py_call_arg;
 
-    # %arg.constr :: MethodObject | Undef
-    %arg.constr = @.ret;
+    # %arg.f :: MethodObject | Undef
+    %arg.f = @.ret; # overwriting %arg.f!
 
     %tab = {};
-    %tab[%arg.constr] = py_call_class_w_constructor;
+    %tab[%arg.f] = py_call_class_w_constructor;
     %tab[Undef] = py_call_class_done;
-    jmp %tab[%arg.constr];
+    jmp %tab[%arg.f];
 }
 
 proc py_call_class_w_constructor {
     %arg = @.frame.irlocals.py_call_arg;
-
-    @.arg = {};
-    @.arg.self = @.frame.irlocals.obj;
-    @.arg.args = %arg.args;
-    @.arg.suc = py_call_class_w_constructor_2;
-
-    jmp self_prefix_args;
-}
-
-
-proc py_call_class_w_constructor_2 {
-    %arg = @.frame.irlocals.py_call_arg;
-    %arg.prefixed_args = @.ret;
-
-    @.arg = {};
-    @.arg.f = %arg.constr;
-    @.arg.farg = %arg.prefixed_args;
-    @.arg.suc = py_call_class_done;
-    jmp call_fn;
+    %arg.method_suc = py_call_class_done;
+    jmp py_call_method;
 }
 
 proc py_call_class_done {
@@ -78,6 +63,7 @@ proc py_call_class_done {
     jmp %arg.suc;
 }
 
+# %arg.{f: MethodObject, args: List<Object>, method_suc: ProcId}
 proc py_call_method {
     %arg = @.frame.irlocals.py_call_arg;
 
@@ -97,7 +83,7 @@ proc py_call_method_2 {
     @.arg = {};
     @.arg.f = %arg.f.payload;
     @.arg.farg = %arg.prefixed_args;
-    @.arg.suc = %arg.suc;
+    @.arg.suc = %arg.method_suc;
     jmp call_fn;
 }
 
