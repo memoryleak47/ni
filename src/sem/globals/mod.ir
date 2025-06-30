@@ -1,17 +1,16 @@
-# setup globals
-proc init_2_globals {
+proc init_globals {
     @.globals = {};
 
     @.arg = {};
     @.arg[0] = init_fn_print;
     @.arg[1] = init_fn_type;
-    @.arg[2] = pre_userstart;
+    @.arg[2] = init_frame;
     @.arg.i = 0;
 
-    jmp init_2_globals_loop;
+    jmp init_globals_loop;
 }
 
-proc init_2_globals_loop {
+proc init_globals_loop {
     %i = @.arg.i;
     @.arg.i = @.arg.i + 1;
     jmp @.arg[%i];

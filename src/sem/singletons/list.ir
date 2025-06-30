@@ -1,0 +1,60 @@
+proc init_list {
+    @.singletons.list = {};
+    @.singletons.list.type = @.singletons.type;
+    @.singletons.list.dict = {};
+    @.singletons.list.mro = {};
+    @.singletons.list.mro[0] = @.singletons.list;
+    @.singletons.list.mro[1] = @.singletons.object;
+
+    %getitem_fn = {};
+    %getitem_fn.type = @.singletons.function;
+    %getitem_fn.payload = fn_list_getitem;
+    @.singletons.list.dict["__getitem__"] = %getitem_fn;
+
+    %setitem_fn = {};
+    %setitem_fn.type = @.singletons.function;
+    %setitem_fn.payload = fn_list_setitem;
+    @.singletons.list.dict["__setitem__"] = %setitem_fn;
+
+    %append_fn = {};
+    %append_fn.type = @.singletons.function;
+    %append_fn.payload = fn_list_append;
+    @.singletons.list.dict["append"] = %append_fn;
+
+    jmp init_singletons_loop;
+}
+
+proc fn_list_getitem {
+    %list = @.arg[0].payload;
+    %idx = @.arg[1].payload;
+
+    @.ret = %list[%idx];
+
+    jmp pop_stack;
+}
+
+proc fn_list_setitem {
+    %list = @.arg[0].payload;
+    %idx = @.arg[1].payload;
+    %v = @.arg[2];
+
+    %list[%idx] = %v;
+
+    jmp pop_stack_none;
+}
+
+proc fn_list_append {
+    %list = @.arg[0];
+    %v = @.arg[1];
+
+    %old_len = %list.length.payload;
+    %intbox = {};
+    %intbox.type = @.singletons.int;
+    %intbox.payload = %old_len + 1;
+
+    %list.length = %intbox;
+    %list.payload[%old_len] = %v;
+
+    jmp pop_stack_none;
+}
+

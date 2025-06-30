@@ -3,7 +3,7 @@ proc init_fn_type {
     %type_fn.type = @.singletons.function;
     %type_fn.payload = fn_type;
     @.globals["type"] = %type_fn;
-    jmp init_2_globals_loop;
+    jmp init_globals_loop;
 }
 
 proc fn_type {

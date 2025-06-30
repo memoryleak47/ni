@@ -1,9 +1,9 @@
 #
 main proc init {
-    jmp init_1_singletons;
+    jmp init_singletons;
 }
 
-proc pre_userstart {
+proc init_frame {
     # setup callstack
     %frame = {};
     %frame.parent = undef;

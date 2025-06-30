@@ -1,0 +1,38 @@
+proc init_bool {
+    ### bool
+    @.singletons.bool = {};
+    @.singletons.bool.dict = {};
+    @.singletons.bool.mro = {};
+    @.singletons.bool.mro[0] = @.singletons.bool;
+    @.singletons.bool.mro[1] = @.singletons.object;
+
+    @.singletons.true = {};
+    @.singletons.true.type = @.singletons.bool;
+    @.singletons.true.payload = True;
+
+    @.singletons.false = {};
+    @.singletons.false.type = @.singletons.bool;
+    @.singletons.false.payload = False;
+
+    @.singletons.not = {};
+    @.singletons.not[@.singletons.false] = @.singletons.true;
+    @.singletons.not[@.singletons.true] = @.singletons.false;
+
+    @.singletons.and = {};
+    @.singletons.and[@.singletons.true] = {};
+    @.singletons.and[@.singletons.false] = {};
+    @.singletons.and[@.singletons.true] [@.singletons.true] = @.singletons.true;
+    @.singletons.and[@.singletons.false][@.singletons.true] = @.singletons.false;
+    @.singletons.and[@.singletons.true] [@.singletons.false] = @.singletons.false;
+    @.singletons.and[@.singletons.false][@.singletons.false] = @.singletons.false;
+
+    @.singletons.or = {};
+    @.singletons.or[@.singletons.true] = {};
+    @.singletons.or[@.singletons.false] = {};
+    @.singletons.or[@.singletons.true] [@.singletons.true] = @.singletons.true;
+    @.singletons.or[@.singletons.false][@.singletons.true] = @.singletons.true;
+    @.singletons.or[@.singletons.true] [@.singletons.false] = @.singletons.true;
+    @.singletons.or[@.singletons.false][@.singletons.false] = @.singletons.false;
+
+    jmp init_singletons_loop;
+}
