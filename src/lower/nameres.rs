@@ -57,6 +57,13 @@ fn iter(ast: &AST, nrt: &mut NameResTable, current_fn_ptr: *const ASTStatement) 
             ASTStatement::If(_, body) | ASTStatement::While(_, body) => {
                 iter(body, nrt, current_fn_ptr);
             }
+            ASTStatement::For(v, _, body) => {
+                let k = (current_fn_ptr, v.to_string());
+                if !nrt.contains_key(&k) {
+                    nrt.insert(k, VarPlace::Local);
+                }
+                iter(body, nrt, current_fn_ptr);
+            }
             ASTStatement::Try(body, opt_except) => {
                 iter(body, nrt, current_fn_ptr);
                 if let Some(except) = opt_except {

@@ -226,6 +226,28 @@ fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
             ASTStatement::Raise(body) => {
                 ctxt.push(format!("jmp raise"))
             }
+            ASTStatement::For(v, expr, body) => {
+                let hv = Symbol::new_fresh("hiddenvar");
+                let expr = ASTExpr::FnCall(Box::new(
+                    ASTExpr::Attribute(Box::new(expr.clone()), String::from("__iter__"))),
+                    vec![]);
+                let mut body = body.clone();
+                body.insert(0, ASTStatement::Assign(
+                    ASTExpr::Var(v.to_string()),
+                    ASTExpr::FnCall(
+                        Box::new(ASTExpr::Attribute(
+                            Box::new(ASTExpr::Var(hv.to_string())),
+                            "__next__".to_string(),
+                        )),
+                   vec![]),
+                ));
+                let stmt = ASTStatement::Try(
+                    vec![
+                        ASTStatement::Assign(ASTExpr::Var(hv.to_string()), expr),
+                        ASTStatement::While(ASTExpr::Bool(true), body),
+                    ], None);
+                lower_body(&[stmt], ctxt);
+            },
             _ => todo!(),
         }
     }

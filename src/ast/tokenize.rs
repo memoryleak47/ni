@@ -17,6 +17,8 @@ pub enum Token {
     Equals,
     If,
     While,
+    For,
+    In,
     Return,
     Break,
     Continue,
@@ -144,6 +146,8 @@ pub fn tokenize(s: &str) -> Vec<Token> {
                     tokens.push(match &*s {
                         "if" => Token::If,
                         "while" => Token::While,
+                        "for" => Token::For,
+                        "in" => Token::In,
                         "return" => Token::Return,
                         "break" => Token::Break,
                         "continue" => Token::Continue,

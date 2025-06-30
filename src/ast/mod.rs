@@ -23,6 +23,7 @@ pub enum ASTStatement {
     ),
     If(ASTExpr, AST),
     While(ASTExpr, AST),
+    For(/*var*/ String, ASTExpr, AST),
     Break,
     Continue,
     Return(Option<ASTExpr>),

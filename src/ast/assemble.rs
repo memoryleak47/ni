@@ -106,6 +106,7 @@ fn assemble_stmt(toks: &[Token]) -> Result<(ASTStatement, &[Token]), String> {
     let a = or(a, assemble_class_stmt);
     let a = or(a, assemble_expr_stmt);
     let a = or(a, assemble_branch_stmt);
+    let a = or(a, assemble_for_stmt);
     let a = or(a, assemble_try_stmt);
     let a = or(a, assemble_raise_stmt);
     a(toks)
@@ -143,6 +144,14 @@ fn assemble_branch_stmt(toks: &[Token]) -> Result<(ASTStatement, &[Token]), Stri
     let (expr, toks) = assemble_expr(toks)?;
     let (body, toks) = assemble_indented_ast(toks)?;
     Ok((f(expr, body), toks))
+}
+
+fn assemble_for_stmt(toks: &[Token]) -> Result<(ASTStatement, &[Token]), String> {
+    let [Token::For, Token::Ident(v), Token::In, toks@..] = toks else { return Err(String::new()) };
+    let v = v.to_string();
+    let (expr, toks) = assemble_expr(toks)?;
+    let (body, toks) = assemble_indented_ast(toks)?;
+    Ok((ASTStatement::For(v, expr, body), toks))
 }
 
 fn assemble_stmt_base(toks: &[Token]) -> Result<(ASTStatement, &[Token]), String> {
