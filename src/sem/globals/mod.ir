@@ -5,7 +5,8 @@ proc init_globals {
     @.arg[0] = init_fn_print;
     @.arg[1] = init_fn_type;
     @.arg[2] = init_range;
-    @.arg[3] = init_frame;
+    @.arg[3] = init_fn_input;
+    @.arg[4] = init_frame;
     @.arg.i = 0;
 
     jmp init_globals_loop;

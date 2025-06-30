@@ -11,7 +11,7 @@ pub enum IRToken {
     LBrace, RBrace,
     Comma, Dot, Equals, Semicolon, At,
 
-    Proc, Exit, Panic, Jmp, Main, Print,
+    Proc, Exit, Panic, Jmp, Main, Print, Input,
     BinOp(BinOpKind),
 }
 
@@ -97,6 +97,7 @@ pub fn ir_tokenize(s: &str) -> Vec<IRToken> {
                         "jmp" => IRToken::Jmp,
                         "main" => IRToken::Main,
                         "print" => IRToken::Print,
+                        "input" => IRToken::Input,
                         _ => IRToken::Symbol(Symbol::new(s)),
                     });
                     state = TokenizerState::None;

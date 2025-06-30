@@ -72,6 +72,7 @@ fn expr_string(expr: &Expr, proc: &Proc) -> String {
         Float(x) => format!("{x}"),
         Int(x) => format!("{x}"),
         Str(s) => format!("\"{s}\""),
+        Input => format!("\"input\""),
     }
 }
 

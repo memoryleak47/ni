@@ -43,6 +43,8 @@ pub enum Expr {
     NewTable, // equivalent to {}
     BinOp(BinOpKind, Node, Node),
 
+    Input, // corresponds to pythons "input()" function applied to no args.
+
     // literals
     Symbol(Symbol), // $symbol
     Float(R64),

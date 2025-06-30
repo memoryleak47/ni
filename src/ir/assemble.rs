@@ -148,6 +148,7 @@ fn assemble_atomic_expr_or_node(toks: &[IRToken]) -> Option<(ExprOrNode, Vec<Sta
             let [IRToken::RParen, toks@..] = toks else { return None };
             Some((expr_or_node, prev, toks))
         },
+        [IRToken::Input, toks@..] => Some((ExprOrNode::Expr(Expr::Input), Vec::new(), toks)),
         _ => None,
     }
 }

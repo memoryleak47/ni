@@ -1,15 +1,44 @@
 proc init_misc {
-    ### function, method & str
-    @.singletons.function = {};
-    @.singletons.method = {};
-    @.singletons.str = {};
+    ### function
+    %function = {};
+    %function.type = @.singletons.type;
+    %function.mro = {};
+    %function.mro[0] = %function;
+    %function.mro[1] = @.singletons.object;
+    %function.dict = {};
+    @.singletons.function = %function;
+
+    ### method
+    %method = {};
+    %method.type = @.singletons.type;
+    %method.mro = {};
+    %method.mro[0] = %method;
+    %method.mro[1] = @.singletons.object;
+    %method.dict = {};
+    @.singletons.method = %method;
+
+    ### str
+    %str = {};
+    %str.type = @.singletons.type;
+    %str.mro = {};
+    %str.mro[0] = %str;
+    %str.mro[1] = @.singletons.object;
+    %str.dict = {};
+
+    @.singletons.str = %str;
 
     ### none
-    @.singletons.none_type = {};
+    %none_type = {};
+    %none_type.type = @.singletons.type;
+    %none_type.mro = {};
+    %none_type.mro[0] = %none_type;
+    %none_type.mro[1] = @.singletons.object;
+    %none_type.dict = {};
+    @.singletons.none_type = %none_type;
+
     @.singletons.none = {};
     @.singletons.none.payload = None;
     @.singletons.none.type = @.singletons.none_type;
-
 
     #### define general `==` operator for object.
     %eq_fn = {};

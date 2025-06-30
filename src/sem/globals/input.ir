@@ -1,0 +1,19 @@
+proc init_fn_input {    
+    %input_fn = {};
+    %input_fn.type = @.singletons.function;
+    %input_fn.payload = fn_input;
+    %input_fn.dict = {};
+    @.globals["input"] = %input_fn;
+
+    jmp init_globals_loop;
+}
+
+proc fn_input {
+    @.ret = {};
+    @.ret.payload = input;
+    @.ret.dict = {};
+    @.ret.type = @.singletons.str;
+
+    jmp pop_stack;
+}
+
