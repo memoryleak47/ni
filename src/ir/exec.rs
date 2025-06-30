@@ -111,9 +111,6 @@ fn exec_binop(kind: BinOpKind, l: Value, r: Value, ctxt: &mut Ctxt) -> Value {
         (Ge, Value::Float(l), Value::Float(r)) => boolify(l >= r),
 
         (Plus, Value::Str(l), Value::Str(r)) => Value::Str(format!("{}{}", l, r)),
-
-        (IsEqual, l, r) => boolify(l == r),
-        (IsNotEqual, l, r) => boolify(l != r),
         (kind, l, r) => crash(&format!("type error! \"{l:?} {kind} {r:?}\""), ctxt),
     }
 }
