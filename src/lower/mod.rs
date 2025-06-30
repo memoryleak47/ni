@@ -227,7 +227,9 @@ fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
                 ctxt.push(format!("jmp raise"))
             }
             ASTStatement::For(v, expr, body) => {
-                let hv = Symbol::new_fresh("hiddenvar");
+                // The $ sign prevents collisions with user-defined variables.
+                let hv = Symbol::new_fresh("$hiddenvar");
+
                 let expr = ASTExpr::FnCall(Box::new(
                     ASTExpr::Attribute(Box::new(expr.clone()), String::from("__iter__"))),
                     vec![]);
