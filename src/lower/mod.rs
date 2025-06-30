@@ -224,11 +224,7 @@ fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
                 ctxt.focus_blk(suc);
             },
             ASTStatement::Raise(body) => {
-                let h = Symbol::new_fresh("handler");
-                ctxt.push(format!("%{h} = @.handler"));
-                ctxt.push(format!("@.frame = %{h}.frame"));
-                ctxt.push(format!("@.handler = %{h}.parent"));
-                ctxt.push(format!("jmp %{h}.pid"));
+                ctxt.push(format!("jmp raise"))
             }
             _ => todo!(),
         }

@@ -45,3 +45,11 @@ proc call_fn {
     @.arg = %arg.farg;
     jmp %arg.f;
 }
+
+proc raise {
+    %h = @.handler;
+    @.handler = %h.parent;
+    @.frame = %h.frame;
+    jmp %h.pid;
+}
+

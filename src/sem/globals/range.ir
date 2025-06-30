@@ -50,16 +50,9 @@ proc range_iterator__next__ {
 
     %tab = {};
     %tab[True] = pop_stack;
-    %tab[False] = raise_stopiter ;
+    %tab[False] = raise;
 
     jmp %tab[%i < %stop];
-}
-
-proc raise_stopiter {
-    %h = @.handler;
-    @.handler = %h.parent;
-    @.frame = %h.frame;
-    jmp %h.pid;
 }
 
 proc range__init__ {
