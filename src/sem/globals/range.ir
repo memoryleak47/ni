@@ -1,0 +1,87 @@
+proc init_range {
+    # setup range_iterator class
+    %range_iterator = {};
+    %range_iterator.type = @.singletons.type;
+    %range_iterator.dict = {};
+    %range_iterator.mro = {};
+    %range_iterator.mro[0] = %range_iterator;
+    %range_iterator.mro[1] = @.singletons.object;
+
+    %__next__ = {};
+    %__next__.type = @.singletons.function;
+    %__next__.payload = range_iterator__next__;
+    %range_iterator.dict["__next__"] = %__next__;
+
+    @.singletons.range_iterator = %range_iterator;
+
+    # setup range class
+    %range = {};
+    %range.type = @.singletons.type;
+    %range.dict = {};
+    %range.mro = {};
+    %range.mro[0] = %range;
+    %range.mro[1] = @.singletons.object;
+
+    %__init__ = {};
+    %__init__.type = @.singletons.function;
+    %__init__.payload = range__init__;
+    %range.dict["__init__"] = %__init__;
+
+    %__iter__ = {};
+    %__iter__.type = @.singletons.function;
+    %__iter__.payload = range__iter__;
+    %range.dict["__iter__"] = %__iter__;
+
+    @.globals["range"] = %range;
+
+    jmp init_globals_loop;
+}
+
+proc range_iterator__next__ {
+    %self = @.arg[0];
+    %stop = %self.stop;
+    %i = %self.i;
+    %self.i = %self.i + 1;
+
+    @.ret = {};
+    @.ret.type = @.singletons.int;
+    @.ret.dict = {};
+    @.ret.payload = %i;
+
+    %tab = {};
+    %tab[True] = pop_stack;
+    %tab[False] = raise_stopiter ;
+
+    jmp %tab[%i < %stop];
+}
+
+proc raise_stopiter {
+    %h = @.handler;
+    @.handler = %h.parent;
+    @.frame = %h.frame;
+    jmp %h.pid;
+}
+
+proc range__init__ {
+    %self = @.arg[0];
+    %start = @.arg[1];
+    %stop = @.arg[2];
+    %self.dict["start"] = %start;
+    %self.dict["stop"] = %stop;
+
+    jmp pop_stack;
+}
+
+proc range__iter__ {
+    %self = @.arg[0];
+
+    %iter = {};
+    %iter.type = @.singletons.range_iterator;
+    %iter.dict = {};
+
+    %iter.stop = %self.dict["stop"].payload;
+    %iter.i = %self.dict["start"].payload;
+
+    @.ret = %iter;
+    jmp pop_stack;
+}

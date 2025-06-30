@@ -90,7 +90,7 @@ proc py_call_method_2 {
 proc py_call_other {
     %arg = @.frame.irlocals.py_call_arg;
 
-    panic "todo!";
+    panic "todo: implement py_call_other!";
 }
 
 
