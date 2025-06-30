@@ -1,0 +1,15 @@
+proc init_fn_print {    
+    # setup print
+    %print_fn = {};
+    %print_fn.type = @.singletons.function;
+    %print_fn.payload = fn_print;
+    @.globals["print"] = %print_fn;
+    jmp init_2_globals_loop;
+}
+
+proc fn_print {
+    print @.arg[0].payload;
+    jmp pop_stack_none;
+}
+
+

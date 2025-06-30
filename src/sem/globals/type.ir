@@ -1,0 +1,13 @@
+proc init_fn_type {
+    %type_fn = {};
+    %type_fn.type = @.singletons.function;
+    %type_fn.payload = fn_type;
+    @.globals["type"] = %type_fn;
+    jmp init_2_globals_loop;
+}
+
+proc fn_type {
+    @.ret = @.arg[0].type;
+    jmp pop_stack;
+}
+

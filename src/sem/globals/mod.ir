@@ -2,27 +2,17 @@
 proc init_2_globals {
     @.globals = {};
 
-    # setup print
-    %print_fn = {};
-    %print_fn.type = @.singletons.function;
-    %print_fn.payload = fn_print;
-    @.globals["print"] = %print_fn;
+    @.arg = {};
+    @.arg[0] = init_fn_print;
+    @.arg[1] = init_fn_type;
+    @.arg[2] = pre_userstart;
+    @.arg.i = 0;
 
-    # setup type
-    %type_fn = {};
-    %type_fn.type = @.singletons.function;
-    %type_fn.payload = fn_type;
-    @.globals["type"] = %type_fn;
-
-    jmp pre_userstart;
+    jmp init_2_globals_loop;
 }
 
-proc fn_print {
-    print @.arg[0].payload;
-    jmp pop_stack_none;
-}
-
-proc fn_type {
-    @.ret = @.arg[0].type;
-    jmp pop_stack;
+proc init_2_globals_loop {
+    %i = @.arg.i;
+    @.arg.i = @.arg.i + 1;
+    jmp @.arg[%i];
 }
