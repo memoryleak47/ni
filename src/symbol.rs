@@ -75,7 +75,11 @@ impl SymbolMap {
             let mut chars: Vec<char> = s.chars().collect();
             for i in (0..chars.len()).rev() {
                 let c = chars[i];
-                if c == '_' { chars.truncate(i); }
+                if c == '_' {
+                    // don't touch symbols that end in `_`. we only simplify ones like `_2`.
+                    if i == chars.len()-1 { break; }
+                    chars.truncate(i);
+                }
                 if !c.is_numeric() { break; }
             }
             chars.into_iter().collect()
