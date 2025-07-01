@@ -47,6 +47,7 @@ fn assemble_stmt(toks: &[IRToken]) -> Option<(Statement, Vec<Statement>, &[IRTok
     let a = or(a, assemble_stmt_print);
     let a = or(a, assemble_stmt_jmp);
     let a = or(a, assemble_stmt_exit);
+    let a = or(a, assemble_stmt_fail);
     let a = or(a, assemble_stmt_panic);
 
     let (stmt, prev, toks) = a(toks)?;
@@ -86,6 +87,11 @@ fn assemble_stmt_jmp(toks: &[IRToken]) -> Option<(Statement, Vec<Statement>, &[I
 fn assemble_stmt_exit(toks: &[IRToken]) -> Option<(Statement, Vec<Statement>, &[IRToken])> {
     let [IRToken::Exit, toks@..] = toks else { return None };
     Some((Statement::Exit, Vec::new(), toks))
+}
+
+fn assemble_stmt_fail(toks: &[IRToken]) -> Option<(Statement, Vec<Statement>, &[IRToken])> {
+    let [IRToken::Fail, toks@..] = toks else { return None };
+    Some((Statement::Fail, Vec::new(), toks))
 }
 
 fn assemble_stmt_panic(toks: &[IRToken]) -> Option<(Statement, Vec<Statement>, &[IRToken])> {

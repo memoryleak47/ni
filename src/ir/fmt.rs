@@ -52,6 +52,7 @@ fn display_stmt(stmt_id: usize, proc: &Proc, force_visible: bool, f: &mut Format
             let n = node_string(*n, proc);
             write!(f, "    panic {n};\n")?;
         },
+        Fail => write!(f, "    fail;\n")?,
     }
 
     Ok(())

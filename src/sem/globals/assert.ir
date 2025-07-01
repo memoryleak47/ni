@@ -1,0 +1,19 @@
+proc init_fn_assert {    
+    %assert_fn = {};
+    %assert_fn.type = @.singletons.function;
+    %assert_fn.payload = fn_assert;
+    @.globals["assert"] = %assert_fn;
+
+    jmp init_globals_loop;
+}
+
+proc fn_assert {
+    %tab = {};
+    %tab[@.singletons.false] = do_fail;
+    %tab[@.singletons.true] = pop_stack_none;
+    jmp %tab[@.arg[0]];
+}
+
+proc do_fail {
+    fail;
+}

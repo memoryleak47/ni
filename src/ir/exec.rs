@@ -196,6 +196,10 @@ fn step_stmt(stmt: &Statement, ctxt: &mut Ctxt) -> bool {
             println!("PANIC: {v:?}");
             return false;
         }
+        Fail => {
+            println!("`Fail` reached!");
+            return false;
+        }
     }
 
     true

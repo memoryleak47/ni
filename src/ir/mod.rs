@@ -32,6 +32,7 @@ pub enum Statement {
     Print(Node),
     Jmp(/*proc-id*/ Node),
     Panic(/*err msg or code*/ Node),
+    Fail, // analysis tries to prove that this is never reached.
     Exit,
 }
 
