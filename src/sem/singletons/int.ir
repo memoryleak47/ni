@@ -1,5 +1,5 @@
 proc init_int {
-    %int = {};
+    %int = @.singletons.int;
     %int.type = @.singletons.type;
     %int.dict = {};
 
@@ -61,8 +61,6 @@ proc init_int {
     %pow_fn.type = @.singletons.function;
     %pow_fn.payload = fn_payload_pow;
     %int.dict["__pow__"] = %pow_fn;
-
-    @.singletons.int = %int;
 
     jmp init_singletons_loop;
 }

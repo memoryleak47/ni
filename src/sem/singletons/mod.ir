@@ -2,12 +2,14 @@ proc init_singletons {
     @.singletons = {};
 
     @.arg = {};
-    @.arg[0] = init_type_and_object;
-    @.arg[1] = init_bool;
-    @.arg[2] = init_int;
-    @.arg[3] = init_misc;
-    @.arg[4] = init_list;
-    @.arg[5] = init_globals;
+    @.arg[0] = fwd_declare_singletons;
+    @.arg[1] = init_type;
+    @.arg[2] = init_object;
+    @.arg[3] = init_bool;
+    @.arg[4] = init_int;
+    @.arg[5] = init_misc;
+    @.arg[6] = init_list;
+    @.arg[7] = init_globals;
     @.arg.i = 0;
 
     jmp init_singletons_loop;
@@ -17,4 +19,25 @@ proc init_singletons_loop {
     %i = @.arg.i;
     @.arg.i = @.arg.i + 1;
     jmp @.arg[%i];
+}
+
+proc fwd_declare_singletons {
+    @.singletons.type = {};
+    @.singletons.object = {};
+
+    @.singletons.function = {};
+    @.singletons.method = {};
+    @.singletons.int = {};
+    @.singletons.str = {};
+    @.singletons.bool = {};
+    @.singletons.none_type = {};
+    @.singletons.list = {};
+
+    @.singletons.none = {};
+    @.singletons.true = {};
+    @.singletons.false = {};
+
+    @.singletons.primitive = {};
+
+    jmp init_singletons_loop;
 }

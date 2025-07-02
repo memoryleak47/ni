@@ -1,5 +1,4 @@
 proc init_list {
-    @.singletons.list = {};
     @.singletons.list.type = @.singletons.type;
     @.singletons.list.dict = {};
     @.singletons.list.mro = {};

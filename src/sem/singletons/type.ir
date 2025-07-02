@@ -1,0 +1,12 @@
+proc init_type {
+    %type = @.singletons.type;
+
+    %type.type = %type;
+    %type.dict = {};
+
+    %type.mro = {};
+    %type.mro[0] = %type;
+    %type.mro[1] = @.singletons.object;
+
+    jmp init_singletons_loop;
+}

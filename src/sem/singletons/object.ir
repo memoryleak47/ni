@@ -1,0 +1,60 @@
+proc init_object {
+    %object = @.singletons.object;
+
+    %object.type = @.singletons.type;
+    %object.dict = {};
+
+    %object.mro = {};
+    %object.mro[0] = %object;
+
+    # define general `==` operator.
+    %eq_fn = {};
+    %eq_fn.type = @.singletons.function;
+    %eq_fn.payload = fn_std_eq;
+    @.singletons.object.dict["__eq__"] = %eq_fn;
+
+    # primitivity checks.
+    @.singletons.primitive[@.singletons.str] = Yes;
+    @.singletons.primitive[@.singletons.int] = Yes;
+    @.singletons.primitive[@.singletons.none_type] = Yes;
+    @.singletons.primitive[@.singletons.bool] = Yes;
+
+    jmp init_singletons_loop;
+}
+
+# @.arg{0, 1}
+proc fn_std_eq {
+    %a = @.singletons.primitive[@.arg[0].type];
+    %b = @.singletons.primitive[@.arg[0].type];
+
+    %tab = {};
+    %tab[Undef] = std_eq_prim;
+    %tab[%a] = std_eq_nonprim;
+    %tab[%b] = std_eq_nonprim;
+    jmp %tab[Undef];
+}
+
+proc std_eq_prim {
+    %a = @.arg[0].payload;
+    %b = @.arg[1].payload;
+
+    %tab = {};
+    %tab[%a] = @.singletons.false;
+    %tab[%b] = @.singletons.true;
+
+    @.ret = %tab[%a];
+    jmp pop_stack;
+}
+
+proc std_eq_nonprim {
+    %a = @.arg[0];
+    %b = @.arg[1];
+
+    %tab = {};
+    %tab[%a] = @.singletons.false;
+    %tab[%b] = @.singletons.true;
+
+    @.ret = %tab[%a];
+    jmp pop_stack;
+}
+
