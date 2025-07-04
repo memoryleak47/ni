@@ -20,7 +20,7 @@ proc init_list {
     %append_fn.payload = fn_list_append;
     @.singletons.list.dict["append"] = %append_fn;
 
-    jmp init_singletons_loop;
+    jmp init_loop;
 }
 
 proc fn_list_getitem {

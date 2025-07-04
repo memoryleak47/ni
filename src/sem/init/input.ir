@@ -5,7 +5,7 @@ proc init_fn_input {
     %input_fn.dict = {};
     @.globals["input"] = %input_fn;
 
-    jmp init_globals_loop;
+    jmp init_loop;
 }
 
 proc fn_input {

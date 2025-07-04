@@ -19,7 +19,7 @@ proc init_object {
     @.singletons.primitive[@.singletons.none_type] = Yes;
     @.singletons.primitive[@.singletons.bool] = Yes;
 
-    jmp init_singletons_loop;
+    jmp init_loop;
 }
 
 # @.arg{0, 1}

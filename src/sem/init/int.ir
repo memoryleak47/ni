@@ -62,7 +62,7 @@ proc init_int {
     %pow_fn.payload = fn_payload_pow;
     %int.dict["__pow__"] = %pow_fn;
 
-    jmp init_singletons_loop;
+    jmp init_loop;
 }
 
 # @.arg{0, 1}

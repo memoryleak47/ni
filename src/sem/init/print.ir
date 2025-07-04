@@ -5,7 +5,7 @@ proc init_fn_print {
     %print_fn.payload = fn_print;
     @.globals["print"] = %print_fn;
 
-    jmp init_globals_loop;
+    jmp init_loop;
 }
 
 proc fn_print {

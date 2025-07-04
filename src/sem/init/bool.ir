@@ -10,5 +10,5 @@ proc init_bool {
     @.singletons.false.type = @.singletons.bool;
     @.singletons.false.payload = False;
 
-    jmp init_singletons_loop;
+    jmp init_loop;
 }

@@ -1,27 +1,35 @@
-proc init_singletons {
+main proc init {
     @.singletons = {};
+    @.globals = {};
 
     @.arg = {};
-    @.arg[0] = fwd_declare_singletons;
+    @.arg[0] = fwd_declare;
     @.arg[1] = init_type;
     @.arg[2] = init_object;
     @.arg[3] = init_bool;
     @.arg[4] = init_int;
     @.arg[5] = init_misc;
     @.arg[6] = init_list;
-    @.arg[7] = init_globals;
+    @.arg[7] = init_fn_print;
+    @.arg[8] = init_fn_type;
+    @.arg[9] = init_range;
+    @.arg[10] = init_fn_input;
+    @.arg[11] = init_fn_assert;
+
+    @.arg[12] = init_frame;
+
     @.arg.i = 0;
 
-    jmp init_singletons_loop;
+    jmp init_loop;
 }
 
-proc init_singletons_loop {
+proc init_loop {
     %i = @.arg.i;
     @.arg.i = @.arg.i + 1;
     jmp @.arg[%i];
 }
 
-proc fwd_declare_singletons {
+proc fwd_declare {
     @.singletons.type = {};
     @.singletons.object = {};
 
@@ -39,5 +47,18 @@ proc fwd_declare_singletons {
 
     @.singletons.primitive = {};
 
-    jmp init_singletons_loop;
+    jmp init_loop;
 }
+
+proc init_frame {
+    # setup callstack
+    %frame = {};
+    %frame.parent = undef;
+    %frame.retpid = fin;
+    %frame.pylocals = @.globals;
+    %frame.irlocals = {};
+    @.frame = %frame;
+
+    jmp userstart;
+}
+

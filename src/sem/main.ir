@@ -1,20 +1,4 @@
 #
-main proc init {
-    jmp init_singletons;
-}
-
-proc init_frame {
-    # setup callstack
-    %frame = {};
-    %frame.parent = undef;
-    %frame.retpid = fin;
-    %frame.pylocals = @.globals;
-    %frame.irlocals = {};
-    @.frame = %frame;
-
-    jmp userstart;
-}
-
 proc fin {
     exit;
 }

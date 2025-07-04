@@ -34,7 +34,7 @@ proc init_range {
 
     @.globals["range"] = %range;
 
-    jmp init_globals_loop;
+    jmp init_loop;
 }
 
 proc range_iterator__next__ {

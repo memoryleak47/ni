@@ -35,5 +35,5 @@ proc init_misc {
     @.singletons.none.payload = None;
     @.singletons.none.type = @.singletons.none_type;
 
-    jmp init_singletons_loop;
+    jmp init_loop;
 }

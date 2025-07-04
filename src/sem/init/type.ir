@@ -8,5 +8,5 @@ proc init_type {
     %type.mro[0] = %type;
     %type.mro[1] = @.singletons.object;
 
-    jmp init_singletons_loop;
+    jmp init_loop;
 }
