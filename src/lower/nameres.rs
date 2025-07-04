@@ -64,10 +64,10 @@ fn iter(ast: &AST, nrt: &mut NameResTable, current_fn_ptr: *const ASTStatement) 
                 }
                 iter(body, nrt, current_fn_ptr);
             }
-            ASTStatement::Try(body, opt_except) => {
+            ASTStatement::Try(body, excepts) => {
                 iter(body, nrt, current_fn_ptr);
-                if let Some(except) = opt_except {
-                    iter(except, nrt, current_fn_ptr);
+                for except in excepts {
+                    iter(&except.body, nrt, current_fn_ptr);
                 }
             }
             ASTStatement::Scope(ScopeKind::Global, vars) => {

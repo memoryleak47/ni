@@ -30,8 +30,14 @@ pub enum ASTStatement {
     Expr(ASTExpr),
     Pass,
     Scope(ScopeKind, Vec<String>),
-    Try(AST, /*except*/ Option<AST>),
+    Try(AST, Vec<Except>),
     Raise(ASTExpr),
+}
+
+#[derive(Debug, Clone)]
+pub struct Except {
+    pub ty: Option<ASTExpr>,
+    pub body: AST,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]

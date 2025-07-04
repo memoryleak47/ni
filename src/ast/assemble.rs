@@ -123,15 +123,24 @@ fn assemble_try_stmt(toks: &[Token]) -> Result<(ASTStatement, &[Token]), String>
     let [Token::Try, toks@..] = toks else { return Err("".to_string()) };
     let (body, toks) = assemble_indented_ast(toks)?;
 
-    let mut opt_except = None;
+    let mut excepts = Vec::new();
     let mut toks = toks;
-    if let [Token::Except, toks2@..] = toks {
-        let (except, toks2) = assemble_indented_ast(toks2)?;
+    while let [Token::Except, toks2@..] = toks {
+        let mut ty = None;
+        let mut toks2 = toks2;
+        if !matches!(toks2.get(0), Some(Token::Colon)) {
+            let (ty2, toks3) = assemble_expr(toks2)?;
+            toks2 = toks3;
+            ty = Some(ty2);
+        }
+        let (body, toks2) = assemble_indented_ast(toks2)?;
         toks = toks2;
-        opt_except = Some(except);
+        let except = Except { body, ty };
+        excepts.push(except);
     }
+    if excepts.is_empty() { return Err("no excepts!".to_string()); }
 
-    Ok((ASTStatement::Try(body, opt_except), toks))
+    Ok((ASTStatement::Try(body, excepts), toks))
 }
 
 fn assemble_branch_stmt(toks: &[Token]) -> Result<(ASTStatement, &[Token]), String> {

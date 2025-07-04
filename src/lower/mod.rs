@@ -197,29 +197,39 @@ fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
                 lower_var_assign(name, format!("{cl}"), ctxt);
                 ctxt.fl_mut().ast_ptr = old_ptr;
             },
-            ASTStatement::Try(body, opt_except) => {
-                let except = opt_except.as_deref().unwrap_or(&[]);
-                let h = ctxt.alloc_irlocal("handler");
+            ASTStatement::Try(body, excepts) => {
                 let suc = ctxt.alloc_blk();
-                let except_pid = ctxt.alloc_blk();
-                
-                // push handler stack
-                ctxt.push(format!("{h} = {{}}"));
-                ctxt.push(format!("{h}.parent = @.handler"));
-                ctxt.push(format!("{h}.frame = @.frame"));
-                ctxt.push(format!("{h}.pid = {except_pid}"));
-                ctxt.push(format!("@.handler = {h}"));
+
+                let mut pids = Vec::new();
+
+                // We push to the handler stack in reverted order, as the first `except` should be at the top of the stack.
+                for except in excepts.iter().rev() {
+                    let h = ctxt.alloc_irlocal("handler");
+                    let except_pid = ctxt.alloc_blk();
+                    pids.push(except_pid);
+
+                    // push handler stack
+                    ctxt.push(format!("{h} = {{}}"));
+                    ctxt.push(format!("{h}.parent = @.handler"));
+                    ctxt.push(format!("{h}.frame = @.frame"));
+                    ctxt.push(format!("{h}.pid = {except_pid}"));
+                    ctxt.push(format!("@.handler = {h}"));
+                }
 
                 lower_body(body, ctxt);
 
                 // pop handler stack
-                ctxt.push(format!("@.handler = @.handler.parent"));
+                for except in excepts.iter() {
+                    ctxt.push(format!("@.handler = @.handler.parent"));
+                }
 
                 ctxt.push(format!("jmp {suc}"));
 
-                ctxt.focus_blk(except_pid);
-                    lower_body(except, ctxt);
-                    ctxt.push(format!("jmp {suc}"));
+                for (pid, except) in pids.iter().zip(excepts.iter().rev()) {
+                    ctxt.focus_blk(*pid);
+                        lower_body(&except.body, ctxt);
+                        ctxt.push(format!("jmp {suc}"));
+                }
 
                 ctxt.focus_blk(suc);
             },
@@ -243,11 +253,15 @@ fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
                         )),
                    vec![]),
                 ));
-                let stmt = ASTStatement::Try(
-                    vec![
-                        ASTStatement::Assign(ASTExpr::Var(hv.to_string()), expr),
-                        ASTStatement::While(ASTExpr::Bool(true), body),
-                    ], None);
+                let bod = vec![
+                    ASTStatement::Assign(ASTExpr::Var(hv.to_string()), expr),
+                    ASTStatement::While(ASTExpr::Bool(true), body),
+                ];
+                let except = Except {
+                    ty: None,
+                    body: vec![ASTStatement::Pass],
+                };
+                let stmt = ASTStatement::Try(bod, vec![except]);
                 lower_body(&[stmt], ctxt);
             },
             _ => todo!(),
