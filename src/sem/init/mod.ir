@@ -15,6 +15,7 @@ main proc init {
     @.arg[9] = init_range;
     @.arg[10] = init_fn_input;
     @.arg[11] = init_fn_assert;
+    @.arg[12] = init_base_exception;
 
     @.arg[12] = init_frame;
 
@@ -44,6 +45,7 @@ proc fwd_declare {
     @.singletons.none = {};
     @.singletons.true = {};
     @.singletons.false = {};
+    @.singletons.base_exception = {};
 
     @.singletons.primitive = {};
 

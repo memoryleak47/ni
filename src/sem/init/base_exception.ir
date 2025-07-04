@@ -1,0 +1,26 @@
+proc init_base_exception {
+    %base_exception = @.singletons.base_exception;
+    %base_exception.type = @.singletons.type;
+    %base_exception.dict = {};
+    %base_exception.mro = {};
+    %base_exception.mro[0] = %base_exception;
+    %base_exception.mro[1] = @.singletons.object;
+
+    %be_init = {};
+    %be_init.type = @.singletons.function;
+    %be_init.payload = fn_base_exception_init;
+    %base_exception.dict["__init__"] = %be_init;
+
+    @.globals["BaseException"] = %base_exception;
+
+    jmp init_loop;
+}
+
+proc fn_base_exception_init {
+    %self = @.arg[0].payload;
+    %s = @.arg[1].payload;
+
+    %self.s = %s;
+
+    jmp pop_stack;
+}
