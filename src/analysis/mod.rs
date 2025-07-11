@@ -20,7 +20,7 @@ struct AnalysisState {
 
 struct Spec {
   st: ThreadState,
-  out: Set<AppliedSpecId>, // TODO or do we want to return a bunch of side-effects?
+  out: Set<AppliedSpecId>,
 }
 
 struct ThreadState {
