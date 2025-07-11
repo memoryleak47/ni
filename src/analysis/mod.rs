@@ -14,13 +14,13 @@ type TableSortId = Id;
 type SpecId = Id;
 
 struct AnalysisState {
-  specs: SpecId -> Spec,
-  queue: Queue<SpecId>, // these SpecIds still need to be computed.
+    specs: Map<SpecId, Spec>,
+    queue: Queue<SpecId>, // these SpecIds still need to be computed.
 }
 
 struct Spec {
-  st: ThreadState,
-  out: Set<AppliedSpecId>,
+    st: ThreadState,
+    out: Set<AppliedSpecId>,
 }
 
 struct ThreadState {
@@ -31,11 +31,10 @@ struct ThreadState {
 
     // forall (t: T), forall (k: K), exists (v: V), t[k] = v.
     // any entry in T is a TableSortId, or a ValueId recursively refering to one.
+    // TODO what's the story with overlapping t or k triples?
     tkvs: Set<(T: ValueSet, K: ValueSet, V: ValueSet)>,
 
-    deref_val_id: ValueId -> ValueSet,
-
+    deref_val_id: Map<ValueId, ValueSet>,
     root: ValueId,
-
     pid: ProcId,
 }
