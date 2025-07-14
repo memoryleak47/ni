@@ -75,7 +75,7 @@ fn step_expr(mut st: ThreadState, expr: &Expr) -> Vec<(ValueId, ThreadState)> {
         Expr::Str(s) => vs.strings.insert(s.clone()),
     };
 
-    st.deref_val_id.insert(value_id, vs);
+    st.deref.insert(value_id, vs);
 
     vec![(value_id, st)]
 }
@@ -90,7 +90,7 @@ fn step_stmt(mut st: ThreadState, stmt: &Statement) -> Vec<ThreadState> {
             }
             out
         }
-        Statement::Store(t, idx, n) => {
+        Statement::Store(t, k, v) => {
             let tovs = |x| {
                 let mut out = ValueSet::bottom();
                 out.value_ids.insert(st.nodes[x]);
@@ -98,16 +98,25 @@ fn step_stmt(mut st: ThreadState, stmt: &Statement) -> Vec<ThreadState> {
             };
 
             let t = tovs(t);
-            let idx = tovs(idx);
-            let n = tovs(n);
+            let k = tovs(k);
+            let v = tovs(v);
 
-            // XXX should we overwrite other entries aswell?
-            st.tkvs.push((t, idx, n));
+            // remove strictly overwritten stuff.
+            st.tkvs.retain(|(t2, k2, _)| !t.concrete_eq(t2) || !k.concrete_eq(k2));
+
+            for (t2, k2, v2) in st.tkvs.iter_mut() {
+                if t.overlaps(&*t2, &st.deref) && k.overlaps(&*k2, &st.deref) {
+                    *v2 = v2.union(&v);
+                }
+            }
+
+            st.tkvs.push((t, k, v));
+
             vec![st]
         }
         Statement::Jmp(n) => {
             let vid = st.nodes[n];
-            let vs = full_deref(vid, &st);
+            let vs = full_deref(vid, &st.deref);
 
             st.nodes.clear();
             let mut outs = Vec::new();

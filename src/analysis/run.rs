@@ -23,13 +23,13 @@ fn build_analysis(ir: IR) -> AnalysisState {
         let mut vs = ValueSet::bottom();
         vs.table_sorts.insert(root_sort_id);
 
-        let mut deref_val_id: Map<_, _> = Default::default();
-        deref_val_id.insert(root_id, vs);
+        let mut deref: Map<_, _> = Default::default();
+        deref.insert(root_id, vs);
 
         Spec {
             st: ThreadState {
                 tkvs: Default::default(),
-                deref_val_id,
+                deref,
                 root: root_id,
                 pid: analysis.ir.main_pid,
                 nodes: Map::new(),

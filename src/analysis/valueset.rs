@@ -109,9 +109,9 @@ impl ValueSet {
         }
     }
 
-    pub fn overlaps(&self, other: &ValueSet, st: &ThreadState) -> bool {
-        let l = full_deref_vs(self.clone(), st);
-        let r = full_deref_vs(other.clone(), st);
+    pub fn overlaps(&self, other: &ValueSet, d: &Deref) -> bool {
+        let l = full_deref_vs(self.clone(), d);
+        let r = full_deref_vs(other.clone(), d);
 
         if l.is_bot() || r.is_bot() { return false; }
         if l.top || r.top { return true; }
@@ -157,10 +157,15 @@ impl ValueSet {
             value_ids: self.value_ids.intersection(&other.value_ids).cloned().collect(),
         }
     }
+
+    pub fn concrete_eq(&self, other: &ValueSet) -> bool {
+        if self.top || other.top { return false; }
+
+        todo!()
+    }
 }
 
-pub fn full_deref_vs(mut v: ValueSet, st: &ThreadState) -> ValueSet {
-    let deref = &st.deref_val_id;
+pub fn full_deref_vs(mut v: ValueSet, deref: &Deref) -> ValueSet {
     while v.value_ids.len() > 0 {
         let mut value_ids = Set::new();
         std::mem::swap(&mut value_ids, &mut v.value_ids);
@@ -171,6 +176,6 @@ pub fn full_deref_vs(mut v: ValueSet, st: &ThreadState) -> ValueSet {
     v
 }
 
-pub fn full_deref(vid: ValueId, st: &ThreadState) -> ValueSet {
-    full_deref_vs(st.deref_val_id[&vid].clone(), st)
+pub fn full_deref(vid: ValueId, deref: &Deref) -> ValueSet {
+    full_deref_vs(deref[&vid].clone(), deref)
 }

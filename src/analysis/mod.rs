@@ -39,6 +39,9 @@ pub struct Spec {
     pub outs: Vec<AppliedSpecId>, // set of output options.
 }
 
+// Used to access the abstract value behind a ValueId.
+pub type Deref = Map<ValueId, ValueSet>;
+
 #[derive(Clone)]
 pub struct ThreadState {
     // forall (t: T), forall (k: K), exists (v: V), t[k] = v.
@@ -49,7 +52,7 @@ pub struct ThreadState {
     // always empty on proc call!
     nodes: Map<Node, ValueId>,
 
-    deref_val_id: Map<ValueId, ValueSet>,
+    deref: Deref,
     root: ValueId,
     pid: ProcId,
 
