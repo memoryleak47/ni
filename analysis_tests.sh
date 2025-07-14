@@ -15,12 +15,11 @@ do
         echo $res1
         exit
     fi
-    echo "$res1"
     res2=$(echo $f | cut -d '.' -f 2)
     if [[ ! "$res1" == "$res2" ]]; then
         echo different output:
-        echo ground truth:
-        echo "$res2"
+        echo "-- analysis output: $res1"
+        echo "-- ground truth: $res2"
         exit
     fi
 
