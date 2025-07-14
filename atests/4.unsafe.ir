@@ -1,0 +1,11 @@
+main proc start {
+    jmp bad;
+}
+
+proc bad {
+    fail;
+}
+
+proc good {
+    exit;
+}
