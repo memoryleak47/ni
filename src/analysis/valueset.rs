@@ -8,6 +8,8 @@ pub struct ValueSet {
     pub table_sorts: Set<TableSortId>,
 
     // you need to recursively deref these to evaluate the actual things in the ValueSet.
+    // So, this `value_ids` set is a disjunction.
+    // The value is equal to either one of these ValueIds, or one of symbols, strings, ints, table_sorts.
     pub value_ids: Set<ValueId>,
 }
 
