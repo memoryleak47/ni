@@ -44,7 +44,7 @@ pub struct ThreadState {
     // forall (t: T), forall (k: K), exists (v: V), t[k] = v.
     // any entry in T is a TableSortId, or a ValueId recursively refering to one.
     // TODO what's the story with overlapping t or k triples?
-    tkvs: Set<(ValueSet, ValueSet, ValueSet)>,
+    tkvs: Vec<(ValueSet, ValueSet, ValueSet)>,
 
     // always empty on proc call!
     nodes: Map<Node, ValueId>,

@@ -32,7 +32,9 @@ fn step_expr(mut st: ThreadState, expr: &Expr) -> Vec<(ValueId, ThreadState)> {
     let mut value_id = Symbol::new_fresh("valueId");
     let mut vs = ValueSet::bottom();
     match expr {
-        Expr::Index(_, _) => todo!(),
+        Expr::Index(t, k) => {
+            todo!()
+        },
         Expr::Root => return vec![(st.root, st)],
         Expr::NewTable => {
             let sort_id = Symbol::new_fresh("sortId");
@@ -63,7 +65,18 @@ fn step_stmt(mut st: ThreadState, stmt: &Statement) -> Vec<ThreadState> {
             out
         }
         Statement::Store(t, idx, n) => {
-            todo!()
+            let tovs = |x| {
+                let mut out = ValueSet::bottom();
+                out.value_ids.insert(st.nodes[x]);
+                out
+            };
+
+            let t = tovs(t);
+            let idx = tovs(idx);
+            let n = tovs(n);
+
+            st.tkvs.push((t, idx, n));
+            vec![st]
         }
         Statement::Jmp(n) => {
             let vid = st.nodes[n];

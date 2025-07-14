@@ -28,7 +28,7 @@ fn build_analysis(ir: IR) -> AnalysisState {
 
         Spec {
             st: ThreadState {
-                tkvs: Set::new(),
+                tkvs: Default::default(),
                 deref_val_id,
                 root: root_id,
                 pid: analysis.ir.main_pid,
