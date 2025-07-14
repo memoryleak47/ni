@@ -34,7 +34,10 @@ fn step_expr(mut st: ThreadState, expr: &Expr) -> Vec<(ValueId, ThreadState)> {
     match expr {
         Expr::Index(_, _) => todo!(),
         Expr::Root => return vec![(st.root, st)],
-        Expr::NewTable => todo!(),
+        Expr::NewTable => {
+            let sort_id = Symbol::new_fresh("sortId");
+            vs.table_sorts.insert(sort_id);
+        },
         Expr::BinOp(_, _, _) => todo!(),
         Expr::Input => todo!(),
 
