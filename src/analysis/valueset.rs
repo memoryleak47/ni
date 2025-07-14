@@ -44,6 +44,15 @@ impl<T> OrTop<Set<T>> where T: Hash + Eq + Clone {
             (OrTop::T(s1), OrTop::T(s2)) => OrTop::T(s1.union(&s2).cloned().collect()),
         }
     }
+
+    pub fn overlaps(&self, other: &OrTop<Set<T>>) -> bool {
+        match (self, other) {
+            (OrTop::Top, OrTop::Top) => true,
+            (OrTop::Top, OrTop::T(a)) => a.len() > 0,
+            (OrTop::T(a), OrTop::Top) => a.len() > 0,
+            (OrTop::T(s1), OrTop::T(s2)) => s1.intersection(s2).next().is_some(),
+        }
+    }
 }
 
 impl ValueSet {
@@ -55,6 +64,14 @@ impl ValueSet {
             table_sorts: self.table_sorts.union(&other.table_sorts).cloned().collect(),
             value_ids: self.value_ids.union(&other.value_ids).cloned().collect(),
         }
+    }
+
+    pub fn overlaps(&self, other: &ValueSet) -> bool {
+        self.symbols.intersection(&other.symbols).next().is_some() ||
+        self.strings.overlaps(&other.strings) ||
+        self.ints.overlaps(&other.ints) ||
+        self.table_sorts.intersection(&other.table_sorts).next().is_some()
+        // XXX TODO: cover value ids
     }
 }
 

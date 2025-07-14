@@ -33,7 +33,21 @@ fn step_expr(mut st: ThreadState, expr: &Expr) -> Vec<(ValueId, ThreadState)> {
     let mut vs = ValueSet::bottom();
     match expr {
         Expr::Index(t, k) => {
-            todo!()
+            let tovs = |x| {
+                let mut out = ValueSet::bottom();
+                out.value_ids.insert(st.nodes[x]);
+                out
+            };
+
+            let t = tovs(t);
+            let k = tovs(k);
+
+            // XXX improve upon this.
+            for (t2, k2, v2) in st.tkvs.iter() {
+                if t2.overlaps(&t) && k2.overlaps(&k) {
+                    vs = vs.union(&v2);
+                }
+            }
         },
         Expr::Root => return vec![(st.root, st)],
         Expr::NewTable => {
@@ -75,6 +89,7 @@ fn step_stmt(mut st: ThreadState, stmt: &Statement) -> Vec<ThreadState> {
             let idx = tovs(idx);
             let n = tovs(n);
 
+            // XXX should we overwrite other entries aswell?
             st.tkvs.push((t, idx, n));
             vec![st]
         }
