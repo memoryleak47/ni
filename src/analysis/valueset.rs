@@ -2,6 +2,7 @@ use crate::*;
 
 #[derive(Clone)]
 pub struct ValueSet {
+    pub top: bool, // true means this ValueSet contains all values.
     pub symbols: Set<Symbol>,
     pub strings: OrTop<Set<String>>,
     pub ints: OrTop<Set<i64>>,
@@ -22,6 +23,18 @@ pub enum OrTop<T> {
 impl ValueSet {
     pub fn bottom() -> Self {
         ValueSet {
+            top: false,
+            symbols: Set::new(),
+            strings: OrTop::T(Set::new()),
+            ints: OrTop::T(Set::new()),
+            table_sorts: Set::new(),
+            value_ids: Set::new(),
+        }
+    }
+
+    pub fn top() -> Self {
+        ValueSet {
+            top: true,
             symbols: Set::new(),
             strings: OrTop::T(Set::new()),
             ints: OrTop::T(Set::new()),
@@ -47,6 +60,15 @@ impl<T> OrTop<Set<T>> where T: Hash + Eq + Clone {
         }
     }
 
+    pub fn intersection(&self, other: &OrTop<Set<T>>) -> OrTop<Set<T>> {
+        match (self, other) {
+            (OrTop::Top, x) => x.clone(),
+            (x, OrTop::Top) => x.clone(),
+            (OrTop::T(s1), OrTop::T(s2)) => OrTop::T(s1.intersection(&s2).cloned().collect()),
+        }
+    }
+
+
     pub fn overlaps(&self, other: &OrTop<Set<T>>) -> bool {
         match (self, other) {
             (OrTop::Top, OrTop::Top) => true,
@@ -55,11 +77,30 @@ impl<T> OrTop<Set<T>> where T: Hash + Eq + Clone {
             (OrTop::T(s1), OrTop::T(s2)) => s1.intersection(s2).next().is_some(),
         }
     }
+
+    pub fn is_empty(&self) -> bool {
+        match self {
+            OrTop::Top => false,
+            OrTop::T(a) => a.is_empty(),
+        }
+    }
+
+    pub fn is_subset(&self, other: &OrTop<Set<T>>) -> bool {
+        match (self, other) {
+            (_, OrTop::Top) => true,
+            (OrTop::Top, OrTop::T(a)) => false,
+            (OrTop::T(s1), OrTop::T(s2)) => s1.is_subset(s2),
+        }
+    }
 }
 
 impl ValueSet {
     pub fn union(&self, other: &ValueSet) -> ValueSet {
+        if self.top { return self.clone(); }
+        if other.top { return other.clone(); }
+
         ValueSet {
+            top: false,
             symbols: self.symbols.union(&other.symbols).cloned().collect(),
             strings: self.strings.union(&other.strings),
             ints: self.ints.union(&other.ints),
@@ -72,10 +113,49 @@ impl ValueSet {
         let l = full_deref_vs(self.clone(), st);
         let r = full_deref_vs(other.clone(), st);
 
+        if l.is_bot() || r.is_bot() { return false; }
+        if l.top || r.top { return true; }
+
         l.symbols.intersection(&r.symbols).next().is_some() ||
         l.strings.overlaps(&r.strings) ||
         l.ints.overlaps(&r.ints) ||
         l.table_sorts.intersection(&r.table_sorts).next().is_some()
+    }
+
+    pub fn is_bot(&self) -> bool {
+        !self.top
+        && self.symbols.is_empty()
+        && self.strings.is_empty()
+        && self.ints.is_empty()
+        && self.table_sorts.is_empty()
+        && self.value_ids.is_empty()
+    }
+
+    // TODO respect ValueIds.
+    pub fn is_subset(&self, other: &ValueSet, st: &ThreadState) -> bool {
+        if other.top { return true; }
+        if self.top { return false; }
+
+        self.symbols.is_subset(&other.symbols)
+        && self.strings.is_subset(&other.strings)
+        && self.ints.is_subset(&other.ints)
+        && self.table_sorts.is_subset(&other.table_sorts)
+        && self.value_ids.is_subset(&other.value_ids)
+    }
+
+    // TODO respect ValueIds.
+    pub fn intersection(&self, other: &ValueSet, st: &ThreadState) -> ValueSet {
+        if self.top { return other.clone(); }
+        if other.top { return self.clone(); }
+
+        ValueSet {
+            top: false,
+            symbols: self.symbols.intersection(&other.symbols).cloned().collect(),
+            strings: self.strings.intersection(&other.strings),
+            ints: self.ints.intersection(&other.ints),
+            table_sorts: self.table_sorts.intersection(&other.table_sorts).cloned().collect(),
+            value_ids: self.value_ids.intersection(&other.value_ids).cloned().collect(),
+        }
     }
 }
 

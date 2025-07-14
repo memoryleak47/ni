@@ -42,16 +42,28 @@ fn step_expr(mut st: ThreadState, expr: &Expr) -> Vec<(ValueId, ThreadState)> {
             let t = tovs(t);
             let k = tovs(k);
 
-            // XXX improve upon this.
+            let mut out = ValueSet::top();
+
             for (t2, k2, v2) in st.tkvs.iter() {
-                if t2.overlaps(&t, &st) && k2.overlaps(&k, &st) {
-                    vs = vs.union(&v2);
+                if t.is_subset(&t2, &st) && k.is_subset(&k2, &st) {
+                    vs = vs.intersection(&v2, &st);
                 }
             }
         },
         Expr::Root => return vec![(st.root, st)],
         Expr::NewTable => {
             let sort_id = Symbol::new_fresh("sortId");
+
+            { // add (value_id, Top, Undef) triple!
+                let mut t = ValueSet::bottom();
+                t.value_ids.insert(value_id);
+
+                let mut undef = ValueSet::bottom();
+                undef.symbols.insert(Symbol::new("Undef"));
+
+                st.tkvs.push((t, ValueSet::top(), undef));
+            }
+
             vs.table_sorts.insert(sort_id);
         },
         Expr::BinOp(_, _, _) => todo!(),
