@@ -43,12 +43,15 @@ fn step_expr(st: ThreadState, expr: &Expr) -> Vec<(ValueId, ThreadState)> {
     }
 }
 
-fn step_stmt(st: ThreadState, stmt: &Statement) -> Vec<ThreadState> {
+fn step_stmt(mut st: ThreadState, stmt: &Statement) -> Vec<ThreadState> {
     match stmt {
         Statement::Let(n, expr, _) => {
-            // let val = step_expr(expr, ctxt);
-            // ctxt.nodes.insert(*n, val);
-            todo!()
+            let mut out = Vec::new();
+            for (val_id, mut x) in step_expr(st, expr) {
+                x.nodes.insert(*n, val_id);
+                out.push(x);
+            }
+            out
         }
         Statement::Store(t, idx, n) => {
             todo!()
