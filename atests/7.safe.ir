@@ -2,6 +2,7 @@ main proc start {
     %t = {};
     %a = input;
     %t["a"] = bad;
+    %t[input] = bad;
     %t[%a] = good;
     %t[%t] = bad;
 
