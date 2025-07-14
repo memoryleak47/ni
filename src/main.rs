@@ -20,6 +20,9 @@ pub use ir::*;
 mod cli;
 pub use cli::*;
 
+mod analysis;
+pub use analysis::*;
+
 fn main() {
     let cli = cli();
     let contents = fs::read_to_string(&cli.filename).unwrap();
@@ -50,10 +53,19 @@ fn main() {
     let toks = ir_tokenize(&ir_string);
     let ir = ir_assemble(&toks[..]);
 
-    if let Action::ShowPostIR = cli.action {
-        println!("{}", ir_string);
-        return;
+    match cli.action {
+        Action::ShowPostIR => {
+            println!("{}", ir_string);
+        },
+        Action::Run => {
+            exec(&ir);
+        },
+        Action::Analyze => {
+            println!("{}", match analyze(&ir) {
+                true => "safe",
+                false => "unsafe",
+            });
+        },
+        _ => {},
     }
-
-    exec(&ir);
 }

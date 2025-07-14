@@ -1,11 +1,11 @@
 use crate::*;
 
-struct AppliedSpecId {
-    m: SlotMap,
-    id: SpecId,
+pub struct AppliedSpecId {
+    pub m: SlotMap,
+    pub id: SpecId,
 }
 
 // ommited entries keep their names.
-struct SlotMap {
+pub struct SlotMap {
     m: Map<Id, Id>,
 }
