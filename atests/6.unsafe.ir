@@ -1,0 +1,17 @@
+main proc start {
+    %a = {};
+
+    %a[foo] = good;
+    %a[bar] = bad;
+
+    jmp %a[bar];
+}
+
+proc bad {
+    fail;
+}
+
+proc good {
+    exit;
+}
+
