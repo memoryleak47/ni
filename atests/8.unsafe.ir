@@ -3,12 +3,16 @@ main proc start {
 
     %t["x"] = good;
     %t[input] = good;
+
+    %a = input;
+    %t[%a] = good;
+
     %t[input] = bad;
     %t[input] = good;
     %t["y"] = good;
     %t[%t] = good;
 
-    jmp %t[input];
+    jmp %t[%a];
 }
 
 proc bad {
