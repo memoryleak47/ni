@@ -11,6 +11,9 @@ pub use valueset::*;
 mod run;
 pub use run::*;
 
+mod step;
+pub use step::*;
+
 #[derive(Clone, Copy, Hash, PartialEq, Eq)]
 pub struct Id(pub usize);
 
@@ -29,6 +32,7 @@ pub type ProcId = Symbol;
 pub type SpecId = Id;
 
 pub struct AnalysisState {
+    pub ir: IR,
     pub specs: Map<SpecId, Spec>,
     pub queue: VecDeque<SpecId>, // these SpecIds still need to be computed.
 }
@@ -38,6 +42,7 @@ pub struct Spec {
     pub outs: Vec<AppliedSpecId>, // set of output options.
 }
 
+#[derive(Clone)]
 pub struct ThreadState {
     // forall (t: T), forall (k: K), exists (v: V), t[k] = v.
     // any entry in T is a TableSortId, or a ValueId recursively refering to one.

@@ -1,13 +1,14 @@
 use crate::*;
 
 // returns true for safe, and false for unsafe.
-pub fn analyze(ir: &IR) -> bool {
+pub fn analyze(ir: IR) -> bool {
     let analysis = build_analysis(ir);
-    check_analysis_safe(ir, &analysis)
+    check_analysis_safe(&analysis)
 }
 
-fn build_analysis(ir: &IR) -> AnalysisState {
+fn build_analysis(ir: IR) -> AnalysisState {
     let mut analysis = AnalysisState {
+        ir,
         specs: Map::new(),
         queue: Default::default(),
     };
@@ -30,7 +31,7 @@ fn build_analysis(ir: &IR) -> AnalysisState {
                 tkvs: Set::new(),
                 deref_val_id,
                 root: root_id,
-                pid: ir.main_pid,
+                pid: analysis.ir.main_pid,
             },
             outs: Vec::new(),
         }
@@ -45,17 +46,12 @@ fn build_analysis(ir: &IR) -> AnalysisState {
     analysis
 }
 
-fn check_analysis_safe(ir: &IR, analysis: &AnalysisState) -> bool {
+fn check_analysis_safe(analysis: &AnalysisState) -> bool {
     for (_, b) in &analysis.specs {
-        for stmt in ir.procs[&b.st.pid].stmts.iter() {
+        for stmt in analysis.ir.procs[&b.st.pid].stmts.iter() {
             if matches!(stmt, Statement::Fail) { return false; }
         }
     }
     true
 }
 
-impl AnalysisState {
-    fn step(&mut self, i: SpecId) {
-        todo!()
-    }
-}

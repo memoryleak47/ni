@@ -1,5 +1,6 @@
 use crate::*;
 
+#[derive(Clone)]
 pub struct ValueSet {
     pub symbols: Set<Symbol>,
     pub strings: OrTop<Set<String>>,
@@ -10,6 +11,7 @@ pub struct ValueSet {
     pub value_ids: Set<ValueId>,
 }
 
+#[derive(Clone)]
 pub enum OrTop<T> {
     Top,
     T(T),

@@ -61,7 +61,7 @@ fn main() {
             exec(&ir);
         },
         Action::Analyze => {
-            println!("{}", match analyze(&ir) {
+            println!("{}", match analyze(ir) {
                 true => "safe",
                 false => "unsafe",
             });
