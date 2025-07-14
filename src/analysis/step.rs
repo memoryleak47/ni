@@ -55,7 +55,7 @@ fn step_expr(mut st: ThreadState, expr: &Expr) -> Vec<(ValueId, ThreadState)> {
             vs.table_sorts.insert(sort_id);
         },
         Expr::BinOp(_, _, _) => todo!(),
-        Expr::Input => todo!(),
+        Expr::Input => { vs.strings = OrTop::Top; },
 
         Expr::Symbol(s) => { vs.symbols.insert(*s); },
         Expr::Float(_) => todo!(),
