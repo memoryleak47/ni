@@ -28,19 +28,25 @@ impl AnalysisState {
     }
 }
 
-fn step_expr(st: ThreadState, expr: &Expr) -> Vec<(ValueId, ThreadState)> {
+fn step_expr(mut st: ThreadState, expr: &Expr) -> Vec<(ValueId, ThreadState)> {
+    let mut value_id = Symbol::new_fresh("valueId");
+    let mut vs = ValueSet::bottom();
     match expr {
         Expr::Index(_, _) => todo!(),
-        Expr::Root => todo!(),
+        Expr::Root => return vec![(st.root, st)],
         Expr::NewTable => todo!(),
         Expr::BinOp(_, _, _) => todo!(),
         Expr::Input => todo!(),
 
-        Expr::Symbol(_) => todo!(),
+        Expr::Symbol(s) => { vs.symbols.insert(*s); },
         Expr::Float(_) => todo!(),
-        Expr::Int(_) => todo!(),
-        Expr::Str(_) => todo!(),
-    }
+        Expr::Int(i) => vs.ints.insert(*i),
+        Expr::Str(s) => vs.strings.insert(s.clone()),
+    };
+
+    st.deref_val_id.insert(value_id, vs);
+
+    vec![(value_id, st)]
 }
 
 fn step_stmt(mut st: ThreadState, stmt: &Statement) -> Vec<ThreadState> {

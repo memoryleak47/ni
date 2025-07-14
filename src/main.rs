@@ -2,6 +2,7 @@ use std::fs;
 
 pub use indexmap::IndexMap as Map;
 pub use indexmap::IndexSet as Set;
+pub use std::hash::Hash;
 
 pub use noisy_float::prelude::{Float, R64};
 

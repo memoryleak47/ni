@@ -28,3 +28,12 @@ impl ValueSet {
         }
     }
 }
+
+impl<T> OrTop<Set<T>> where T: Hash + Eq {
+    pub fn insert(&mut self, t: T) {
+        match self {
+            OrTop::Top => {},
+            OrTop::T(s) => { s.insert(t); },
+        }
+    }
+}
