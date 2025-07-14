@@ -63,7 +63,17 @@ fn step_stmt(mut st: ThreadState, stmt: &Statement) -> Vec<ThreadState> {
             todo!()
         }
         Statement::Jmp(n) => {
-            todo!()
+            let vid = st.nodes[n];
+            let vs = full_deref(vid, &st);
+
+            st.nodes.clear();
+            let mut outs = Vec::new();
+            for pid in vs.symbols {
+                let mut st = st.clone();
+                st.pid = pid;
+                outs.push(st);
+            }
+            outs
         }
         Statement::Print(_) => vec![st],
         Statement::Exit | Statement::Panic(_) | Statement::Fail => Vec::new(),
