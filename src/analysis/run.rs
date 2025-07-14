@@ -1,0 +1,61 @@
+use crate::*;
+
+// returns true for safe, and false for unsafe.
+pub fn analyze(ir: &IR) -> bool {
+    let analysis = build_analysis(ir);
+    check_analysis_safe(ir, &analysis)
+}
+
+fn build_analysis(ir: &IR) -> AnalysisState {
+    let mut analysis = AnalysisState {
+        specs: Map::new(),
+        queue: Default::default(),
+    };
+
+    let spec_id: SpecId = Id(0);
+    analysis.queue.push_back(spec_id);
+
+    let spec = {
+        let root_id: ValueId = Id(0);
+        let root_sort_id: TableSortId = Id(0);
+
+        let mut vs = ValueSet::bottom();
+        vs.table_sorts.insert(root_sort_id);
+
+        let mut deref_val_id: Map<_, _> = Default::default();
+        deref_val_id.insert(root_id, vs);
+
+        Spec {
+            st: ThreadState {
+                tkvs: Set::new(),
+                deref_val_id,
+                root: root_id,
+                pid: ir.main_pid,
+            },
+            outs: Vec::new(),
+        }
+    };
+
+    analysis.specs.insert(spec_id, spec);
+
+    while let Some(i) = analysis.queue.pop_front() {
+        analysis.step(i);
+    }
+
+    analysis
+}
+
+fn check_analysis_safe(ir: &IR, analysis: &AnalysisState) -> bool {
+    for (_, b) in &analysis.specs {
+        for stmt in ir.procs[&b.st.pid].stmts.iter() {
+            if matches!(stmt, Statement::Fail) { return false; }
+        }
+    }
+    true
+}
+
+impl AnalysisState {
+    fn step(&mut self, i: SpecId) {
+        todo!()
+    }
+}
