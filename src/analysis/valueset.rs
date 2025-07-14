@@ -66,12 +66,14 @@ impl ValueSet {
         }
     }
 
-    pub fn overlaps(&self, other: &ValueSet) -> bool {
-        self.symbols.intersection(&other.symbols).next().is_some() ||
-        self.strings.overlaps(&other.strings) ||
-        self.ints.overlaps(&other.ints) ||
-        self.table_sorts.intersection(&other.table_sorts).next().is_some()
-        // XXX TODO: cover value ids
+    pub fn overlaps(&self, other: &ValueSet, st: &ThreadState) -> bool {
+        let l = full_deref_vs(self.clone(), st);
+        let r = full_deref_vs(other.clone(), st);
+
+        l.symbols.intersection(&r.symbols).next().is_some() ||
+        l.strings.overlaps(&r.strings) ||
+        l.ints.overlaps(&r.ints) ||
+        l.table_sorts.intersection(&r.table_sorts).next().is_some()
     }
 }
 

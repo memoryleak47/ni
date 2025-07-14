@@ -44,7 +44,7 @@ fn step_expr(mut st: ThreadState, expr: &Expr) -> Vec<(ValueId, ThreadState)> {
 
             // XXX improve upon this.
             for (t2, k2, v2) in st.tkvs.iter() {
-                if t2.overlaps(&t) && k2.overlaps(&k) {
+                if t2.overlaps(&t, &st) && k2.overlaps(&k, &st) {
                     vs = vs.union(&v2);
                 }
             }
