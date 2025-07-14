@@ -7,5 +7,5 @@ pub struct AppliedSpecId {
 
 // ommited entries keep their names.
 pub struct SlotMap {
-    m: Map<Id, Id>,
+    m: Map<Symbol, Symbol>,
 }

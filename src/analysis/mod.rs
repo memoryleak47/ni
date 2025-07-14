@@ -14,22 +14,19 @@ pub use run::*;
 mod step;
 pub use step::*;
 
-#[derive(Clone, Copy, Hash, PartialEq, Eq)]
-pub struct Id(pub usize);
-
 // represents a concrete symbolic object.
 // different ValueIds can refer to the same object. Once this is detected, we'll typically union them.
-pub type ValueId = Id;
+pub type ValueId = Symbol;
 
 // Tables from different TableSortIds are guaranteed to be distinct.
 // Generally, TableSortIds work with weak updates.
 // You need to wrap it in a ValueId to make it concrete.
-pub type TableSortId = Id;
+pub type TableSortId = Symbol;
 
 pub type ProcId = Symbol;
 
 // a proc specialization.
-pub type SpecId = Id;
+pub type SpecId = Symbol;
 
 pub struct AnalysisState {
     pub ir: IR,

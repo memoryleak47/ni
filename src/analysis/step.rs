@@ -16,7 +16,7 @@ impl AnalysisState {
         };
 
         for st in states {
-            let id: SpecId = Id(self.specs.len());
+            let id: SpecId = Symbol::new_fresh("specId");
             self.queue.push_back(id);
 
             let spec = Spec {

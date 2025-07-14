@@ -13,12 +13,12 @@ fn build_analysis(ir: IR) -> AnalysisState {
         queue: Default::default(),
     };
 
-    let spec_id: SpecId = Id(0);
+    let spec_id: SpecId = Symbol::new_fresh("startSpecId");
     analysis.queue.push_back(spec_id);
 
     let spec = {
-        let root_id: ValueId = Id(0);
-        let root_sort_id: TableSortId = Id(0);
+        let root_id: ValueId = Symbol::new_fresh("rootValueId");
+        let root_sort_id: TableSortId = Symbol::new_fresh("rootTableSortId");
 
         let mut vs = ValueSet::bottom();
         vs.table_sorts.insert(root_sort_id);
