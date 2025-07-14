@@ -45,8 +45,8 @@ fn step_expr(mut st: ThreadState, expr: &Expr) -> Vec<(ValueId, ThreadState)> {
             let mut out = ValueSet::top();
 
             for (t2, k2, v2) in st.tkvs.iter() {
-                if t.is_subset(&t2, &st) && k.is_subset(&k2, &st) {
-                    vs = vs.intersection(&v2, &st);
+                if t.is_subset(&t2, &st.deref) && k.is_subset(&k2, &st.deref) {
+                    vs = vs.intersection(&v2, &st.deref);
                 }
             }
         },

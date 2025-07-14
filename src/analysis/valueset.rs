@@ -132,7 +132,7 @@ impl ValueSet {
     }
 
     // TODO respect ValueIds.
-    pub fn is_subset(&self, other: &ValueSet, st: &ThreadState) -> bool {
+    pub fn is_subset(&self, other: &ValueSet, deref: &Deref) -> bool {
         if other.top { return true; }
         if self.top { return false; }
 
@@ -144,7 +144,7 @@ impl ValueSet {
     }
 
     // TODO respect ValueIds.
-    pub fn intersection(&self, other: &ValueSet, st: &ThreadState) -> ValueSet {
+    pub fn intersection(&self, other: &ValueSet, deref: &Deref) -> ValueSet {
         if self.top { return other.clone(); }
         if other.top { return self.clone(); }
 
