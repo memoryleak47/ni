@@ -1,0 +1,19 @@
+main proc start {
+    %t = {};
+    %a = input;
+    %t["a"] = bad;
+    %t[%a] = good;
+    %t[%t] = bad;
+
+    jmp %t[%a];
+}
+
+proc bad {
+    fail;
+}
+
+proc good {
+    exit;
+}
+
+
