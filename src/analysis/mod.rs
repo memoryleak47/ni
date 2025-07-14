@@ -49,6 +49,9 @@ pub struct ThreadState {
     // TODO what's the story with overlapping t or k triples?
     tkvs: Set<(ValueSet, ValueSet, ValueSet)>,
 
+    // always empty on proc call!
+    nodes: Map<Node, ValueId>,
+
     deref_val_id: Map<ValueId, ValueSet>,
     root: ValueId,
     pid: ProcId,

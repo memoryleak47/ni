@@ -4,11 +4,7 @@ impl AnalysisState {
     pub fn step(&mut self, i: SpecId) {
         let states = {
             let spec = &self.specs[&i];
-            let fst = FullThreadState {
-                st: spec.st.clone(),
-                nodes: Map::new(),
-            };
-            let mut states = vec![fst];
+            let mut states = vec![spec.st.clone()];
             for stmt in self.ir.procs[&spec.st.pid].stmts.iter() {
                 let mut new_states = Vec::new();
                 for st in states {
@@ -19,12 +15,12 @@ impl AnalysisState {
             states
         };
 
-        for fst in states {
+        for st in states {
             let id: SpecId = Id(self.specs.len());
             self.queue.push_back(id);
 
             let spec = Spec {
-                st: fst.st,
+                st,
                 outs: Default::default(),
             };
             self.specs.insert(id, spec);
@@ -32,12 +28,7 @@ impl AnalysisState {
     }
 }
 
-struct FullThreadState {
-    st: ThreadState,
-    nodes: Map<Node, ValueId>,
-}
-
-fn step_expr(st: FullThreadState, expr: &Expr) -> Vec<(ValueId, FullThreadState)> {
+fn step_expr(st: ThreadState, expr: &Expr) -> Vec<(ValueId, ThreadState)> {
     match expr {
         Expr::Index(_, _) => todo!(),
         Expr::Root => todo!(),
@@ -52,7 +43,7 @@ fn step_expr(st: FullThreadState, expr: &Expr) -> Vec<(ValueId, FullThreadState)
     }
 }
 
-fn step_stmt(st: FullThreadState, stmt: &Statement) -> Vec<FullThreadState> {
+fn step_stmt(st: ThreadState, stmt: &Statement) -> Vec<ThreadState> {
     match stmt {
         Statement::Let(n, expr, _) => {
             // let val = step_expr(expr, ctxt);

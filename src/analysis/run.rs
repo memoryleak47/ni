@@ -32,6 +32,7 @@ fn build_analysis(ir: IR) -> AnalysisState {
                 deref_val_id,
                 root: root_id,
                 pid: analysis.ir.main_pid,
+                nodes: Map::new(),
             },
             outs: Vec::new(),
         }
