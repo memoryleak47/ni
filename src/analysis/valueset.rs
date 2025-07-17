@@ -4,7 +4,7 @@ use crate::*;
 pub struct ValueSet(pub Vec<ValueParticle>); // disjunction of possibilities.
 
 // So far, ValueParticles like Symbol(_), String(_) and Int(_) are not hashconsed into ValueIds!
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub enum ValueParticle {
     Symbol(Symbol),
     String(String),
@@ -16,8 +16,12 @@ pub enum ValueParticle {
 }
 
 impl ValueParticle {
-    fn subseteq(&self, other: &ValueSet) -> bool {
-        todo!()
+    pub fn subseteq(&self, other: &ValueSet, deref: &Deref) -> bool {
+        if other.0.contains(self) { return true; }
+        if let Some(x) = upcast(self, deref) {
+            return x.subseteq(other, deref);
+        }
+        false
     }
 
     pub fn deref(&self, deref: &Deref) -> ValueSet {
@@ -30,12 +34,12 @@ impl ValueSet {
         Self(Vec::new())
     }
 
-    pub fn compactify(self) -> Self {
+    pub fn compactify(self, deref: &Deref) -> Self {
         let mut v: Vec<ValueParticle> = self.0;
         for i in (0..v.len()).rev() {
             let t = v.swap_remove(i);
             let wv = Self(v);
-            let b = !t.subseteq(&wv);
+            let b = !t.subseteq(&wv, deref);
             v = wv.0;
             if b {
                 v.push(t);
@@ -44,9 +48,9 @@ impl ValueSet {
         Self(v)
     }
 
-    pub fn union(&self, other: &ValueSet) -> ValueSet {
+    pub fn union(&self, other: &ValueSet, deref: &Deref) -> ValueSet {
         let merge = Self(self.0.iter().chain(other.0.iter()).cloned().collect());
-        merge.compactify()
+        merge.compactify(deref)
     }
 
     pub fn deref(&self, deref: &Deref) -> ValueSet {
@@ -61,10 +65,6 @@ impl ValueSet {
     }
 
     pub fn subseteq(&self, other: &ValueSet, deref: &Deref) -> bool {
-        todo!()
-    }
-
-    pub fn intersection(&self, other: &ValueSet, deref: &Deref) -> Vec<ValueSet> {
-        todo!()
+        self.0.iter().all(|x| x.subseteq(other, deref))
     }
 }
