@@ -68,8 +68,8 @@ fn step_stmt(mut st: ThreadState, stmt: &Statement) -> Vec<ThreadState> {
         Statement::Store(t, k, v) => {
             let t = st.nodes[t].clone();
             let k = st.nodes[k].clone();
-            let v = ValueSet(vec![st.nodes[v].clone()]);
-            let st = store_p(&t, &k, v, st);
+            let v = st.nodes[v].clone();
+            let st = store_p(t, k, v, st);
             vec![st]
         },
         Statement::Jmp(n) => {
