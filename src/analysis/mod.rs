@@ -1,7 +1,5 @@
 use crate::*;
 
-use std::collections::VecDeque;
-
 mod app;
 pub use app::*;
 
@@ -11,53 +9,67 @@ pub use valueset::*;
 mod run;
 pub use run::*;
 
+mod index;
+pub use index::*;
+
+mod store;
+pub use store::*;
+
 mod step;
 pub use step::*;
 
-// represents a concrete symbolic object.
-// different ValueIds can refer to the same object. Once this is detected, we'll typically union them.
-pub type ValueId = Symbol;
-
 // Tables from different TableSortIds are guaranteed to be distinct.
 // Generally, TableSortIds work with weak updates.
-// You need to wrap it in a ValueId to make it concrete.
-pub type TableSortId = Symbol;
+// You need to wrap them in a ValueId for strong updates.
+#[derive(Clone, Copy, Hash, PartialEq, Eq)]
+pub struct TableSortId(pub Symbol);
 
-pub type ProcId = Symbol;
+// Represents a symbolic value. Different ValueIds can refer to the same value.
+// In this system, you can never equate a ValueId to something (not even to other ValueIds).
+// It will remain a distinct symbolical object.
+#[derive(Clone, Copy, Hash, PartialEq, Eq)]
+pub struct ValueId(pub Symbol);
 
-// a proc specialization.
-pub type SpecId = Symbol;
+// Represents a specialization of some ProcId, based on some call context represented by "ThreadState".
+#[derive(Clone, Copy, Hash, PartialEq, Eq)]
+pub struct SpecId(pub Symbol);
+
+pub struct Homomorphism {
+    pub m_value_id: Map<ValueId, ValueId>, // bijective map from a _subset_ of the inputs ValueIds to all of the outputs ValueIds.
+    pub m_table_sort: Map<TableSortId, TableSortId>, // non-injective map from all inputs TableSortIds to all outputs TableSortIds.
+}
 
 pub struct AnalysisState {
-    pub ir: IR,
     pub specs: Map<SpecId, Spec>,
-    pub queue: VecDeque<SpecId>, // these SpecIds still need to be computed.
+    pub queue: Vec<SpecId>, // these Specs still need to be computed.
+    pub ir: IR,
 }
 
 pub struct Spec {
     pub st: ThreadState,
-    pub outs: Vec<AppliedSpecId>, // set of output options.
+
+    // we don't actually need to store the homomorphism here I think.
+    // The mere existance of a homomorphism suffices.
+    // But maybe the heuristic cares for that homomorphism?
+    // Note for later, if we want the homomorphism, we'd need to store a collection of (ThreadState, Homomorphism, SpecId) triples,
+    // otherwise it's unclear between which things you are declaring a homomorphism. (as the out ThreadState state uses fresh names)
+    pub outs: Vec<SpecId>,
 }
 
-// Used to access the abstract value behind a ValueId.
 pub type Deref = Map<ValueId, ValueSet>;
 
 #[derive(Clone)]
 pub struct ThreadState {
-    // forall (t: T), forall (k: K), exists (v: V), t[k] = v.
-    // any entry in T is a TableSortId, or a ValueId recursively refering to one.
-    // what's the story with overlapping t or k triples? all contained (is_subset) v's intersect.
-    tkvs: Vec<(ValueSet, ValueSet, ValueSet)>,
+    // semantics: all tkv-triples are universally true (they hold for all runtime values contained in these t,k-ValueSets),
+    // thus we intersect over all possibilities (while using disjunctive heap laws to get rid of ValueSets).
+    pub tkvs: Map</*T*/ ValueParticle, Map</*K*/ ValueParticle, /*V*/ ValueSet>>,
 
-    // always empty on proc call!
-    nodes: Map<Node, ValueId>,
+    // ts_cache[t] = {t' ValueParticle | t overlaps t'}
+    pub ts_cache: Map<TableSortId, Vec<ValueParticle>>,
 
-    deref: Deref,
-    root: ValueId,
-    pid: ProcId,
+    pub root: ValueId,
+    pub pid: Symbol,
 
-    // // maybe later:
-    // facts: Set<Fact>,
-    // // for general facts about ValueIds, in particular ints & strings and which ValueIds are ops computed from others...
-    // // another typical fact (as seen in the nondet example from before), is to assert that two ValueIds are not equal.
+    pub deref: Deref,
+    pub nodes: Map<Node, ValueParticle>,
 }
