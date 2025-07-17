@@ -18,6 +18,9 @@ pub use store::*;
 mod step;
 pub use step::*;
 
+mod binop;
+pub use binop::*;
+
 // Tables from different TableSortIds are guaranteed to be distinct.
 // Generally, TableSortIds work with weak updates.
 // You need to wrap them in a ValueId for strong updates.

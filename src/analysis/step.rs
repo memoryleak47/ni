@@ -51,7 +51,11 @@ fn step_expr(mut st: ThreadState, expr: &Expr) -> (ValueParticle, ThreadState) {
             st.deref.insert(value_id, vs);
             (ValueParticle::ValueId(value_id), st)
         },
-        Expr::BinOp(_, _, _) => todo!(),
+        Expr::BinOp(kind, l, r) => {
+            let l = st.nodes[l].clone();
+            let r = st.nodes[r].clone();
+            step_binop(*kind, l, r, st)
+        },
         Expr::Input => {
             let value_id = ValueId(Symbol::new_fresh("inputVID"));
             let vs = ValueSet(vec![ValueParticle::TopString]);
