@@ -8,7 +8,7 @@ impl AnalysisState {
             for stmt in self.ir.procs[&spec.st.pid].stmts.iter() {
                 let mut new_states = Vec::new();
                 for st in states {
-                    new_states.extend(step_stmt(st, stmt));
+                    new_states.extend(step_stmt(st, stmt, &self.ir));
                 }
                 states = new_states;
             }
@@ -58,7 +58,7 @@ fn step_expr(mut st: ThreadState, expr: &Expr) -> (ValueId, ThreadState) {
     (value_id, st)
 }
 
-fn step_stmt(mut st: ThreadState, stmt: &Statement) -> Vec<ThreadState> {
+fn step_stmt(mut st: ThreadState, stmt: &Statement, ir: &IR) -> Vec<ThreadState> {
     match stmt {
         Statement::Let(n, expr, _) => {
             let (val_id, mut new_st) = step_expr(st, expr);
@@ -79,7 +79,7 @@ fn step_stmt(mut st: ThreadState, stmt: &Statement) -> Vec<ThreadState> {
             st.nodes.clear();
             let mut outs = Vec::new();
             let procs = vs.0.iter().filter_map(|x| match x {
-                ValueParticle::Symbol(s) => Some(*s),
+                ValueParticle::Symbol(s) if ir.procs.contains_key(s) => Some(*s),
                 _ => None,
             });
             for pid in procs {
