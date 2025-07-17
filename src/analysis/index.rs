@@ -69,7 +69,7 @@ fn intersect(a: ValueSet, b: ValueSet, deref: &Deref) -> ValueSet {
     out
 }
 
-fn intersect_p(a: &ValueParticle, b: &ValueParticle, deref: &Deref) -> ValueSet {
+pub fn intersect_p(a: &ValueParticle, b: &ValueParticle, deref: &Deref) -> ValueSet {
     use ValueParticle::*;
     match (a, b) {
         (v@ValueId(_), o) | (o, v@ValueId(_)) => {

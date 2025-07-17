@@ -27,6 +27,11 @@ impl ValueParticle {
     pub fn deref(&self, deref: &Deref) -> ValueSet {
         ValueSet(vec![self.clone()]).deref(deref)
     }
+
+    pub fn overlaps(&self, other: &ValueParticle, deref: &Deref) -> bool {
+        // NOTE: this only works as `intersect_p` is overapproximating instead of underapproximating when comparing a ValueId to something else.
+        intersect_p(self, other, deref).0.len() > 0
+    }
 }
 
 impl ValueSet {
