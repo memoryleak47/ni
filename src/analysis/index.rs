@@ -73,8 +73,8 @@ pub fn intersect_p(a: &ValueParticle, b: &ValueParticle, deref: &Deref) -> Value
     use ValueParticle::*;
     match (a, b) {
         (v@ValueId(_), o) | (o, v@ValueId(_)) => {
-            let o = ValueSet(vec![o.clone()]);
-            let cond = v.subseteq(&o, deref);
+            // If we want a strict "intersect", this would be a "subseteq" check, but then we might underapproximate.
+            let cond = v.overlaps(&o, deref);
             if cond { ValueSet(vec![v.clone()]) } else { ValueSet(Vec::new()) }
         },
         (s@String(_), TopString) | (TopString, s@String(_)) => ValueSet(vec![s.clone()]),

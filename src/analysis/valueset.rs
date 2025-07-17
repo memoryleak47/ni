@@ -29,8 +29,25 @@ impl ValueParticle {
     }
 
     pub fn overlaps(&self, other: &ValueParticle, deref: &Deref) -> bool {
-        // NOTE: this only works as `intersect_p` is overapproximating instead of underapproximating when comparing a ValueId to something else.
-        intersect_p(self, other, deref).0.len() > 0
+        // We deref away all ValueIds.
+        let a = self.deref(deref);
+        let b = other.deref(deref);
+        for a in &a.0 {
+            for b in &b.0 {
+                if a.overlaps_dereffed(b) { return true; }
+            }
+        }
+        false
+    }
+
+    fn overlaps_dereffed(&self, other: &ValueParticle) -> bool {
+        match (self, other) {
+            (ValueParticle::String(_), ValueParticle::TopString) => true,
+            (ValueParticle::TopString, ValueParticle::String(_)) => true,
+            (ValueParticle::Int(_), ValueParticle::TopInt) => true,
+            (ValueParticle::TopInt, ValueParticle::Int(_)) => true,
+            (x, y) => x == y,
+        }
     }
 
     pub fn is_concrete(&self) -> bool {
