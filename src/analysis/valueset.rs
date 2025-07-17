@@ -1,10 +1,10 @@
 use crate::*;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ValueSet(pub Vec<ValueParticle>); // disjunction of possibilities.
 
 // So far, ValueParticles like Symbol(_), String(_) and Int(_) are not hashconsed into ValueIds!
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub enum ValueParticle {
     Symbol(Symbol),
     String(String),

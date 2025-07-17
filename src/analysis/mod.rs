@@ -21,17 +21,17 @@ pub use step::*;
 // Tables from different TableSortIds are guaranteed to be distinct.
 // Generally, TableSortIds work with weak updates.
 // You need to wrap them in a ValueId for strong updates.
-#[derive(Clone, Copy, Hash, PartialEq, Eq)]
+#[derive(Clone, Copy, Hash, PartialEq, Eq, Debug)]
 pub struct TableSortId(pub Symbol);
 
 // Represents a symbolic value. Different ValueIds can refer to the same value.
 // In this system, you can never equate a ValueId to something (not even to other ValueIds).
 // It will remain a distinct symbolical object.
-#[derive(Clone, Copy, Hash, PartialEq, Eq)]
+#[derive(Clone, Copy, Hash, PartialEq, Eq, Debug)]
 pub struct ValueId(pub Symbol);
 
 // Represents a specialization of some ProcId, based on some call context represented by "ThreadState".
-#[derive(Clone, Copy, Hash, PartialEq, Eq)]
+#[derive(Clone, Copy, Hash, PartialEq, Eq, Debug)]
 pub struct SpecId(pub Symbol);
 
 pub struct Homomorphism {
