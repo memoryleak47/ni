@@ -32,6 +32,14 @@ impl ValueParticle {
         // NOTE: this only works as `intersect_p` is overapproximating instead of underapproximating when comparing a ValueId to something else.
         intersect_p(self, other, deref).0.len() > 0
     }
+
+    pub fn is_concrete(&self) -> bool {
+        matches!(self, ValueParticle::ValueId(_)
+            | ValueParticle::String(_)
+            | ValueParticle::Int(_)
+            | ValueParticle::Symbol(_)
+        )
+    }
 }
 
 impl ValueSet {
@@ -71,5 +79,12 @@ impl ValueSet {
 
     pub fn subseteq(&self, other: &ValueSet, deref: &Deref) -> bool {
         self.0.iter().all(|x| x.subseteq(other, deref))
+    }
+
+    pub fn is_concrete(&self) -> bool {
+        match &*self.0 {
+            [x] => x.is_concrete(),
+            _ => false,
+        }
     }
 }

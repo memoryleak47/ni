@@ -28,41 +28,49 @@ impl AnalysisState {
     }
 }
 
-fn step_expr(mut st: ThreadState, expr: &Expr) -> (ValueId, ThreadState) {
-    let mut value_id = ValueId(Symbol::new_fresh("valueId"));
-    let mut vs = ValueSet::bottom();
+fn step_expr(mut st: ThreadState, expr: &Expr) -> (ValueParticle, ThreadState) {
     match expr {
         Expr::Index(t, k) => {
             let t = &st.nodes[t];
             let k = &st.nodes[k];
 
-            vs = index_p(t, k, &st, &mut Default::default());
-        },
-        Expr::Root => return (st.root, st),
-        Expr::NewTable => {
-            let sort_id = TableSortId(Symbol::new_fresh("sortId"));
+            let vs = index_p(t, k, &st, &mut Default::default());
+            if let [x] = &*vs.0 && x.is_concrete() {
+                return (x.clone(), st);
+            }
 
-            vs = ValueSet(vec![ValueParticle::TableSort(sort_id)]);
+            let value_id = ValueId(Symbol::new_fresh("indexVID"));
+            st.deref.insert(value_id, vs);
+            (ValueParticle::ValueId(value_id), st)
+        },
+        Expr::Root => return (ValueParticle::ValueId(st.root), st),
+        Expr::NewTable => {
+            let value_id = ValueId(Symbol::new_fresh("tableVID"));
+            let sort_id = TableSortId(Symbol::new_fresh("sortId"));
+            let vs = ValueSet(vec![ValueParticle::TableSort(sort_id)]);
+            st.deref.insert(value_id, vs);
+            (ValueParticle::ValueId(value_id), st)
         },
         Expr::BinOp(_, _, _) => todo!(),
-        Expr::Input => { vs = ValueSet(vec![ValueParticle::TopString]); },
+        Expr::Input => {
+            let value_id = ValueId(Symbol::new_fresh("inputVID"));
+            let vs = ValueSet(vec![ValueParticle::TopString]);
+            st.deref.insert(value_id, vs);
+            (ValueParticle::ValueId(value_id), st)
+        },
 
-        Expr::Symbol(s) => { vs = ValueSet(vec![ValueParticle::Symbol(*s)]); },
+        Expr::Symbol(s) => (ValueParticle::Symbol(*s), st),
         Expr::Float(_) => todo!(),
-        Expr::Int(i) => { vs = ValueSet(vec![ValueParticle::Int(*i)]); },
-        Expr::Str(s) => { vs = ValueSet(vec![ValueParticle::String(s.clone())]); },
-    };
-
-    st.deref.insert(value_id, vs);
-
-    (value_id, st)
+        Expr::Int(i) => (ValueParticle::Int(*i), st),
+        Expr::Str(s) => (ValueParticle::String(s.clone()), st),
+    }
 }
 
 fn step_stmt(mut st: ThreadState, stmt: &Statement, ir: &IR) -> Vec<ThreadState> {
     match stmt {
         Statement::Let(n, expr, _) => {
-            let (val_id, mut new_st) = step_expr(st, expr);
-            new_st.nodes.insert(*n, ValueParticle::ValueId(val_id));
+            let (part, mut new_st) = step_expr(st, expr);
+            new_st.nodes.insert(*n, part);
             vec![new_st]
         }
         Statement::Store(t, k, v) => {
