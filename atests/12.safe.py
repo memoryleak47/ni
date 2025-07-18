@@ -5,7 +5,7 @@ class A:
 a = A()
 b = A()
 
-l = [b, a]
+l = [a, b]
 l[0].name = "wow"
 
 assert(a.name == "wow")
