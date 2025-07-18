@@ -34,10 +34,27 @@ pub fn index_p(t: &ValueParticle, k: &ValueParticle, st: &ThreadState, m: &mut C
     let v = match (v1, v2) {
         (Some(v1), Some(v2)) => intersect(v1, v2, &st.deref),
         (Some(v), None) | (None, Some(v)) => v,
-        (None, None) => ValueSet(vec![ValueParticle::Symbol(Symbol::new("Undef"))])
+        (None, None) => index_p_weak(t, k, st),
     };
     m.insert(tk, v.clone());
     v
+}
+
+fn index_p_weak(t: &ValueParticle, k: &ValueParticle, st: &ThreadState) -> ValueSet {
+    let mut out = ValueSet(Vec::new());
+    out.0.push(ValueParticle::Symbol(Symbol::new("Undef")));
+
+    for (t2, kv2) in st.tkvs.iter() {
+        if t.overlaps(&*t2, &st.deref) {
+            for (k2, v2) in kv2.iter() {
+                if k.overlaps(&*k2, &st.deref) {
+                    out = out.union(&v2, &st.deref);
+                }
+            }
+        }
+    }
+
+    out
 }
 
 fn index(t: &ValueSet, k: &ValueSet, st: &ThreadState, m: &mut Cache) -> ValueSet {
