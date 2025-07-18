@@ -24,6 +24,13 @@ impl AnalysisState {
     }
 
     fn check_hom(&self, special: SpecId, general: SpecId, hom: Homomorphism) -> bool {
+        let special = &self.specs[&special].st;
+        let general = &self.specs[&general].st;
+        if hom.value_id_map[&general.root] != special.root { return false; }
+        if general.pid != special.pid { return false; }
+
+        // TODO check tkvs.
+
         todo!()
     }
 }
