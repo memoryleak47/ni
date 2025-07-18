@@ -1,14 +1,20 @@
 proc init_bool {
-    @.singletons.bool.dict = {};
-    @.singletons.bool.mro = {};
-    @.singletons.bool.mro[0] = @.singletons.bool;
-    @.singletons.bool.mro[1] = @.singletons.object;
+    %bool = @.singletons.bool;
+    %true = @.singletons.true;
+    %false = @.singletons.false;
 
-    @.singletons.true.type = @.singletons.bool;
-    @.singletons.true.payload = True;
+    %bool.type = @.singletons.type;
+    %bool.dict = {};
 
-    @.singletons.false.type = @.singletons.bool;
-    @.singletons.false.payload = False;
+    %bool.mro = {};
+    %bool.mro[0] = @.singletons.bool;
+    %bool.mro[1] = @.singletons.object;
+
+    %true.type = @.singletons.bool;
+    %true.payload = True;
+
+    %false.type = @.singletons.bool;
+    %false.payload = False;
 
     jmp init_loop;
 }
