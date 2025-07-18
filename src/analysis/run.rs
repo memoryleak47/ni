@@ -53,6 +53,10 @@ impl AnalysisState {
         let spec_id = SpecId(Symbol::new_fresh("specId"));
         let spec = Spec { st, outs: Vec::new() };
         self.specs.insert(spec_id, spec);
+
+        // Let the heuristic do things with it.
+        heur(self, spec_id);
+
         spec_id
     }
 }

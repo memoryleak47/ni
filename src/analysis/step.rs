@@ -16,14 +16,8 @@ impl AnalysisState {
         };
 
         for st in states {
-            let id = SpecId(Symbol::new_fresh("specId"));
+            let id = self.add(st);
             self.queue.push(id);
-
-            let spec = Spec {
-                st,
-                outs: Default::default(),
-            };
-            self.specs.insert(id, spec);
         }
     }
 }
