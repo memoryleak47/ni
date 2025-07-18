@@ -11,6 +11,7 @@ impl Debug for ValueParticle {
             ValueParticle::TopInt => write!(f, "TopInt"),
             ValueParticle::TableSort(TableSortId(ts)) => write!(f, "TS:{ts}"),
             ValueParticle::ValueId(ValueId(i)) => write!(f, "VID:{i}"),
+            ValueParticle::Top => write!(f, "Top"),
         }
     }
 }

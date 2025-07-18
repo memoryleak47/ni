@@ -6,6 +6,7 @@ pub struct ValueSet(pub Vec<ValueParticle>); // disjunction of possibilities.
 // So far, ValueParticles like Symbol(_), String(_) and Int(_) are not hashconsed into ValueIds!
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub enum ValueParticle {
+    Top,
     Symbol(Symbol),
     String(String),
     TopString,
@@ -42,6 +43,7 @@ impl ValueParticle {
 
     fn overlaps_dereffed(&self, other: &ValueParticle) -> bool {
         match (self, other) {
+            (ValueParticle::Top, _) | (_, ValueParticle::Top) => true,
             (ValueParticle::String(_), ValueParticle::TopString) => true,
             (ValueParticle::TopString, ValueParticle::String(_)) => true,
             (ValueParticle::Int(_), ValueParticle::TopInt) => true,

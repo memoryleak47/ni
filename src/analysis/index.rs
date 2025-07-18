@@ -7,7 +7,8 @@ pub fn upcast(p: &ValueParticle, deref: &Deref) -> Option<ValueSet> {
         ValueParticle::ValueId(v) => deref.get(v).cloned(),
         ValueParticle::String(_) => Some(ValueSet(vec![ValueParticle::TopString])),
         ValueParticle::Int(_) => Some(ValueSet(vec![ValueParticle::TopInt])),
-        _ => None,
+        ValueParticle::Top => None,
+        _ => Some(ValueSet(vec![ValueParticle::Top])),
     }
 }
 
@@ -24,7 +25,7 @@ pub fn index_p(t: &ValueParticle, k: &ValueParticle, st: &ThreadState, m: &mut C
         }
     }
 
-    // 3. try to upcast
+    // 3.1 try to upcast
     let t_set = ValueSet(vec![t.clone()]);
     let k_set = ValueSet(vec![k.clone()]);
 
@@ -34,8 +35,12 @@ pub fn index_p(t: &ValueParticle, k: &ValueParticle, st: &ThreadState, m: &mut C
     let v = match (v1, v2) {
         (Some(v1), Some(v2)) => intersect(v1, v2, &st.deref),
         (Some(v), None) | (None, Some(v)) => v,
-        (None, None) => index_p_weak(t, k, st),
+        (None, None) => ValueSet(vec![ValueParticle::Top]),
     };
+
+    // 3.2 intersect with weak matches.
+    let v_weak = index_p_weak(t, k, st);
+    let v = intersect(v, v_weak, &st.deref);
     m.insert(tk, v.clone());
     v
 }
@@ -72,7 +77,7 @@ fn index(t: &ValueSet, k: &ValueSet, st: &ThreadState, m: &mut Cache) -> ValueSe
 }
 
 // this is overapproximating an intersection!
-fn intersect(a: ValueSet, b: ValueSet, deref: &Deref) -> ValueSet {
+pub fn intersect(a: ValueSet, b: ValueSet, deref: &Deref) -> ValueSet {
     // distributivity:
     // (a1 \/ a2) /\ b = (a1 /\ b) \/ (a2 /\ b)
     // a /\ (b1 \/ b2) = (a /\ b1) \/ (a /\ b2)
@@ -89,6 +94,7 @@ fn intersect(a: ValueSet, b: ValueSet, deref: &Deref) -> ValueSet {
 pub fn intersect_p(a: &ValueParticle, b: &ValueParticle, deref: &Deref) -> ValueSet {
     use ValueParticle::*;
     match (a, b) {
+        (Top, o) | (o, Top) => ValueSet(vec![o.clone()]),
         (v@ValueId(_), o) | (o, v@ValueId(_)) => {
             // If we want a strict "intersect", this would be a "subseteq" check, but then we might underapproximate.
             let cond = v.overlaps(&o, deref);
