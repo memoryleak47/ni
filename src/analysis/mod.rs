@@ -21,6 +21,12 @@ pub use step::*;
 mod binop;
 pub use binop::*;
 
+mod hom;
+pub use hom::*;
+
+mod heur;
+pub use heur::*;
+
 mod fmt;
 
 // Tables from different TableSortIds are guaranteed to be distinct.
