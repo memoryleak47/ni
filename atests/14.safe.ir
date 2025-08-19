@@ -1,0 +1,15 @@
+main proc start {
+    jmp loop;
+}
+
+proc loop {
+    %t = {};
+    %a = input;
+    %t[%a] = loop;
+    %t["wow"] = goal;
+    jmp %t[%a];
+}
+
+proc goal {
+    exit;
+}
