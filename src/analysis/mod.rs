@@ -74,6 +74,8 @@ pub type Deref = Map<ValueId, ValueSet>;
 
 #[derive(Clone)]
 pub struct ThreadState {
+    // TODO: add cache: Map<TableSortId, Vec<usize>>,
+    // we might want something more address-stable than "usize" though!
     pub table_entries: Vec<TableEntry>,
 
     pub root: ValueId,
