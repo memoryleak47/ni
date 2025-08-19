@@ -21,8 +21,7 @@ fn build_analysis(ir: IR) -> AnalysisState {
             deref.insert(root_id, vs);
 
         ThreadState {
-            tkvs: Default::default(),
-            ts_cache: Default::default(),
+            table_entries: Default::default(),
             deref,
             root: root_id,
             pid: analysis.ir.main_pid,

@@ -28,7 +28,7 @@ fn step_expr(mut st: ThreadState, expr: &Expr) -> (ValueParticle, ThreadState) {
             let t = &st.nodes[t];
             let k = &st.nodes[k];
 
-            let vs = index_p(t, k, &st, &mut Default::default());
+            let vs = index_p(t, k, &st);
             if let [x] = &*vs.0 && x.is_concrete() {
                 return (x.clone(), st);
             }

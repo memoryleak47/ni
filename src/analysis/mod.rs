@@ -6,14 +6,11 @@ pub use app::*;
 mod valueset;
 pub use valueset::*;
 
+mod table;
+pub use table::*;
+
 mod run;
 pub use run::*;
-
-mod index;
-pub use index::*;
-
-mod store;
-pub use store::*;
 
 mod step;
 pub use step::*;
@@ -67,16 +64,17 @@ pub struct Spec {
     pub outs: Vec<SpecId>,
 }
 
+#[derive(Clone)]
+pub enum TableEntry {
+    Clear(ValueSet, ValueSet),
+    Add(ValueSet, ValueSet, ValueSet),
+}
+
 pub type Deref = Map<ValueId, ValueSet>;
 
 #[derive(Clone)]
 pub struct ThreadState {
-    // semantics: all tkv-triples are universally true (they hold for all runtime values contained in these t,k-ValueSets),
-    // thus we intersect over all possibilities (while using disjunctive heap laws to get rid of ValueSets).
-    pub tkvs: Map</*T*/ ValueParticle, Map</*K*/ ValueParticle, /*V*/ ValueSet>>,
-
-    // ts_cache[t] = {t' ValueParticle | t overlaps t'}
-    pub ts_cache: Map<TableSortId, Vec<ValueParticle>>,
+    pub table_entries: Vec<TableEntry>,
 
     pub root: ValueId,
     pub pid: Symbol,

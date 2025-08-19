@@ -100,6 +100,15 @@ impl ValueSet {
         self.0.iter().all(|x| x.subseteq(other, deref))
     }
 
+    pub fn overlaps(&self, other: &ValueSet, deref: &Deref) -> bool {
+        for x in &*self.0 {
+            for y in &*other.0 {
+                if x.overlaps(y, deref) { return true; }
+            }
+        }
+        false
+    }
+
     pub fn is_concrete(&self) -> bool {
         match &*self.0 {
             [x] => x.is_concrete(),
@@ -107,3 +116,14 @@ impl ValueSet {
         }
     }
 }
+
+pub fn upcast(p: &ValueParticle, deref: &Deref) -> Option<ValueSet> {
+    match p {
+        ValueParticle::ValueId(v) => deref.get(v).cloned(),
+        ValueParticle::String(_) => Some(ValueSet(vec![ValueParticle::TopString])),
+        ValueParticle::Int(_) => Some(ValueSet(vec![ValueParticle::TopInt])),
+        ValueParticle::Top => None,
+        _ => Some(ValueSet(vec![ValueParticle::Top])),
+    }
+}
+
