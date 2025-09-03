@@ -68,7 +68,7 @@ pub struct Spec {
     pub outs: Vec<SpecId>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum TableEntry {
     Clear(ValueSet, ValueSet),
     Add(ValueSet, ValueSet, ValueSet),
@@ -76,7 +76,7 @@ pub enum TableEntry {
 
 pub type Deref = Map<ValueId, ValueSet>;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ThreadState {
     // TODO: add cache: Map<TableSortId, Vec<usize>>,
     // we might want something more address-stable than "usize" though!

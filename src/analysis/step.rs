@@ -17,7 +17,9 @@ impl AnalysisState {
 
         for st in states {
             let id = self.add(st);
-            self.queue.push(id);
+            // TODO make less hacky: This is necessary as self.add(st) might not add anything
+            // due to subsumption.
+            if self.specs.contains_key(&id) { self.queue.push(id); }
         }
     }
 }
