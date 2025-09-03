@@ -51,7 +51,7 @@ fn check_analysis_safe(analysis: &AnalysisState) -> bool {
 
 impl AnalysisState {
     pub fn add(&mut self, st: ThreadState) -> SpecId {
-        let spec_id = SpecId(Symbol::new_fresh("specId"));
+        let spec_id = SpecId(Symbol::new_fresh(&format!("specId_{}", st.pid)));
         let spec = Spec { st, outs: Vec::new() };
         self.specs.insert(spec_id, spec);
 

@@ -3,7 +3,7 @@ use crate::*;
 impl AnalysisState {
     pub fn step(&mut self, i: SpecId) {
         let states = {
-            let spec = &self.specs[&i];
+            let spec = &self.specs.get(&i).unwrap_or_else(|| panic!("Spec '{i:?}' not found!"));
             let mut states = vec![spec.st.clone()];
             for stmt in self.ir.procs[&spec.st.pid].stmts.iter() {
                 let mut new_states = Vec::new();
