@@ -14,7 +14,7 @@ pub fn heur(a: &mut AnalysisState, new: SpecId) {
 
 fn subsumes(general: &ThreadState, special: &ThreadState) -> bool {
     // TODO trivial subsumption check.
-    general.table_entries.len() == 0 && special.table_entries.len() == 0
+    general.pid == special.pid && general.table_entries.len() == 0 && special.table_entries.len() == 0
 }
 
 fn replace_a(bad: SpecId, good: SpecId, a: &mut AnalysisState) {
