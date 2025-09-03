@@ -83,17 +83,17 @@ fn step_stmt(mut st: ThreadState, stmt: &Statement, ir: &IR) -> Vec<ThreadState>
         Statement::Jmp(n) => {
             let vid = st.nodes[n].clone();
             let vs = vid.deref(&st.deref);
+            // TODO why is this necessary?
+            let vs = vs.compactify(&st.deref);
 
             st.nodes.clear();
             gc_ts(&mut st);
 
             let mut outs = Vec::new();
-            let mut procs: Vec<Symbol> = vs.0.iter().filter_map(|x| match x {
+            let procs = vs.0.iter().filter_map(|x| match x {
                 ValueParticle::Symbol(s) if ir.procs.contains_key(s) => Some(*s),
                 _ => None,
-            }).collect();
-            procs.sort();
-            procs.dedup();
+            });
             for pid in procs {
                 let mut st = st.clone();
                 st.pid = pid;
