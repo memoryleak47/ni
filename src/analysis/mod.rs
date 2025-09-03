@@ -50,6 +50,7 @@ pub struct Homomorphism {
     pub m_table_sort: Map<TableSortId, TableSortId>, // non-injective map from all inputs TableSortIds to all outputs TableSortIds.
 }
 
+#[derive(Debug)]
 pub struct AnalysisState {
     pub root_spec: SpecId,
     pub specs: Map<SpecId, Spec>,
@@ -57,6 +58,7 @@ pub struct AnalysisState {
     pub ir: IR,
 }
 
+#[derive(Debug)]
 pub struct Spec {
     pub st: ThreadState,
 
