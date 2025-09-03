@@ -1,0 +1,18 @@
+main proc start {
+    jmp loop;
+}
+
+proc loop {
+    @.d = {};
+    @.d.e = "nice";
+
+    %t = {};
+    %a = input;
+    %t[%a] = loop;
+    %t["wow"] = goal;
+    jmp %t[%a];
+}
+
+proc goal {
+    exit;
+}
