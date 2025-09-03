@@ -51,6 +51,7 @@ pub struct Homomorphism {
 }
 
 pub struct AnalysisState {
+    pub root_spec: SpecId,
     pub specs: Map<SpecId, Spec>,
     pub queue: Vec<SpecId>, // these Specs still need to be computed.
     pub ir: IR,

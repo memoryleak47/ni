@@ -8,6 +8,7 @@ pub fn analyze(ir: IR) -> bool {
 
 fn build_analysis(ir: IR) -> AnalysisState {
     let mut analysis = AnalysisState {
+        root_spec: SpecId(Symbol::new("missing")), // will be set correctly below.
         ir,
         specs: Map::new(),
         queue: Default::default(),
@@ -30,6 +31,7 @@ fn build_analysis(ir: IR) -> AnalysisState {
     };
     let spec_id = analysis.add(st);
     analysis.queue.push(spec_id);
+    analysis.root_spec = spec_id;
 
     while let Some(i) = analysis.queue.pop() {
         analysis.step(i);
