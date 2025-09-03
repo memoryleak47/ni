@@ -83,6 +83,8 @@ fn step_stmt(mut st: ThreadState, stmt: &Statement, ir: &IR) -> Vec<ThreadState>
             let vs = vid.deref(&st.deref);
 
             st.nodes.clear();
+            gc_ts(&mut st);
+
             let mut outs = Vec::new();
             let procs = vs.0.iter().filter_map(|x| match x {
                 ValueParticle::Symbol(s) if ir.procs.contains_key(s) => Some(*s),

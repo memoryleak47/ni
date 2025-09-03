@@ -24,6 +24,9 @@ pub use hom::*;
 mod heur;
 pub use heur::*;
 
+mod gc;
+pub use gc::*;
+
 mod fmt;
 
 // Tables from different TableSortIds are guaranteed to be distinct.
