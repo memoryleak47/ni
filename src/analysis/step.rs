@@ -83,8 +83,6 @@ fn step_stmt(mut st: ThreadState, stmt: &Statement, ir: &IR) -> Vec<ThreadState>
         Statement::Jmp(n) => {
             let vid = st.nodes[n].clone();
             let vs = vid.deref(&st.deref);
-            // TODO why is this necessary?
-            let vs = vs.compactify(&st.deref);
 
             st.nodes.clear();
             gc_ts(&mut st);

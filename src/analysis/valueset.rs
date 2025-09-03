@@ -93,7 +93,7 @@ impl ValueSet {
                 _ => out.push(x.clone()),
             }
         }
-        ValueSet(out)
+        ValueSet(out).compactify(&Default::default())
     }
 
     pub fn subseteq(&self, other: &ValueSet, deref: &Deref) -> bool {
