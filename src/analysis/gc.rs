@@ -9,18 +9,28 @@ pub fn gc_ts(st: &mut ThreadState) {
             ts_deref_valueid(st, vid);
         }
     }
-/*
-    st.table_entries.retain(|e| {
-        let [t, k] = match e {
-            TableEntry::Add(t, k, _) => &[t, k],
-            TableEntry::Clear(t, k) => &[t, k],
-        };
-        let t = t.deref(&st.deref);
-        let k = k.deref(&st.deref);
 
-        has_free_symbol(&vs) || !get_table_sorts(&vs).is_disjoint(&reach));
+    // throw away non-reachable TableSortIds.
+    for e in st.table_entries.iter_mut() {
+        let slice: &mut [_] = match e {
+            TableEntry::Add(t, k, v) => &mut [t, k, v],
+            TableEntry::Clear(t, k) => &mut [t, k],
+        };
+        for x in slice {
+            x.0.retain(|a| match a {
+                ValueParticle::TableSort(tid) => reach.contains(tid),
+                _ => true,
+            });
+        }
     }
-*/
+
+    // clear empty table entries.
+    st.table_entries.retain(|e| {
+        match e {
+            TableEntry::Add(t, k, v) => t.0.len() >= 0 && k.0.len() >= 0 && v.0.len() >= 0,
+            TableEntry::Clear(t, k) => t.0.len() >= 0 && k.0.len() >= 0,
+        }
+    });
 }
 
 // The correct way to remove a ValueId from a ThreadState.
