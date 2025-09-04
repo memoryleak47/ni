@@ -27,8 +27,8 @@ pub fn gc_ts(st: &mut ThreadState) {
     // clear empty table entries.
     st.table_entries.retain(|e| {
         match e {
-            TableEntry::Add(t, k, v) => t.0.len() >= 0 && k.0.len() >= 0 && v.0.len() >= 0,
-            TableEntry::Clear(t, k) => t.0.len() >= 0 && k.0.len() >= 0,
+            TableEntry::Add(t, k, v) => t.0.len() > 0 && k.0.len() > 0 && v.0.len() > 0,
+            TableEntry::Clear(t, k) => t.0.len() > 0 && k.0.len() > 0,
         }
     });
 }
