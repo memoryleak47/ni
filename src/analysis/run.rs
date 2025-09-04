@@ -12,6 +12,7 @@ fn build_analysis(ir: IR) -> AnalysisState {
         ir,
         specs: Map::new(),
         queue: Default::default(),
+        heur_queue: Default::default(),
     };
 
     let st = {
@@ -30,10 +31,14 @@ fn build_analysis(ir: IR) -> AnalysisState {
         }
     };
     let spec_id = analysis.add(st);
-    analysis.queue.push(spec_id);
     analysis.root_spec = spec_id;
 
-    while let Some(i) = analysis.queue.pop() {
+    loop {
+        while let Some(x) = analysis.heur_queue.pop() {
+            heur(&mut analysis, x);
+        }
+
+        let Some(i) = analysis.queue.pop() else { break };
         analysis.step(i);
     }
 
@@ -55,8 +60,8 @@ impl AnalysisState {
         let spec = Spec { st, outs: Vec::new() };
         self.specs.insert(spec_id, spec);
 
-        // Let the heuristic do things with it.
-        heur(self, spec_id);
+        self.queue.push(spec_id);
+        self.heur_queue.push(spec_id);
 
         spec_id
     }

@@ -2,24 +2,18 @@ use crate::*;
 
 impl AnalysisState {
     pub fn step(&mut self, i: SpecId) {
-        let states = {
-            let spec = &self.specs.get(&i).unwrap_or_else(|| panic!("Spec '{i:?}' not found!"));
-            let mut states = vec![spec.st.clone()];
-            for stmt in self.ir.procs[&spec.st.pid].stmts.iter() {
-                let mut new_states = Vec::new();
-                for st in states {
-                    new_states.extend(step_stmt(st, stmt, &self.ir));
-                }
-                states = new_states;
+        let spec = &self.specs.get(&i).unwrap_or_else(|| panic!("Spec '{i:?}' not found!"));
+        let mut states = vec![spec.st.clone()];
+        for stmt in self.ir.procs[&spec.st.pid].stmts.iter() {
+            let mut new_states = Vec::new();
+            for st in states {
+                new_states.extend(step_stmt(st, stmt, &self.ir));
             }
-            states
-        };
+            states = new_states;
+        }
 
         for st in states {
-            let id = self.add(st);
-            // TODO make less hacky: This is necessary as self.add(st) might not add anything
-            // due to subsumption.
-            if self.specs.contains_key(&id) { self.queue.push(id); }
+            self.add(st);
         }
     }
 }

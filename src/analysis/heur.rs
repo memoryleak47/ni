@@ -30,8 +30,14 @@ fn replace_a(bad: SpecId, good: SpecId, a: &mut AnalysisState) {
 
     let n = a.queue.len();
     a.queue.retain(|d| *d != bad);
-    if a.queue.len() != n {
+    if a.queue.len() != n && !a.queue.contains(&good) {
         a.queue.push(good);
+    }
+
+    let n = a.heur_queue.len();
+    a.heur_queue.retain(|d| *d != bad);
+    if a.heur_queue.len() != n && !a.heur_queue.contains(&good) {
+        a.heur_queue.push(good);
     }
 }
 

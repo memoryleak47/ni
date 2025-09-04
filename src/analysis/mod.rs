@@ -55,6 +55,7 @@ pub struct AnalysisState {
     pub root_spec: SpecId,
     pub specs: Map<SpecId, Spec>,
     pub queue: Vec<SpecId>, // these Specs still need to be computed.
+    pub heur_queue: Vec<SpecId>, // these Specs still need to run through the heuristic.
     pub ir: IR,
 }
 
