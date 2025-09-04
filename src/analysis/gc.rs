@@ -3,6 +3,7 @@ use crate::*;
 pub fn gc_ts(st: &mut ThreadState) {
     let reach = reachable_table_sorts(st);
 
+    // "deref away" unreachable ValueIds (as implied by `reach`).
     for (vid, vs) in st.deref.clone() {
         let live = has_free_symbol(&vs) || !get_table_sorts(&vs).is_disjoint(&reach);
         if !live {
@@ -10,7 +11,7 @@ pub fn gc_ts(st: &mut ThreadState) {
         }
     }
 
-    // throw away non-reachable TableSortIds.
+    // eliminate non-reachable TableSortIds from the table-entries.
     for e in st.table_entries.iter_mut() {
         let slice: &mut [_] = match e {
             TableEntry::Add(t, k, v) => &mut [t, k, v],
