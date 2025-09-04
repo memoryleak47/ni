@@ -1,15 +1,22 @@
 use crate::*;
 
-// only allowed to mutate using a.widen() and a.add()
 pub fn heur(a: &mut AnalysisState, new: SpecId) {
+    if let Some(o) = is_subsumed(a, new) {
+        replace_a(new, o, a);
+        gc_a(a);
+    } else {
+        a.queue.push(new);
+    }
+}
+
+fn is_subsumed(a: &AnalysisState, new: SpecId) -> Option<SpecId> {
     let st = &a.specs[&new].st;
     for (o, st_o) in a.specs.iter() {
         if *o != new && subsumes(&st_o.st, st) {
-            replace_a(new, *o, a);
-            gc_a(a);
-            return;
+            return Some(*o);
         }
     }
+    None
 }
 
 fn subsumes(general: &ThreadState, special: &ThreadState) -> bool {

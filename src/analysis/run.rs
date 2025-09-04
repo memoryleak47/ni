@@ -60,7 +60,6 @@ impl AnalysisState {
         let spec = Spec { st, outs: Vec::new() };
         self.specs.insert(spec_id, spec);
 
-        self.queue.push(spec_id);
         self.heur_queue.push(spec_id);
 
         spec_id
