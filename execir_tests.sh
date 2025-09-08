@@ -13,7 +13,7 @@ do
     echo "========="
     echo
 
-    res1=$(RUSTFLAGS=-Awarnings cargo r --release -q "etests/${i}.py" < "$inputfile")
+    res1=$(RUSTFLAGS=-Awarnings timeout 3s cargo r --release -q "etests/${i}.py" < "$inputfile")
     if [[ ! "$?" == 0 ]]; then
         echo error!
         echo $res1
