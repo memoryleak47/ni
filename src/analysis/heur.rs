@@ -6,6 +6,16 @@ pub fn heur(a: &mut AnalysisState, new: SpecId) {
         gc_a(a);
     } else {
         a.queue.push(new);
+
+        // checks for whether we want to call a "merge".
+        let pid = a.specs[&new].st.pid;
+        a.specs.iter().filter(|(_, x)| x.st.pid == pid).count() >= 50;
+        let [(&id1, st1), (&id2, st2)] = *a.specs.iter().filter(|(_, x)| x.st.pid == pid).take(2).collect::<Vec<_>>() else { panic!() };
+
+        let new = a.add(merge(&st1.st, &st2.st));
+        replace_a(id1, new, a);
+        replace_a(id2, new, a);
+        gc_a(a);
     }
 }
 
