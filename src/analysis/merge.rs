@@ -22,6 +22,8 @@ pub fn merge(st1: &ThreadState, st2: &ThreadState) -> ThreadState {
 
     // TODO find similarities between these groups, and unify TableSortIds based on that.
 
+    gc_table_entries(&mut out);
+
     out
 }
 

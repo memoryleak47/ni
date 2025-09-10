@@ -37,6 +37,7 @@ pub fn store_p(t: ValueParticle, k: ValueParticle, v: ValueParticle, mut st: Thr
 // If a Clear has previous overlapping (in t and k) Adds, we can remove it.
 // (We could remove more, but for now we don't).
 // TODO: this is brutally inefficient. TableEntries need to be grouped much more.
+// TODO: merge this with "gc_ts".
 pub fn gc_table_entries(st: &mut ThreadState) {
     // We first remove all adds, and then clears,
     // as removing adds can cause the removal of clears.
