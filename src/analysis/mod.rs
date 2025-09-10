@@ -96,6 +96,7 @@ pub struct ThreadState {
 }
 
 impl ThreadState {
+    #[track_caller]
     pub fn check(&self) {
         let mut vids = vec![self.root];
         let it1 = self.deref.values();
