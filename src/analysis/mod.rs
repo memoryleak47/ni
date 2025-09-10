@@ -35,7 +35,7 @@ mod fmt;
 // Tables from different TableSortIds are guaranteed to be distinct.
 // Generally, TableSortIds work with weak updates.
 // You need to wrap them in a ValueId for strong updates.
-#[derive(Clone, Copy, Hash, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, Hash, PartialEq, Eq, Debug, Ord, PartialOrd)]
 pub struct TableSortId(pub Symbol);
 
 // Represents a symbolic value. Different ValueIds can refer to the same value.

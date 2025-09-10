@@ -13,20 +13,36 @@ type Groups = Map<(TableSortId, ValueGroup), Vec<usize>>;
 pub fn merge(st1: &ThreadState, st2: &ThreadState) -> ThreadState {
     let (st1, tid1) = pre_simplify(st1);
     let (st2, tid2) = pre_simplify(st2);
-    merge_table_sort_ids(tid1, tid2);
+    assert_eq!(tid1, tid2);
 
-    let g1 = build_groups(&st1);
-    let g2 = build_groups(&st2);
+    let mut out = st1.clone();
+    out.table_entries.extend(st2.table_entries.clone());
 
-    let keys: Set<_> = g1.keys().chain(g2.keys()).collect();
+    let g = build_groups(&out);
 
     // TODO find similarities between these groups, and unify TableSortIds based on that.
 
-    todo!()
+    out
 }
 
-// TODO
-fn merge_table_sort_ids(x: TableSortId, y: TableSortId) {}
+fn unify_tids(tid1: TableSortId, tid2: TableSortId, st: &mut ThreadState) {
+    if tid1 == tid2 { return }
+    let (tid1, tid2) = if tid1 > tid2 { (tid2, tid1) } else { (tid1, tid2) };
+
+    for e in st.table_entries.iter_mut() {
+        let vset: &mut [&mut ValueSet] = match e {
+            TableEntry::Add(t, k, v) => &mut [t, k, v],
+            TableEntry::Clear(t, k) => &mut [t, k]
+        };
+
+        for x in vset {
+            for y in x.0.iter_mut() {
+                let ValueParticle::TableSort(y) = y else { continue };
+                if *y == tid2 { *y = tid1; }
+            }
+        }
+    }
+}
 
 fn build_groups(st: &ThreadState) -> Groups {
     let mut groups: Groups = Groups::new();
