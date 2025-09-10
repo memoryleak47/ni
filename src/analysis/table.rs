@@ -26,5 +26,50 @@ pub fn store_p(t: ValueParticle, k: ValueParticle, v: ValueParticle, mut st: Thr
     let v = ValueSet([v].into_iter().collect());
     st.table_entries.push(TableEntry::Clear(t.clone(), k.clone()));
     st.table_entries.push(TableEntry::Add(t, k, v));
+
+    // TODO add optimization: we only need to consider entries covered by these newest two.
+    gc_table_entries(&mut st);
+
     st
+}
+
+// If an Add has a future "Clear" or "Add" whose t and k (and v for add) are a superset, we can ignore the original Add.
+// If a Clear has previous overlapping (in t and k) Adds, we can remove it.
+// (We could remove more, but for now we don't).
+// TODO: this is brutally inefficient. TableEntries need to be grouped much more.
+pub fn gc_table_entries(st: &mut ThreadState) {
+    let mut entries = Vec::new();
+    for i in 0..st.table_entries.len() {
+        let x = &st.table_entries[i];
+        let relevant = match x {
+            TableEntry::Add(t, k, v) => add_relevant([t, k, v], i, st),
+            TableEntry::Clear(t, k) => clear_relevant([t, k], i, st),
+        };
+        if relevant {
+            entries.push(x.clone());
+        }
+    }
+    st.table_entries = entries;
+}
+
+// checks if add is covered by further add or clear
+fn add_relevant([t, k, v]: [&ValueSet; 3], i: usize, st: &ThreadState) -> bool {
+    let d = &st.deref;
+    for e in st.table_entries[(i+1)..].iter() {
+        let covered = match e {
+            TableEntry::Add(t2, k2, v2) => t.subseteq(t2, d) && k.subseteq(k2, d) && v.subseteq(v2, d),
+            TableEntry::Clear(t2, k2) => t.subseteq(t2, d) && k.subseteq(k2, d),
+        };
+        if covered { return false }
+    }
+    true
+}
+
+// checks if clear has previous Add that overlaps it.
+fn clear_relevant([t, k]: [&ValueSet; 2], i: usize, st: &ThreadState) -> bool {
+    let d = &st.deref;
+    for e in st.table_entries[0..i].iter() {
+        if let TableEntry::Add(t2, k2, _) = e && t.overlaps(t2, d) && k.overlaps(k2, d) { return true }
+    }
+    false
 }
