@@ -27,6 +27,9 @@ pub use heur::*;
 mod gc;
 pub use gc::*;
 
+mod merge;
+pub use merge::*;
+
 mod fmt;
 
 // Tables from different TableSortIds are guaranteed to be distinct.
