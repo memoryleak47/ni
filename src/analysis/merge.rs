@@ -34,7 +34,7 @@ fn unify_tids(tid1: TableSortId, tid2: TableSortId, st: &mut ThreadState) {
     for e in st.table_entries.iter_mut() {
         let vset: &mut [&mut ValueSet] = match e {
             TableEntry::Add(t, k, v) => &mut [t, k, v],
-            TableEntry::Clear(t, k) => &mut [t, k]
+            TableEntry::Clear(t, k) => &mut [t, k] // TODO is this correct, even for clear?
         };
 
         for x in vset {
