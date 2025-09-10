@@ -34,8 +34,22 @@ fn is_subsumed(a: &AnalysisState, new: SpecId) -> Option<SpecId> {
 }
 
 fn subsumes(general: &ThreadState, special: &ThreadState) -> bool {
-    // TODO trivial subsumption check.
-    general.pid == special.pid && general.table_entries.len() == 0 && special.table_entries.len() == 0
+    if general.pid != special.pid { return false; }
+
+    let n_general = merge(general, special);
+
+    // TODO now n_general and general should have the same TableSortIds. Check for semantical equivalence between them.
+    todo!()
+}
+
+fn increment_ids(st: &mut ThreadState) {
+    let mut map: Map<TableSortId, TableSortId> = Map::new();
+    for (x, vs) in st.deref.iter_mut() {
+        for e in vs.0.iter_mut() {
+            let ValueParticle::TableSort(tid) = e else { continue };
+            *tid = *map.entry(*tid).or_insert_with(|| TableSortId(Symbol::next_fresh(tid.0)));
+        }
+    }
 }
 
 fn replace_a(bad: SpecId, good: SpecId, a: &mut AnalysisState) {
