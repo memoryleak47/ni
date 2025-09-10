@@ -11,16 +11,22 @@ enum ValueGroup {
 type Groups = Map<(TableSortId, ValueGroup), Vec<usize>>;
 
 pub fn merge(st1: &ThreadState, st2: &ThreadState) -> ThreadState {
-    let st1 = pre_simplify(st1);
-    let st2 = pre_simplify(st2);
+    let (st1, tid1) = pre_simplify(st1);
+    let (st2, tid2) = pre_simplify(st2);
+    merge_table_sort_ids(tid1, tid2);
 
     let g1 = build_groups(&st1);
     let g2 = build_groups(&st2);
+
+    let keys: Set<_> = g1.keys().chain(g2.keys()).collect();
 
     // TODO find similarities between these groups, and unify TableSortIds based on that.
 
     todo!()
 }
+
+// TODO
+fn merge_table_sort_ids(x: TableSortId, y: TableSortId) {}
 
 fn build_groups(st: &ThreadState) -> Groups {
     let mut groups: Groups = Groups::new();
@@ -51,7 +57,10 @@ fn groupify(p: &ValueParticle) -> ValueGroup {
 }
 
 // gets rid of all ValueIds, and thus clears for now.
-fn pre_simplify(st: &ThreadState) -> ThreadState {
+// Returns root TableSortId.
+fn pre_simplify(st: &ThreadState) -> (ThreadState, TableSortId) {
+    let [ValueParticle::TableSort(tid)] = *st.deref[&st.root].0 else { panic!() };
+
     let vids: Vec<_> = st.deref.keys().collect();
 
     let mut st = st.clone();
@@ -62,5 +71,5 @@ fn pre_simplify(st: &ThreadState) -> ThreadState {
 
     gc_table_entries(&mut st);
 
-    st
+    (st, tid)
 }
