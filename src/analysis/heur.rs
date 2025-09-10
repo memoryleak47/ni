@@ -38,6 +38,8 @@ fn subsumes(general: &ThreadState, special: &ThreadState) -> bool {
 }
 
 fn replace_a(bad: SpecId, good: SpecId, a: &mut AnalysisState) {
+    assert!(bad != good);
+
     a.specs.remove(&bad);
 
     for (_, x) in a.specs.iter_mut() {
