@@ -12,9 +12,11 @@ impl AnalysisState {
             states = new_states;
         }
 
+        let mut outs = Vec::new();
         for st in states {
-            self.add(st);
+            outs.push(self.add(st));
         }
+        self.specs[&i].outs = outs;
     }
 }
 
