@@ -1,6 +1,8 @@
 use crate::*;
 
 pub fn heur(a: &mut AnalysisState, new: SpecId) {
+    assert!(a.specs.contains_key(&new));
+
     if let Some(o) = is_subsumed(a, new) {
         replace_a(new, o, a);
         gc_a(a);
