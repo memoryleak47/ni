@@ -15,6 +15,7 @@ pub fn merge(st1: &ThreadState, st2: &ThreadState) -> ThreadState {
     st2.check();
     let (st1, tid1) = pre_simplify(st1);
     let (st2, tid2) = pre_simplify(st2);
+    assert_eq!(st1.root, st2.root);
     assert_eq!(tid1, tid2);
 
     let mut out = st1.clone();
@@ -50,6 +51,8 @@ pub fn merge(st1: &ThreadState, st2: &ThreadState) -> ThreadState {
             break;
         }
     }
+
+    out.deref.insert(st1.root, ValueSet(vec![ValueParticle::TableSort(tid1)]));
 
     gc_table_entries(&mut out);
 
