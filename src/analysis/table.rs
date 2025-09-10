@@ -38,18 +38,28 @@ pub fn store_p(t: ValueParticle, k: ValueParticle, v: ValueParticle, mut st: Thr
 // (We could remove more, but for now we don't).
 // TODO: this is brutally inefficient. TableEntries need to be grouped much more.
 pub fn gc_table_entries(st: &mut ThreadState) {
-    let mut entries = Vec::new();
-    for i in 0..st.table_entries.len() {
-        let x = &st.table_entries[i];
-        let relevant = match x {
-            TableEntry::Add(t, k, v) => add_relevant([t, k, v], i, st),
-            TableEntry::Clear(t, k) => clear_relevant([t, k], i, st),
-        };
-        if relevant {
-            entries.push(x.clone());
+    // We first remove all adds, and then clears,
+    // as removing adds can cause the removal of clears.
+    let mut i = 0;
+    while i < st.table_entries.len() {
+        let TableEntry::Add(t, k, v) = &st.table_entries[i] else { i += 1; continue };
+        if add_relevant([t, k, v], i, st) {
+            i += 1;
+        } else {
+            st.table_entries.remove(i);
         }
     }
-    st.table_entries = entries;
+
+    let mut i = 0;
+    while i < st.table_entries.len() {
+        let TableEntry::Clear(t, k) = &st.table_entries[i] else { i += 1; continue };
+        if clear_relevant([t, k], i, st) {
+            i += 1;
+        } else {
+            st.table_entries.remove(i);
+        }
+    }
+
 }
 
 // checks if add is covered by further add or clear
