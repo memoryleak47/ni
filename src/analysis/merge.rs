@@ -16,5 +16,8 @@ fn pre_simplify(st: &ThreadState) -> ThreadState {
     for vid in vids {
         ts_deref_valueid(&mut st, *vid);
     }
+
+    gc_table_entries(&mut st);
+
     st
 }

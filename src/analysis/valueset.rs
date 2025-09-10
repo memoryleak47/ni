@@ -66,6 +66,8 @@ impl ValueSet {
         Self(Vec::new())
     }
 
+    pub fn is_bottom(&self) -> bool { self.0.is_empty() }
+
     pub fn compactify(self, deref: &Deref) -> Self {
         let mut v: Vec<ValueParticle> = self.0;
         for i in (0..v.len()).rev() {

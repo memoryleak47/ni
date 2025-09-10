@@ -54,6 +54,8 @@ pub fn gc_table_entries(st: &mut ThreadState) {
 
 // checks if add is covered by further add or clear
 fn add_relevant([t, k, v]: [&ValueSet; 3], i: usize, st: &ThreadState) -> bool {
+    if t.is_bottom() || k.is_bottom() || v.is_bottom() { return false }
+
     let d = &st.deref;
     for e in st.table_entries[(i+1)..].iter() {
         let covered = match e {
@@ -67,6 +69,8 @@ fn add_relevant([t, k, v]: [&ValueSet; 3], i: usize, st: &ThreadState) -> bool {
 
 // checks if clear has previous Add that overlaps it.
 fn clear_relevant([t, k]: [&ValueSet; 2], i: usize, st: &ThreadState) -> bool {
+    if t.is_bottom() || k.is_bottom() { return false }
+
     let d = &st.deref;
     for e in st.table_entries[0..i].iter() {
         if let TableEntry::Add(t2, k2, _) = e && t.overlaps(t2, d) && k.overlaps(k2, d) { return true }
