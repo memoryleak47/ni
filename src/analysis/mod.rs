@@ -94,3 +94,24 @@ pub struct ThreadState {
     pub deref: Deref,
     pub nodes: Map<Node, ValueParticle>,
 }
+
+impl ThreadState {
+    pub fn check(&self) {
+        let mut vids = vec![self.root];
+        let it1 = self.deref.values();
+        let it2 = self.table_entries.iter().map(|x| {
+            let slice = match x {
+                TableEntry::Add(t, k, v) => vec![t, k, v], // TODO fix vec! waste.
+                TableEntry::Clear(t, k) => vec![t, k],
+            };
+            slice.into_iter()
+        }).flatten();
+
+        let it = it1.chain(it2).map(|x| x.0.iter()).flatten();
+        vids.extend(it.filter_map(ValueParticle::to_valueid));
+
+        for x in vids {
+            assert!(self.deref.contains_key(&x));
+        }
+    }
+}
