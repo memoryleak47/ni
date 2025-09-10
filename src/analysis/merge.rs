@@ -8,7 +8,7 @@ enum ValueGroup {
     TopInt,
 }
 
-type Groups = Map<(TableSortId, ValueGroup), Vec<usize>>;
+type Groups = Map<(TableSortId, ValueGroup), Set<TableSortId>>;
 
 pub fn merge(st1: &ThreadState, st2: &ThreadState) -> ThreadState {
     let (st1, tid1) = pre_simplify(st1);
@@ -18,9 +18,36 @@ pub fn merge(st1: &ThreadState, st2: &ThreadState) -> ThreadState {
     let mut out = st1.clone();
     out.table_entries.extend(st2.table_entries.clone());
 
-    let g = build_groups(&out);
+    loop {
+        gc_table_entries(&mut out);
 
-    // TODO find similarities between these groups, and unify TableSortIds based on that.
+        let mut something_happened = false;
+
+        let mut tab_intersection: Map<[TableSortId; 2], usize> = Map::new();
+        let mut tab_count: Map<TableSortId, usize> = Map::new();
+
+        for (_, tids) in build_groups(&out) {
+            for &tid in &tids { *tab_count.entry(tid).or_insert(0) += 1; }
+            for &tid1 in &tids {
+                for &tid2 in &tids {
+                    if tid1 < tid2 {
+                        *tab_intersection.entry([tid1, tid2]).or_insert(0) += 1;
+                    }
+                }
+            }
+        }
+
+        for ([tid1, tid2], intersection_ctr) in tab_intersection {
+            let union_ctr = tab_count[&tid1] + tab_count[&tid2] - intersection_ctr;
+            let iou = intersection_ctr as f64 / union_ctr as f64;
+            if iou > 0.5 {
+                unify_tids(tid1, tid2, &mut out);
+            }
+        }
+        if !something_happened {
+            break;
+        }
+    }
 
     gc_table_entries(&mut out);
 
@@ -49,13 +76,14 @@ fn unify_tids(tid1: TableSortId, tid2: TableSortId, st: &mut ThreadState) {
 fn build_groups(st: &ThreadState) -> Groups {
     let mut groups: Groups = Groups::new();
 
-    for (i, e) in st.table_entries.iter().enumerate() {
+    for e in st.table_entries.iter() {
         let TableEntry::Add(t, k, v) = e else { continue };
         for t in &t.0 {
             let ValueParticle::TableSort(t) = *t else { continue };
             for k in &k.0 {
                 let k = groupify(k);
-                groups.entry((t, k)).or_insert_with(Default::default).push(i);
+                let tids = v.0.iter().filter_map(ValueParticle::to_tid);
+                groups.entry((t, k)).or_insert_with(Default::default).extend(tids);
             }
         }
     }

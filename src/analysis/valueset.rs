@@ -59,6 +59,18 @@ impl ValueParticle {
             | ValueParticle::Symbol(_)
         )
     }
+
+    pub fn to_valueid(&self) -> Option<ValueId> {
+        if let ValueParticle::ValueId(vid) = self {
+            Some(*vid)
+        } else { None }
+    }
+
+    pub fn to_tid(&self) -> Option<TableSortId> {
+        if let ValueParticle::TableSort(tid) = self {
+            Some(*tid)
+        } else { None }
+    }
 }
 
 impl ValueSet {
