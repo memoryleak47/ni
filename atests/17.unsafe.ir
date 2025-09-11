@@ -1,0 +1,26 @@
+main proc start {
+    @.f = {};
+    jmp loop;
+}
+
+proc loop {
+    # creates a linked list:
+    %f = {};
+    %f.f = @.f;
+    @.f = %f;
+
+    %t = {};
+    %a = input;
+    %t[%a] = loop;
+    %t["wow"] = good;
+    %t["nice"] = bad;
+    jmp %t[%a];
+}
+
+proc good {
+    exit;
+}
+
+proc bad {
+    fail;
+}

@@ -43,7 +43,7 @@ pub fn merge(st1: &ThreadState, st2: &ThreadState) -> ThreadState {
         for ([tid1, tid2], intersection_ctr) in tab_intersection {
             let union_ctr = tab_count[&tid1] + tab_count[&tid2] - intersection_ctr;
             let iou = intersection_ctr as f64 / union_ctr as f64;
-            if iou > 0.5 {
+            if iou > 0.1 {
                 unify_tids(tid1, tid2, &mut out);
             }
         }
