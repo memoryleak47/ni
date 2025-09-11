@@ -1,0 +1,18 @@
+main proc loop {
+    @.d = 3;
+
+    %t = {};
+    %a = input;
+    %t[%a] = loop;
+    %t["wow"] = good;
+    %t["nice"] = bad;
+    jmp %t[%a];
+}
+
+proc good {
+    exit;
+}
+
+proc bad {
+    fail;
+}
