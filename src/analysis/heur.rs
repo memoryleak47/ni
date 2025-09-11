@@ -99,4 +99,5 @@ fn gc_a(a: &mut AnalysisState) {
 
     a.specs.retain(|k, _| known.contains(k));
     a.queue.retain(|k| known.contains(k));
+    a.heur_queue.retain(|k| known.contains(k));
 }
