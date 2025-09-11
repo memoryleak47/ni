@@ -15,7 +15,12 @@ pub fn heur(a: &mut AnalysisState, new: SpecId) {
             // merge the last two ones.
             let [(&id1, st1), (&id2, st2)] = *a.specs.iter().filter(|(_, x)| x.st.pid == pid).rev().take(2).collect::<Vec<_>>() else { panic!() };
 
-            let new = a.add(merge(&st1.st, &st2.st));
+            let new = merge(&st1.st, &st2.st);
+            if CHECKS {
+                assert!(subsumes(&new, &st1.st));
+                assert!(subsumes(&new, &st2.st));
+            }
+            let new = a.add(new);
             replace_a(id1, new, a);
             replace_a(id2, new, a);
             gc_a(a);

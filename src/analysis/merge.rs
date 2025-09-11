@@ -11,8 +11,10 @@ enum ValueGroup {
 type Groups = Map<(TableSortId, ValueGroup), Set<TableSortId>>;
 
 pub fn merge(st1: &ThreadState, st2: &ThreadState) -> ThreadState {
-    st1.check();
-    st2.check();
+    if CHECKS {
+        st1.check();
+        st2.check();
+    }
     let (st1, tid1) = pre_simplify(st1);
     let (st2, tid2) = pre_simplify(st2);
     assert_eq!(st1.root, st2.root);
@@ -56,7 +58,7 @@ pub fn merge(st1: &ThreadState, st2: &ThreadState) -> ThreadState {
 
     gc_table_entries(&mut out);
 
-    out.check();
+    if CHECKS { out.check(); }
     out
 }
 

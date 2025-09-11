@@ -1,5 +1,7 @@
 use std::fs;
 
+pub const CHECKS: bool = true;
+
 pub use indexmap::IndexMap as Map;
 pub use indexmap::IndexSet as Set;
 pub use std::hash::Hash;
