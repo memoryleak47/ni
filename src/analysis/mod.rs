@@ -74,7 +74,7 @@ pub struct Spec {
     pub outs: Vec<SpecId>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum TableEntry {
     Clear(ValueSet, ValueSet),
     Add(ValueSet, ValueSet, ValueSet),

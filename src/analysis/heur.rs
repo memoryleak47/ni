@@ -38,8 +38,12 @@ fn subsumes(general: &ThreadState, special: &ThreadState) -> bool {
 
     let n_general = merge(general, special);
 
-    // TODO now n_general and general should have the same TableSortIds. Check for semantical equivalence between them.
-    todo!()
+    check_sem_equiv(&n_general, general)
+}
+
+fn check_sem_equiv(a: &ThreadState, b: &ThreadState) -> bool {
+    a.deref == b.deref
+    && a.table_entries == b.table_entries
 }
 
 fn increment_ids(st: &mut ThreadState) {

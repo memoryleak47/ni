@@ -141,3 +141,12 @@ pub fn upcast(p: &ValueParticle, deref: &Deref) -> Option<ValueSet> {
     }
 }
 
+
+impl PartialEq for ValueSet {
+    fn eq(&self, other: &ValueSet) -> bool {
+        self.subseteq(other, &Default::default()) && other.subseteq(self, &Default::default())
+    }
+}
+
+
+impl Eq for ValueSet {}
