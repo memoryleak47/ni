@@ -1,3 +1,2 @@
-if "ok" == "ok":
-    pass
+True == True
 assert(False)
