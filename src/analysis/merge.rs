@@ -112,7 +112,7 @@ fn groupify(p: &ValueParticle) -> ValueGroup {
 
 // gets rid of all ValueIds, and thus clears for now.
 // Returns root TableSortId.
-fn pre_simplify(st: &ThreadState) -> (ThreadState, TableSortId) {
+pub fn pre_simplify(st: &ThreadState) -> (ThreadState, TableSortId) {
     let [ValueParticle::TableSort(tid)] = *st.deref[&st.root].0 else { panic!() };
 
     let vids: Vec<_> = st.deref.keys().collect();

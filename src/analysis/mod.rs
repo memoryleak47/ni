@@ -30,6 +30,9 @@ pub use gc::*;
 mod merge;
 pub use merge::*;
 
+mod subsumes;
+pub use subsumes::*;
+
 mod fmt;
 
 // Tables from different TableSortIds are guaranteed to be distinct.
