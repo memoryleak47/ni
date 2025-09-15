@@ -71,7 +71,7 @@ impl SymbolMap {
     }
 
     fn next_fresh(&mut self, s: String) -> Symbol {
-        fn clear_suffix(mut s: String) -> String {
+        fn clear_suffix(s: String) -> String {
             let mut chars: Vec<char> = s.chars().collect();
             for i in (0..chars.len()).rev() {
                 let c = chars[i];

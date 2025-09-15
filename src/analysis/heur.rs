@@ -38,29 +38,10 @@ fn is_subsumed(a: &AnalysisState, new: SpecId) -> Option<SpecId> {
     None
 }
 
-fn subsumes(general: &ThreadState, special: &ThreadState) -> bool {
-    subsumes2(general, special)
-}
-
-fn check_sem_equiv(a: &ThreadState, b: &ThreadState) -> bool {
-    a.deref == b.deref
-    && a.table_entries == b.table_entries
-}
-
-fn increment_ids(st: &mut ThreadState) {
-    let mut map: Map<TableSortId, TableSortId> = Map::new();
-    for (x, vs) in st.deref.iter_mut() {
-        for e in vs.0.iter_mut() {
-            let ValueParticle::TableSort(tid) = e else { continue };
-            *tid = *map.entry(*tid).or_insert_with(|| TableSortId(Symbol::next_fresh(tid.0)));
-        }
-    }
-}
-
 fn replace_a(bad: SpecId, good: SpecId, a: &mut AnalysisState) {
     assert!(bad != good);
 
-    a.specs.remove(&bad);
+    a.specs.swap_remove(&bad);
 
     for (_, x) in a.specs.iter_mut() {
         for d in x.outs.iter_mut() {

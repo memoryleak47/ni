@@ -86,8 +86,6 @@ fn iter(ast: &AST, nrt: &mut NameResTable, current_fn_ptr: *const ASTStatement) 
             | ASTStatement::Expr(_)
             | ASTStatement::Raise(_)
             | ASTStatement::Pass => {}
-
-            _ => todo!(),
         }
     }
 }

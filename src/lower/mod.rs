@@ -4,7 +4,7 @@ mod nameres;
 pub use nameres::*;
 
 mod ctxt;
-pub use ctxt::*;
+use ctxt::*;
 
 pub fn lower(ast: &AST) -> String {
     let mut s = String::from("#\n");
@@ -163,7 +163,7 @@ fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
             ASTStatement::Pass => {},
             ASTStatement::Scope(..) => {}, // Scope is handled in nameres.
             ASTStatement::Class(name, args, body) => {
-                let mut args: Vec<String> = args.iter().map(|x| lower_expr(x, ctxt)).collect();
+                let args: Vec<String> = args.iter().map(|x| lower_expr(x, ctxt)).collect();
 
                 let old_ptr = ctxt.fl().ast_ptr;
                 ctxt.fl_mut().ast_ptr = stmt as _;
@@ -203,7 +203,7 @@ fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
                 let mut pids = Vec::new();
 
                 // We push to the handler stack in reverted order, as the first `except` should be at the top of the stack.
-                for except in excepts.iter().rev() {
+                for _except in excepts.iter().rev() {
                     let h = ctxt.alloc_irlocal("handler");
                     let except_pid = ctxt.alloc_blk();
                     pids.push(except_pid);
@@ -219,7 +219,7 @@ fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
                 lower_body(body, ctxt);
 
                 // pop handler stack
-                for except in excepts.iter() {
+                for _except in excepts.iter() {
                     ctxt.push(format!("@.handler = @.handler.parent"));
                 }
 
@@ -233,7 +233,7 @@ fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
 
                 ctxt.focus_blk(suc);
             },
-            ASTStatement::Raise(body) => {
+            ASTStatement::Raise(_body) => {
                 ctxt.push(format!("jmp raise"))
             }
             ASTStatement::For(v, expr, body) => {
@@ -377,7 +377,6 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
 
             format!("%{t}")
         },
-        _ => todo!("{:?}", e),
     };
     let irl = ctxt.alloc_irlocal("expr_val");
     ctxt.push(format!("{irl} = {out}"));
@@ -402,7 +401,7 @@ pub fn op_attrs(op: ASTBinOpKind) -> &'static str {
     }
 }
 
-pub fn find_namespace(v: &str, ctxt: &mut Ctxt) -> String {
+fn find_namespace(v: &str, ctxt: &mut Ctxt) -> String {
     let k = (ctxt.fl().ast_ptr, v.to_string());
     match ctxt.nameres_tab.get(&k) {
         Some(VarPlace::Local) => format!("@.frame.pylocals"),

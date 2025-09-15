@@ -90,8 +90,6 @@ impl Display for BinOpKind {
             Le => "<=",
             Gt => ">",
             Ge => ">=",
-            IsEqual => "==",
-            IsNotEqual => "~=",
             Pow => "^",
         };
         write!(f, "{}", s)

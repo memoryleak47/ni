@@ -75,7 +75,7 @@ fn exec_expr(expr: &Expr, ctxt: &mut Ctxt) -> Value {
         Expr::Int(x) => Value::Int(*x),
         Expr::Str(s) => Value::Str(s.clone()),
         Expr::Input => {
-            let mut stdin = std::io::stdin();
+            let stdin = std::io::stdin();
             let mut s = String::new();
             stdin.read_line(&mut s).unwrap();
             s.pop(); // removes the '\n' at the end.

@@ -244,11 +244,3 @@ impl<A, T> Assembler<T> for A where A: for<'a> Fn(&[Token]) -> Result<(T, &[Toke
 fn or<T>(a: impl Assembler<T>, b: impl Assembler<T>) -> impl Assembler<T> {
     move |toks| a(toks).or_else(|err| b(toks).map_err(|err2| format!("({err})|({err2})")))
 }
-
-fn chain<T1, T2, O>(
-    a: impl Assembler<T1>,
-    b: impl Assembler<T2>,
-    f: impl Fn(T1, T2) -> O,
-) -> impl Assembler<O> {
-    move |toks| a(toks).and_then(|(x, toks)| b(toks).map(|(y, toks)| (f(x, y), toks)))
-}

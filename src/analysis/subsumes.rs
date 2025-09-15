@@ -12,7 +12,7 @@ type Phi = Map<TableSortId, Set<TableSortId>>;
 
 type Homomorphism = Map<TableSortId, TableSortId>;
 
-pub fn subsumes2(general: &ThreadState, special: &ThreadState) -> bool {
+pub fn subsumes(general: &ThreadState, special: &ThreadState) -> bool {
     if general.pid != special.pid { return false; }
 
     let (special, _) = pre_simplify(special);
@@ -59,7 +59,7 @@ fn solve_constraints(mut phi: Phi, constraints: &[Constraint], general: &ThreadS
         if let Some(hom) = solve_constraints(phi_new, constraints, general) {
             return Some(hom);
         }
-        phi[&x].remove(&y1);
+        phi[&x].swap_remove(&y1);
 
         solve_constraints(phi, constraints, general)
     } else {
@@ -103,28 +103,6 @@ fn index(t: &ValueSet, k: &ValueSet, st: &ThreadState) -> ValueSet {
         }
     }
     vs
-}
-
-fn get_support(st: &ThreadState) -> Vec<ValueParticle> {
-    let mut sup: Set<ValueParticle> = Set::new();
-    for (_, vs) in st.deref.iter() {
-        sup.extend(vs.0.iter().cloned());
-    }
-
-    for e in st.table_entries.iter() {
-        match e {
-            TableEntry::Add(t, k, v) => {
-                sup.extend(t.0.iter().cloned());
-                sup.extend(k.0.iter().cloned());
-                sup.extend(v.0.iter().cloned());
-            },
-            TableEntry::Clear(t, k) => {
-                sup.extend(t.0.iter().cloned());
-                sup.extend(k.0.iter().cloned());
-            },
-        }
-    }
-    sup.into_iter().collect()
 }
 
 fn tids(st: &ThreadState) -> Set<TableSortId> {

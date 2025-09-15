@@ -36,7 +36,7 @@ pub fn gc_ts(st: &mut ThreadState) {
 
 // The correct way to remove a ValueId from a ThreadState.
 pub fn ts_deref_valueid(st: &mut ThreadState, vid: ValueId) {
-    let replacement = st.deref.remove(&vid).unwrap();
+    let replacement = st.deref.swap_remove(&vid).unwrap();
     let deref = st.deref.clone();
 
     for (_, vs) in st.deref.iter_mut() {
