@@ -24,7 +24,7 @@ pub fn subsumes2(general: &ThreadState, special: &ThreadState) -> bool {
     let tids_general = tids(&general);
 
     let phi = tids_special.iter().map(|x| (*x, tids_general.clone())).collect();
-    solve_constraints(phi, constraints, &general).is_some()
+    solve_constraints(phi, &constraints, &general).is_some()
 }
 
 fn build_constraints(special: &ThreadState) -> Vec<Constraint> {
@@ -45,12 +45,28 @@ fn build_constraints(special: &ThreadState) -> Vec<Constraint> {
     constraints
 }
 
-fn solve_constraints(phi: Phi, constraints: Vec<Constraint>, general: &ThreadState) -> Option<Homomorphism> {
-    todo!()
-}
+fn solve_constraints(mut phi: Phi, constraints: &[Constraint], general: &ThreadState) -> Option<Homomorphism> {
+    assert!(phi.iter().all(|(_, y)| y.len() > 0));
+    if !constraints_satisfiable(&phi, constraints, general) { return None; }
 
-fn done(phi: &Phi) -> bool {
-    phi.iter().all(|(_, x)| x.len() == 1)
+    if let Some((x, y)) = phi.iter().find(|(_, y)| y.len() > 1).map(|(x, y)| (x.clone(), y.clone())) {
+        let mut phi_new = phi.clone();
+        let y1 = y.iter().next().unwrap().clone();
+        phi_new.insert(x, std::iter::once(y1).collect());
+        if let Some(hom) = solve_constraints(phi_new, constraints, general) {
+            return Some(hom);
+        }
+        phi[&x].remove(&y1);
+
+        solve_constraints(phi, constraints, general)
+    } else {
+        let hom: Homomorphism = phi.iter().map(|(x, y)| {
+            assert!(y.len() == 1);
+            let y = y.iter().next().unwrap().clone();
+            (*x, y)
+        }).collect();
+        Some(hom)
+    }
 }
 
 fn eval_phi(p: &ValueParticle, phi: &Phi) -> ValueSet {
