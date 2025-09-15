@@ -1,3 +1,6 @@
 /target
 file.py
 t.ir
+perf.data
+perf.data.old
+flamegraph.svg
