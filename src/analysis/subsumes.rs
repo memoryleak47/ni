@@ -1,5 +1,8 @@
 use crate::*;
 
+// We assume that TableSortIds coming up in general and special are mapped as the identity.
+const ASSUME_IDENTITY: bool = true;
+
 // phi(a) <= heap_general(phi(t), phi(k))
 // Note: for non-TIDs x, phi(x) = x.
 struct Constraint {
@@ -25,7 +28,10 @@ pub fn subsumes(general: &ThreadState, special: &ThreadState) -> bool {
     // Incase tids_general is empty, we want some place to map everything to.
     tids_general.insert(TableSortId(Symbol::new_fresh("DEFAULT_TID".to_string())));
 
-    let phi = tids_special.iter().map(|x| (*x, tids_general.clone())).collect();
+    let phi = tids_special.iter().map(|x|
+            if ASSUME_IDENTITY && tids_general.contains(x) { (*x, std::iter::once(*x).collect()) }
+            else { (*x, tids_general.clone()) }
+        ).collect();
     let out = solve_constraints(phi, &constraints, &general).is_some();
     out
 }
