@@ -39,11 +39,7 @@ fn is_subsumed(a: &AnalysisState, new: SpecId) -> Option<SpecId> {
 }
 
 fn subsumes(general: &ThreadState, special: &ThreadState) -> bool {
-    if general.pid != special.pid { return false; }
-
-    let n_general = merge(general, special);
-
-    check_sem_equiv(&n_general, general)
+    subsumes2(general, special)
 }
 
 fn check_sem_equiv(a: &ThreadState, b: &ThreadState) -> bool {

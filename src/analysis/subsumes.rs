@@ -21,10 +21,13 @@ pub fn subsumes2(general: &ThreadState, special: &ThreadState) -> bool {
     let constraints = build_constraints(&special);
 
     let tids_special = tids(&special);
-    let tids_general = tids(&general);
+    let mut tids_general = tids(&general);
+    // Incase tids_general is empty, we want some place to map everything to.
+    tids_general.insert(TableSortId(Symbol::new_fresh("DEFAULT_TID".to_string())));
 
     let phi = tids_special.iter().map(|x| (*x, tids_general.clone())).collect();
-    solve_constraints(phi, &constraints, &general).is_some()
+    let out = solve_constraints(phi, &constraints, &general).is_some();
+    out
 }
 
 fn build_constraints(special: &ThreadState) -> Vec<Constraint> {
