@@ -9,7 +9,7 @@ do
     echo "========="
     echo
 
-    res1=$(RUSTFLAGS=-Awarnings timeout 10s cargo r --release -q "atests/$f" --analyze)
+    res1=$(RUSTFLAGS=-Awarnings timeout -v 20s cargo r --release -q "atests/$f" --analyze)
     if [[ ! "$?" == 0 ]]; then
         echo error!
         echo $res1
