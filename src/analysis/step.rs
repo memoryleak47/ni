@@ -41,6 +41,10 @@ fn step_expr(mut st: ThreadState, expr: &Expr) -> (ValueParticle, ThreadState) {
             let sort_id = TableSortId(Symbol::new_fresh("sortId"));
             let vs = ValueSet(vec![ValueParticle::TableSort(sort_id)]);
             st.deref.insert(value_id, vs);
+
+            // Note: We could also handle this in `index_p`.
+            st = store_p(ValueParticle::ValueId(value_id), ValueParticle::Top, ValueParticle::Symbol(Symbol::new("Undef")), st);
+
             (ValueParticle::ValueId(value_id), st)
         },
         Expr::BinOp(kind, l, r) => {
