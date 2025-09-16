@@ -25,7 +25,7 @@ proc init_object {
 # @.arg{0, 1}
 proc fn_std_eq {
     %a = @.singletons.primitive[@.arg[0].type];
-    %b = @.singletons.primitive[@.arg[0].type];
+    %b = @.singletons.primitive[@.arg[1].type];
 
     %tab = {};
     %tab[Undef] = std_eq_prim;
