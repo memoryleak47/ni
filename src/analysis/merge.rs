@@ -6,6 +6,7 @@ enum ValueGroup {
     Symbol(Symbol),
     TopString,
     TopInt,
+    Top, // Top is not orthogonal to the other groups, but that's okay as it's just a heuristic.
 }
 
 type Groups = Map<(TableSortId, ValueGroup), Set<TableSortId>>;
@@ -102,7 +103,7 @@ fn build_groups(st: &ThreadState) -> Groups {
 
 fn groupify(p: &ValueParticle) -> ValueGroup {
     match p {
-        ValueParticle::Top => panic!("How did Top get here?"),
+        ValueParticle::Top => ValueGroup::Top,
         ValueParticle::Symbol(s) => ValueGroup::Symbol(*s),
         ValueParticle::TopString | ValueParticle::String(_) => ValueGroup::TopString,
         ValueParticle::TopInt | ValueParticle::Int(_) => ValueGroup::TopInt,
