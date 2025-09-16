@@ -2,8 +2,7 @@
 
 [ ! -d .git ] && "You need to be in the repo root to execute this" && exit
 
-for f in $(find atests -type f | cut -d "/" -f 2 | sort -h)
-do
+function run_case() {
     echo "========="
     echo "atests/$f"
     echo "========="
@@ -25,4 +24,14 @@ do
 
     echo
     echo
-done
+}
+
+if [ -z "$1" ]; then
+    for f in $(find atests -type f | cut -d "/" -f 2 | sort -h)
+    do
+        run_case "$f"
+    done
+else
+    f=$(cd atests; ls $1.*)
+    run_case "$f"
+fi
