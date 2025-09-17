@@ -12,14 +12,12 @@ function run_case() {
     if [[ ! "$?" == 0 ]]; then
         echo error!
         echo $res1
-        exit
     fi
     res2=$(echo $f | cut -d '.' -f 2)
     if [[ ! "$res1" == "$res2" ]]; then
         echo different output:
         echo "-- analysis output: $res1"
         echo "-- ground truth: $res2"
-        exit
     fi
 
     echo
