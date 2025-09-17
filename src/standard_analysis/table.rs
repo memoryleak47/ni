@@ -13,9 +13,12 @@ pub fn tab_index(t: &ValueSet, k: &ValueSet, st: &ProcState) -> ValueSet {
     vs.compactify()
 }
 
+// TODO: upcast "k".
 pub fn tab_store(t: &ValueSet, k: &ValueSet, v: &ValueSet, st: &mut ProcState) {
     let concrete = t.is_concrete() && k.is_concrete();
     for t in &t.0 {
+        assert!(matches!(t, ValueParticle::Concrete(_)|ValueParticle::Summary(_)));
+
         for k in &k.0 {
             let tk = [t.clone(), k.clone()];
             let vv = st.tables.entry(tk).or_default();
