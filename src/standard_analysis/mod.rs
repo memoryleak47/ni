@@ -36,10 +36,16 @@ pub struct ProcState {
 
 impl AnalysisState {
     pub fn add(&mut self, st: ProcState) {
-        match self.states.entry(st.pid) {
-            indexmap::map::Entry::Vacant(e) => { e.insert(st); },
+        let pid = st.pid;
+        match self.states.entry(pid) {
+            indexmap::map::Entry::Vacant(e) => {
+                e.insert(st);
+                if !self.queue.contains(&pid) { self.queue.push(pid); }
+            }
             indexmap::map::Entry::Occupied(mut e) => {
-                e.insert(e.get().union(&st));
+                let s = e.get_mut();
+                let changed = s.merge(&st);
+                if changed && !self.queue.contains(&pid) { self.queue.push(pid); }
             },
         }
     }
@@ -62,8 +68,8 @@ impl ProcState {
         }
     }
 
-    // TODO: also return whether there actually was something new.
-    pub fn union(&self, other: &ProcState) -> ProcState {
+    // returns whether "self" was changed.
+    pub fn merge(&mut self, other: &ProcState) -> bool {
         todo!()
     }
 }
