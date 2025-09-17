@@ -1,51 +1,37 @@
 use crate::standard_analysis::*;
 
 impl AnalysisState {
-    pub fn step(&mut self, i: SpecId) {
-        let spec = &self.specs.get(&i).unwrap_or_else(|| panic!("Spec '{i:?}' not found!"));
-        let mut states = vec![spec.st.clone()];
-        for stmt in self.ir.procs[&spec.st.pid].stmts.iter() {
+    pub fn step(&mut self, pid: Symbol) {
+        let state = self.states.get(&pid).unwrap_or_else(|| panic!("Spec '{pid:?}' not found!"));
+        let mut states: Vec<ProcState> = vec![state.clone()];
+        for (i, stmt) in self.ir.procs[&pid].stmts.iter().enumerate() {
             let mut new_states = Vec::new();
             for st in states {
-                new_states.extend(step_stmt(st, stmt, &self.ir));
+                let loc = (pid, i);
+                new_states.extend(step_stmt(st, stmt, loc, &self.ir));
             }
             states = new_states;
         }
 
-        let mut outs = Vec::new();
         for st in states {
-            outs.push(self.add(st));
+            self.add(st);
         }
-        self.specs[&i].outs = outs;
     }
 }
 
-fn step_expr(mut st: ThreadState, expr: &Expr) -> (ValueParticle, ThreadState) {
+fn step_expr(mut st: ProcState, loc: Location, expr: &Expr) -> (ValueSet, ProcState) {
     match expr {
         Expr::Index(t, k) => {
             let t = &st.nodes[t];
             let k = &st.nodes[k];
-
-            let vs = index_p(t, k, &st);
-            if let [x] = &*vs.0 && x.is_concrete() {
-                return (x.clone(), st);
-            }
-
-            let value_id = ValueId(Symbol::new_fresh("indexVID"));
-            st.deref.insert(value_id, vs);
-            (ValueParticle::ValueId(value_id), st)
+            let vs = tab_index(t, k, &st);
+            (vs, st)
         },
-        Expr::Root => return (ValueParticle::ValueId(st.root), st),
+        Expr::Root => (ValueSet(vec![st.root.clone()]), st),
         Expr::NewTable => {
-            let value_id = ValueId(Symbol::new_fresh("tableVID"));
-            let sort_id = TableSortId(Symbol::new_fresh("sortId"));
-            let vs = ValueSet(vec![ValueParticle::TableSort(sort_id)]);
-            st.deref.insert(value_id, vs);
-
-            // Note: We could also handle this in `index_p`.
-            st = store_p(ValueParticle::ValueId(value_id), ValueParticle::Top, ValueParticle::Symbol(Symbol::new("Undef")), st);
-
-            (ValueParticle::ValueId(value_id), st)
+            st.summarize(loc);
+            let vs = ValueSet(vec![ValueParticle::Concrete(loc)]);
+            (vs, st)
         },
         Expr::BinOp(kind, l, r) => {
             let l = st.nodes[l].clone();
@@ -53,39 +39,35 @@ fn step_expr(mut st: ThreadState, expr: &Expr) -> (ValueParticle, ThreadState) {
             step_binop(*kind, l, r, st)
         },
         Expr::Input => {
-            let value_id = ValueId(Symbol::new_fresh("inputVID"));
             let vs = ValueSet(vec![ValueParticle::TopString]);
-            st.deref.insert(value_id, vs);
-            (ValueParticle::ValueId(value_id), st)
+            (vs, st)
         },
 
-        Expr::Symbol(s) => (ValueParticle::Symbol(*s), st),
+        Expr::Symbol(s) => (ValueSet(vec![ValueParticle::Symbol(*s)]), st),
         Expr::Float(_) => todo!(),
-        Expr::Int(i) => (ValueParticle::Int(*i), st),
-        Expr::Str(s) => (ValueParticle::String(s.clone()), st),
+        Expr::Int(i) => (ValueSet(vec![ValueParticle::Int(*i)]), st),
+        Expr::Str(s) => (ValueSet(vec![ValueParticle::String(s.clone())]), st),
     }
 }
 
-fn step_stmt(mut st: ThreadState, stmt: &Statement, ir: &IR) -> Vec<ThreadState> {
+fn step_stmt(mut st: ProcState, stmt: &Statement, loc: Location, ir: &IR) -> Vec<ProcState> {
     match stmt {
         Statement::Let(n, expr, _) => {
-            let (part, mut new_st) = step_expr(st, expr);
-            new_st.nodes.insert(*n, part);
+            let (vs, mut new_st) = step_expr(st, loc, expr);
+            new_st.nodes.insert(*n, vs);
             vec![new_st]
         }
         Statement::Store(t, k, v) => {
             let t = st.nodes[t].clone();
             let k = st.nodes[k].clone();
             let v = st.nodes[v].clone();
-            let st = store_p(t, k, v, st);
+            tab_store(&t, &k, &v, &mut st);
             vec![st]
         },
         Statement::Jmp(n) => {
-            let vid = st.nodes[n].clone();
-            let vs = vid.deref(&st.deref);
+            let vs = st.nodes[n].clone();
 
             st.nodes.clear();
-            gc_ts(&mut st);
 
             let mut outs = Vec::new();
             let procs = vs.0.iter().filter_map(|x| match x {

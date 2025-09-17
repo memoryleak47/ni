@@ -1,7 +1,7 @@
 use std::fs;
 
 pub const CHECKS: bool = true;
-pub const MERGER: bool = true;
+pub const MERGER: bool = false;
 
 pub use indexmap::IndexMap as Map;
 pub use indexmap::IndexSet as Set;

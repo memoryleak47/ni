@@ -9,11 +9,14 @@ impl Debug for ValueParticle {
             ValueParticle::TopString => write!(f, "TopString"),
             ValueParticle::Int(i) => write!(f, "{i}"),
             ValueParticle::TopInt => write!(f, "TopInt"),
-            ValueParticle::TableSort(TableSortId(ts)) => write!(f, "TS:{ts}"),
-            ValueParticle::ValueId(ValueId(i)) => write!(f, "VID:{i}"),
-            ValueParticle::Top => write!(f, "Top"),
+            ValueParticle::Concrete(loc) => write!(f, "@{}", fmt_loc(*loc)),
+            ValueParticle::Summary(loc) => write!(f, "*{}", fmt_loc(*loc)),
         }
     }
+}
+
+fn fmt_loc((sym, i): Location) -> String {
+    format!("{sym}:{i}")
 }
 
 impl Debug for ValueSet {
