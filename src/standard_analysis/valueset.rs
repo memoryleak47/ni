@@ -5,7 +5,7 @@ pub struct ValueSet(pub Vec<ValueParticle>); // disjunction of possibilities.
 
 pub type Location = (Symbol, usize);
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum ValueParticle {
     Symbol(Symbol),
     String(String),
@@ -55,6 +55,16 @@ impl ValueSet {
         let top_int = self.0.contains(&ValueParticle::TopInt);
         if top_str { self.0.retain(|x| !matches!(x, ValueParticle::String(_))); }
         if top_int { self.0.retain(|x| !matches!(x, ValueParticle::Int(_))); }
+        self.0.sort();
+        self.0.dedup();
+        if self.0.iter().filter(|x| matches!(x, ValueParticle::Int(_))).count() > 50 {
+            self.0.retain(|x| !matches!(x, ValueParticle::Int(_)));
+            self.0.push(ValueParticle::TopInt);
+        }
+        if self.0.iter().filter(|x| matches!(x, ValueParticle::String(_))).count() > 50 {
+            self.0.retain(|x| !matches!(x, ValueParticle::String(_)));
+            self.0.push(ValueParticle::TopString);
+        }
         self
     }
 

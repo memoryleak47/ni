@@ -29,7 +29,7 @@ pub fn step_binop(kind: BinOpKind, l: ValueSet, r: ValueSet, mut st: ProcState) 
                         vs.0.push(TopInt);
                     };
                 },
-                _ => unreachable!("return bottom here!"),
+                _ => {},
             };
         }
     }
