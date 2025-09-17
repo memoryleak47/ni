@@ -1,4 +1,4 @@
-use crate::*;
+use crate::standard_analysis::*;
 
 pub fn gc_ts(st: &mut ThreadState) {
     let reach = reachable_table_sorts(st);

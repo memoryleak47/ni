@@ -1,4 +1,4 @@
-use crate::*;
+use crate::merger_analysis::*;
 
 #[derive(Eq, Hash, PartialEq)]
 enum ValueGroup {

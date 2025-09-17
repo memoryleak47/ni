@@ -1,6 +1,7 @@
 use std::fs;
 
 pub const CHECKS: bool = true;
+pub const MERGER: bool = true;
 
 pub use indexmap::IndexMap as Map;
 pub use indexmap::IndexSet as Set;
@@ -23,8 +24,8 @@ pub use ir::*;
 mod cli;
 pub use cli::*;
 
-mod analysis;
-pub use analysis::*;
+pub mod merger_analysis;
+pub mod standard_analysis;
 
 fn main() {
     let cli = cli();
@@ -64,6 +65,7 @@ fn main() {
             exec(&ir);
         },
         Action::Analyze => {
+            let analyze = if MERGER { merger_analysis::analyze } else { standard_analysis::analyze };
             println!("{}", match analyze(ir) {
                 true => "safe",
                 false => "unsafe",

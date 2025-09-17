@@ -1,8 +1,8 @@
-use crate::*;
+use crate::merger_analysis::*;
 
 pub fn step_binop(kind: BinOpKind, l: ValueParticle, r: ValueParticle, mut st: ThreadState) -> (ValueParticle, ThreadState) {
     use BinOpKind::*;
-    use ValueParticle::*;
+    use merger_analysis::ValueParticle::*;
 
     let true_ = Symbol(crate::symbol::Symbol::new("True"));
     let false_ = Symbol(crate::symbol::Symbol::new("False"));
@@ -26,7 +26,7 @@ pub fn step_binop(kind: BinOpKind, l: ValueParticle, r: ValueParticle, mut st: T
             } else {
                 ValueSet(vec![TopInt])
             };
-            let vid = crate::analysis::ValueId(crate::symbol::Symbol::new("binopVID"));
+            let vid = crate::merger_analysis::ValueId(crate::symbol::Symbol::new("binopVID"));
             st.deref.insert(vid, vs);
             ValueId(vid)
         },

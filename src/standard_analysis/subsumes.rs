@@ -1,4 +1,4 @@
-use crate::*;
+use crate::standard_analysis::*;
 
 // We assume that TableSortIds coming up in general and special are mapped as the identity.
 const ASSUME_IDENTITY: bool = true;

@@ -1,4 +1,4 @@
-use crate::*;
+use crate::standard_analysis::*;
 
 // returns true for safe, and false for unsafe.
 pub fn analyze(ir: IR) -> bool {

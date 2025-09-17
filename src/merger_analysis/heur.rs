@@ -1,4 +1,4 @@
-use crate::*;
+use crate::merger_analysis::*;
 
 pub fn heur(a: &mut AnalysisState, new: SpecId) {
     assert!(a.specs.contains_key(&new));

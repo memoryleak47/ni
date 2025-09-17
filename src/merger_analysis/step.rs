@@ -1,4 +1,4 @@
-use crate::*;
+use crate::merger_analysis::*;
 
 impl AnalysisState {
     pub fn step(&mut self, i: SpecId) {
