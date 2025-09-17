@@ -36,7 +36,12 @@ pub struct ProcState {
 
 impl AnalysisState {
     pub fn add(&mut self, st: ProcState) {
-        todo!()
+        match self.states.entry(st.pid) {
+            indexmap::map::Entry::Vacant(e) => { e.insert(st); },
+            indexmap::map::Entry::Occupied(mut e) => {
+                e.insert(e.get().union(&st));
+            },
+        }
     }
 }
 
@@ -55,6 +60,11 @@ impl ProcState {
             let vv = self.tables.entry([t, k]).or_default();
             *vv = vv.union(&v);
         }
+    }
+
+    // TODO: also return whether there actually was something new.
+    pub fn union(&self, other: &ProcState) -> ProcState {
+        todo!()
     }
 }
 
