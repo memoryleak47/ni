@@ -70,7 +70,21 @@ impl ProcState {
 
     // returns whether "self" was changed.
     pub fn merge(&mut self, other: &ProcState) -> bool {
-        todo!()
+        assert!(self.nodes.is_empty());
+        assert!(other.nodes.is_empty());
+        assert_eq!(self.root, other.root);
+        assert_eq!(self.pid, other.pid);
+
+        let mut changed = false;
+        for ([t, k], v) in &other.tables {
+            let tk = [t.clone(), k.clone()];
+            let my_v = self.tables.entry(tk).or_default();
+            if !v.subseteq(my_v) {
+                *my_v = my_v.union(v);
+                changed = true;
+            }
+        }
+        changed
     }
 }
 
