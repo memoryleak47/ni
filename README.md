@@ -7,6 +7,9 @@ We hope that this leads us to a language, whose individual building blocks have 
 We aim for a linear compilation size, i.e. each input statement should only grow by a constant factor during this translation.
 
 We intend to break down
-- recursion, iteration (loops), generators and exceptions down to a single control-flow primitive (namely "procs", which are basically addresses you can jump to), and
-- compound objects like closures or class-instances into separate smaller pieces (like fn-ptrs, a dict, a runtime-typeinfo-tag etc.) which individually have an easier semantics, and
-- concise python syntax down to more verbose but simpler instructions (i.e. resolve operator overloads, list comprehensions, add explicit code for type coercion, make truthiness casting in conditions explicit etc.)
+1. recursion, iteration (loops), generators and exceptions down to a single control-flow primitive namely "procs".
+- Procs are simply locations you can jump to
+2. compound objects like closures or class-instances into separate smaller pieces
+- Ni IR only supports primitives + tables (similar to python dicts) + symbols (including proc ids) as the only kinds of Values
+3. concise python syntax down to more verbose but simpler instructions
+- i.e. resolve operator overloads, list comprehensions, add explicit code for type coercion, make truthiness casting in conditions explicit etc.
