@@ -1,10 +1,7 @@
-# Taken from https://gitlab.com/mopsa/benchmarks/pyperformance-benchmarks
-
 """
 Artificial, floating point-heavy benchmark originally used by Factor.
 """
-# from six.moves import xrange
-# import perf
+import pyperf
 
 from math import sin, cos, sqrt
 
@@ -47,39 +44,17 @@ def maximize(points):
 
 
 def benchmark(n):
-    # points = None
-    points = [Point(0)] * n
+    points = [None] * n
     for i in range(n):
-       points[i] = Point(i)
-    # points = [Point(i) for i in range(n)]
+        points[i] = Point(i)
     for p in points:
         p.normalize()
     return maximize(points)
 
-def test_types():
-    import mopsa
+
+if __name__ == "__main__":
+    runner = pyperf.Runner()
+    runner.metadata['description'] = "Float benchmark"
 
     points = POINTS
-    benchmark(points)
-    mopsa.ignore_exception(IndexError)
-    mopsa.ignore_exception(OverflowError)
-    mopsa.ignore_exception(ZeroDivisionError)
-    mopsa.assert_safe()
-
-def test_values():
-    import mopsa
-
-    points = POINTS
-    benchmark(points)
-    mopsa.ignore_exception(OverflowError)
-    mopsa.ignore_exception(ZeroDivisionError)
-    mopsa.assert_safe()
-
-
-# if __name__ == "__main__":
-#     # runner = perf.Runner()
-#     # runner.metadata['description'] = "Float benchmark"
-
-#     points = POINTS
-#     # runner.bench_func('float', benchmark, points)
-#     benchmark(points)
+    runner.bench_func('float', benchmark, points)

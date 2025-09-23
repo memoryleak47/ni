@@ -1,5 +1,3 @@
-# Taken from https://gitlab.com/mopsa/benchmarks/pyperformance-benchmarks
-
 """
 The Computer Language Benchmarks Game
 http://benchmarksgame.alioth.debian.org/
@@ -7,8 +5,7 @@ http://benchmarksgame.alioth.debian.org/
 Contributed by Sokolov Yura, modified by Tupteq.
 """
 
-# import perf
-# from six.moves import xrange
+import pyperf
 
 
 DEFAULT_ARG = 9
@@ -19,16 +16,12 @@ def fannkuch(n):
     max_flips = 0
     m = n - 1
     r = n
-    check = 0
     perm1 = list(range(n))
     perm = list(range(n))
     perm1_ins = perm1.insert
     perm1_pop = perm1.pop
 
     while 1:
-        if check < 30:
-            check += 1
-
         while r != 1:
             count[r - 1] = r
             r -= 1
@@ -54,19 +47,8 @@ def fannkuch(n):
         else:
             return max_flips
 
-def test_types():
-    import mopsa
 
+if __name__ == "__main__":
+    runner = pyperf.Runner()
     arg = DEFAULT_ARG
-    fannkuch(arg)
-    mopsa.ignore_exception(IndexError)
-    mopsa.ignore_exception(ZeroDivisionError)
-    mopsa.assert_safe()
-
-def test_values():
-    import mopsa
-
-    arg = DEFAULT_ARG
-    fannkuch(arg)
-    mopsa.ignore_exception(IndexError)
-    mopsa.assert_safe()
+    runner.bench_func('fannkuch', fannkuch, arg)

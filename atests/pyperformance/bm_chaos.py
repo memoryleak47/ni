@@ -1,18 +1,12 @@
-# Taken from https://gitlab.com/mopsa/benchmarks/pyperformance-benchmarks
-
 """create chaosgame-like fractals
 
 Copyright (C) 2005 Carl Friedrich Bolz
 """
 
-# from __future__ import division, print_function
-
 import math
 import random
 
-# import perf
-# import six
-# from six.moves import xrange
+import pyperf
 
 
 DEFAULT_THICKNESS = 0.25
@@ -33,9 +27,9 @@ class GVector(object):
         return math.sqrt(self.x ** 2 + self.y ** 2 + self.z ** 2)
 
     def dist(self, other):
-        return math.sqrt((self.x - other.x) ** 2 +
-                         (self.y - other.y) ** 2 +
-                         (self.z - other.z) ** 2)
+        return math.sqrt((self.x - other.x) ** 2
+                         + (self.y - other.y) ** 2
+                         + (self.z - other.z) ** 2)
 
     def __add__(self, other):
         if not isinstance(other, GVector):
@@ -66,33 +60,24 @@ class GVector(object):
         return "GVector(%f, %f, %f)" % (self.x, self.y, self.z)
 
 
-def GetKnots(points, degree):
-    # the line below is quite weird. It does not work in Py3.6, but does in Py2.7
-    # this is dead code, cf https://github.com/python/pyperformance/issues/57
-    knots = [0] * degree + range(1, len(points) - degree)
-    knots += [len(points) - degree] * degree
-    return knots
-
-
 class Spline(object):
     """Class for representing B-Splines and NURBS of arbitrary degree"""
 
-    def __init__(self, points, degree=3, knots=None):
-        """Creates a Spline. points is a list of GVector, degree is the
-degree of the Spline."""
-        if knots is None:
-            self.knots = GetKnots(points, degree)
-        else:
-            if len(points) > len(knots) - degree + 1:
-                raise ValueError("too many control points")
-            elif len(points) < len(knots) - degree + 1:
-                raise ValueError("not enough control points")
-            last = knots[0]
-            for cur in knots[1:]:
-                if cur < last:
-                    raise ValueError("knots not strictly increasing")
-                last = cur
-            self.knots = knots
+    def __init__(self, points, degree, knots):
+        """Creates a Spline.
+
+        points is a list of GVector, degree is the degree of the Spline.
+        """
+        if len(points) > len(knots) - degree + 1:
+            raise ValueError("too many control points")
+        elif len(points) < len(knots) - degree + 1:
+            raise ValueError("not enough control points")
+        last = knots[0]
+        for cur in knots[1:]:
+            if cur < last:
+                raise ValueError("knots not strictly increasing")
+            last = cur
+        self.knots = knots
         self.points = points
         self.degree = degree
 
@@ -111,7 +96,6 @@ degree of the Spline."""
         if u == dom[1]:
             return self.points[-1]
         I = self.GetIndex(u)
-        # d = [self.points[I]]
         d = [self.points[I - self.degree + 1 + ii]
              for ii in range(self.degree + 1)]
         U = self.knots
@@ -122,7 +106,6 @@ degree of the Spline."""
                 co1 = (ua - u) / (ua - ub)
                 co2 = (u - ub) / (ua - ub)
                 index = ii - I + self.degree - ik - 1
-                # cheat
                 d[index] = d[index].linear_combination(d[index + 1], co1, co2)
         return d[0]
 
@@ -135,7 +118,6 @@ degree of the Spline."""
         else:
             I = dom[1] - 1
         return I
-
 
     def __len__(self):
         return len(self.points)
@@ -150,23 +132,14 @@ def write_ppm(im, filename):
     w = len(im)
     h = len(im[0])
 
-    # fp = open(filename, "w") #, encoding="latin1", newline='')
-    # with fp:
-    #     fp.write(magic)
-    #     fp.write('%i %i\n%i\n' % (w, h, maxval))
-    #     for j in range(h):
-    #         for i in range(w):
-    #             val = im[i][j]
-    #             c = val * 255
-    #             fp.write('%c%c%c' % (c, c, c))
-    print(magic)
-    print("%i %i\n%i\n" % (w, h, maxval))
-    for j in range(h):
-        for i in range(w):
-            val = im[i][j]
-            c = val * 255
-            print('%c%c%c' % (c, c, c))
-
+    with open(filename, "w", encoding="latin1", newline='') as fp:
+        fp.write(magic)
+        fp.write('%i %i\n%i\n' % (w, h, maxval))
+        for j in range(h):
+            for i in range(w):
+                val = im[i][j]
+                c = val * 255
+                fp.write('%c%c%c' % (c, c, c))
 
 
 class Chaosgame(object):
@@ -184,7 +157,7 @@ class Chaosgame(object):
         maxlength = thickness * self.width / self.height
         for spl in splines:
             length = 0
-            curr = spl(0.0)
+            curr = spl(0)
             for i in range(1, 1000):
                 last = curr
                 t = 1 / 999 * i
@@ -224,8 +197,7 @@ class Chaosgame(object):
             basepoint.y += -derivative.x / derivative.Mag() * (y - 0.5) * \
                 self.thickness
         else:
-            # print("r", end='')
-            print("r")
+            print("r", end='')
         self.truncate(basepoint)
         return basepoint
 
@@ -263,7 +235,7 @@ class Chaosgame(object):
             write_ppm(im, filename)
 
 
-def main():#runner, args):
+def main(runner, args):
     splines = [
         Spline([
             GVector(1.597350, 3.304460, 0.000000),
@@ -288,67 +260,50 @@ def main():#runner, args):
             3, [0, 0, 0, 1, 1, 1])
     ]
 
+    runner.metadata['chaos_thickness'] = args.thickness
+    runner.metadata['chaos_width'] = args.width
+    runner.metadata['chaos_height'] = args.height
+    runner.metadata['chaos_iterations'] = args.iterations
+    runner.metadata['chaos_rng_seed'] = args.rng_seed
+
+    chaos = Chaosgame(splines, args.thickness)
+    runner.bench_func('chaos', chaos.create_image_chaos,
+                      args.width, args.height, args.iterations,
+                      args.filename, args.rng_seed)
 
 
-    # runner.metadata['chaos_thickness'] = args.thickness
-    # runner.metadata['chaos_width'] = args.width
-    # runner.metadata['chaos_height'] = args.height
-    # runner.metadata['chaos_iterations'] = args.iterations
-    # runner.metadata['chaos_rng_seed'] = args.rng_seed
-
-    chaos = Chaosgame(splines, DEFAULT_THICKNESS)
-    chaos.create_image_chaos(DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_ITERATIONS, "bla.ppm", DEFAULT_RNG_SEED)
-
-
-# def add_cmdline_args(cmd, args):
-#     cmd.append("--width=%s" % args.width)
-#     cmd.append("--height=%s" % args.height)
-#     cmd.append("--thickness=%s" % args.thickness)
-#     cmd.append("--rng-seed=%s" % args.rng_seed)
-#     if args.filename:
-#         cmd.extend(("--filename", args.filename))
+def add_cmdline_args(cmd, args):
+    cmd.append("--width=%s" % args.width)
+    cmd.append("--height=%s" % args.height)
+    cmd.append("--thickness=%s" % args.thickness)
+    cmd.append("--rng-seed=%s" % args.rng_seed)
+    if args.filename:
+        cmd.extend(("--filename", args.filename))
 
 
-# if __name__ == "__main__":
-    # runner = perf.Runner(add_cmdline_args=add_cmdline_args)
-    # runner.metadata['description'] = "Create chaosgame-like fractals"
-    # cmd = runner.argparser
-    # cmd.add_argument("--thickness",
-    #                  type=float, default=DEFAULT_THICKNESS,
-    #                  help="Thickness (default: %s)" % DEFAULT_THICKNESS)
-    # cmd.add_argument("--width",
-    #                  type=int, default=DEFAULT_WIDTH,
-    #                  help="Image width (default: %s)" % DEFAULT_WIDTH)
-    # cmd.add_argument("--height",
-    #                  type=int, default=DEFAULT_HEIGHT,
-    #                  help="Image height (default: %s)" % DEFAULT_HEIGHT)
-    # cmd.add_argument("--iterations",
-    #                  type=int, default=DEFAULT_ITERATIONS,
-    #                  help="Number of iterations (default: %s)"
-    #                       % DEFAULT_ITERATIONS)
-    # cmd.add_argument("--filename", metavar="FILENAME.PPM",
-    #                  help="Output filename of the PPM picture")
-    # cmd.add_argument("--rng-seed",
-    #                  type=int, default=DEFAULT_RNG_SEED,
-    #                  help="Random number generator seed (default: %s)"
-    #                       % DEFAULT_RNG_SEED)
+if __name__ == "__main__":
+    runner = pyperf.Runner(add_cmdline_args=add_cmdline_args)
+    runner.metadata['description'] = "Create chaosgame-like fractals"
+    cmd = runner.argparser
+    cmd.add_argument("--thickness",
+                     type=float, default=DEFAULT_THICKNESS,
+                     help="Thickness (default: %s)" % DEFAULT_THICKNESS)
+    cmd.add_argument("--width",
+                     type=int, default=DEFAULT_WIDTH,
+                     help="Image width (default: %s)" % DEFAULT_WIDTH)
+    cmd.add_argument("--height",
+                     type=int, default=DEFAULT_HEIGHT,
+                     help="Image height (default: %s)" % DEFAULT_HEIGHT)
+    cmd.add_argument("--iterations",
+                     type=int, default=DEFAULT_ITERATIONS,
+                     help="Number of iterations (default: %s)"
+                          % DEFAULT_ITERATIONS)
+    cmd.add_argument("--filename", metavar="FILENAME.PPM",
+                     help="Output filename of the PPM picture")
+    cmd.add_argument("--rng-seed",
+                     type=int, default=DEFAULT_RNG_SEED,
+                     help="Random number generator seed (default: %s)"
+                          % DEFAULT_RNG_SEED)
 
-    # args = runner.parse_args()
-    # main(runner, args)
-def test_types():
-    import mopsa
-    main()
-    mopsa.ignore_exception(ValueError)
-    mopsa.ignore_exception(OverflowError)
-    mopsa.ignore_exception(IndexError)
-    mopsa.ignore_exception(ZeroDivisionError)
-    mopsa.assert_safe()
-
-def test_values():
-    import mopsa
-    main()
-    mopsa.ignore_exception(ValueError)
-    mopsa.ignore_exception(OverflowError)
-    mopsa.ignore_exception(IndexError)
-    mopsa.ignore_exception(ZeroDivisionError)
-    mopsa.assert_safe()
+    args = runner.parse_args()
+    main(runner, args)

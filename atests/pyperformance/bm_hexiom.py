@@ -1,6 +1,3 @@
-# Taken from https://gitlab.com/mopsa/benchmarks/pyperformance-benchmarks
-
-# cheat line 452
 """
 Solver of Hexiom board game.
 
@@ -11,12 +8,10 @@ Source: https://github.com/slowfrog/hexiom : hexiom2.py, level36.txt
 (Main function tweaked by Armin Rigo.)
 """
 
-# from __future__ import division, print_function
+import io
 
-# import perf
-#from six.moves import xrange, StringIO
-# from six import u as u_lit, text_type
-# from io import StringIO
+import pyperf
+
 # 2016-07-07: CPython 3.6 takes ~25 ms to solve the board level 25
 DEFAULT_LEVEL = 25
 
@@ -115,8 +110,7 @@ class Done(object):
         maxi = -1
         for i in range(self.count):
             if (not self.already_done(i)):
-                maxvali = max([k for k in self.cells[i] if k != EMPTY])
-                # maxvali = max(k for k in self.cells[i] if k != EMPTY)
+                maxvali = max(k for k in self.cells[i] if k != EMPTY)
                 if maxval < maxvali:
                     maxval = maxvali
                     maxi = i
@@ -133,11 +127,9 @@ class Done(object):
         maxi = -1
         for i in range(self.count):
             if not self.already_done(i):
-                cells_around = pos.hexc.get_by_id(i).links
-                # n = sum(1 if (self.already_done(nid) and (self[nid][0] != EMPTY)) else 0
-                #         for nid in cells_around)
-                n = sum([1 if (self.already_done(nid) and (self[nid][0] != EMPTY)) else 0
-                         for nid in cells_around])
+                cells_around = pos.hex.get_by_id(i).links
+                n = sum(1 if (self.already_done(nid) and (self[nid][0] != EMPTY)) else 0
+                        for nid in cells_around)
                 if n > maxn:
                     maxn = n
                     maxi = i
@@ -148,11 +140,9 @@ class Done(object):
         mini = -1
         for i in range(self.count):
             if not self.already_done(i):
-                cells_around = pos.hexc.get_by_id(i).links
-                # n = sum(1 if (self.already_done(nid) and (self[nid][0] != EMPTY)) else 0
-                # for nid in cells_around)
-                n = sum([1 if (self.already_done(nid) and (self[nid][0] != EMPTY)) else 0
-                         for nid in cells_around])
+                cells_around = pos.hex.get_by_id(i).links
+                n = sum(1 if (self.already_done(nid) and (self[nid][0] != EMPTY)) else 0
+                        for nid in cells_around)
                 if n < minn:
                     minn = n
                     mini = i
@@ -172,7 +162,7 @@ class Done(object):
         elif strategy == Done.MIN_NEIGHBORS_STRATEGY:
             return self.next_cell_min_neighbors(pos)
         else:
-            raise Exception() # TODO "Wrong strategy: %d" % strategy)
+            raise Exception("Wrong strategy: %d" % strategy)
 
 ##################################
 
@@ -187,12 +177,12 @@ class Node(object):
 ##################################
 
 
-class Hexc(object):
+class Hex(object):
 
     def __init__(self, size):
         self.size = size
         self.count = 3 * size * (size - 1) + 1
-        self.nodes_by_id = self.count * [Node((0, 0), 0, [])] #self.count * [None]
+        self.nodes_by_id = self.count * [None]
         self.nodes_by_pos = {}
         id = 0
         for y in range(size):
@@ -233,13 +223,13 @@ class Hexc(object):
 ##################################
 class Pos(object):
 
-    def __init__(self, hexc, tiles, done=None):
-        self.hexc = hexc
+    def __init__(self, hex, tiles, done=None):
+        self.hex = hex
         self.tiles = tiles
-        self.done = Done(hexc.count) if done is None else done
+        self.done = Done(hex.count) if done is None else done
 
     def clone(self):
-        return Pos(self.hexc, self.tiles, self.done.clone())
+        return Pos(self.hex, self.tiles, self.done.clone())
 
 ##################################
 
@@ -250,12 +240,13 @@ def constraint_pass(pos, last_move=None):
     done = pos.done
 
     # Remove impossible values from free cells
-    free_cells = range(done.count) if last_move is None else pos.hexc.get_by_id(last_move).links
+    free_cells = (range(done.count) if last_move is None
+                  else pos.hex.get_by_id(last_move).links)
     for i in free_cells:
         if not done.already_done(i):
             vmax = 0
             vmin = 0
-            cells_around = pos.hexc.get_by_id(i).links
+            cells_around = pos.hex.get_by_id(i).links
             for nid in cells_around:
                 if done.already_done(nid):
                     if done[nid][0] != EMPTY:
@@ -280,8 +271,7 @@ def constraint_pass(pos, last_move=None):
             if done.remove_unfixed(v):
                 changed = True
         else:
-            # possible = sum((1 if v in cell else 0) for cell in done.cells)
-            possible = sum([(1 if v in cell else 0) for cell in done.cells])
+            possible = sum((1 if v in cell else 0) for cell in done.cells)
             # If the number of possible cells for a value is exactly the number of available tiles
             # put a tile in each cell
             if pos.tiles[v] == possible:
@@ -292,14 +282,15 @@ def constraint_pass(pos, last_move=None):
                         changed = True
 
     # Force empty or non-empty around filled cells
-    filled_cells = range(done.count) if last_move is None else [last_move]
+    filled_cells = (range(done.count) if last_move is None
+                    else [last_move])
     for i in filled_cells:
         if done.already_done(i):
             num = done[i][0]
             empties = 0
             filled = 0
             unknown = []
-            cells_around = pos.hexc.get_by_id(i).links
+            cells_around = pos.hex.get_by_id(i).links
             for nid in cells_around:
                 if done.already_done(nid):
                     if done[nid][0] == EMPTY:
@@ -338,7 +329,8 @@ def find_moves(pos, strategy, order):
         return [(cell_id, v) for v in done[cell_id]]
     else:
         # Try higher values first and EMPTY last
-        moves = list(reversed([(cell_id, v) for v in done[cell_id] if v != EMPTY]))
+        moves = list(reversed([(cell_id, v)
+                               for v in done[cell_id] if v != EMPTY]))
         if EMPTY in done[cell_id]:
             moves.append((cell_id, EMPTY))
         return moves
@@ -350,33 +342,32 @@ def play_move(pos, move):
 
 
 def print_pos(pos, output):
-    hexc = pos.hexc
+    hex = pos.hex
     done = pos.done
-    size = hexc.size
+    size = hex.size
     for y in range(size):
-        print(u" " * (size - y - 1)) # , end=u"") #, file=output)
+        print(" " * (size - y - 1), end="", file=output)
         for x in range(size + y):
             pos2 = (x, y)
-            id = hexc.get_by_pos(pos2).id
+            id = hex.get_by_pos(pos2).id
             if done.already_done(id):
-                c = str(done[id][0]) if done[id][0] != EMPTY else u"."
+                c = str(done[id][0]) if done[id][0] != EMPTY else "."
             else:
-                c = u"?"
-            print(c) # u"%s " % c) #, end=u"")#, file=output)
-        print() #end=u"\n")#, file=output)
+                c = "?"
+            print("%s " % c, end="", file=output)
+        print(end="\n", file=output)
     for y in range(1, size):
-        print(" " * y) # u" " * y #, end=u"")#, file=output)
+        print(" " * y, end="", file=output)
         for x in range(y, size * 2 - 1):
             ry = size + y - 1
             pos2 = (x, ry)
-            id = hexc.get_by_pos(pos2).id
+            id = hex.get_by_pos(pos2).id
             if done.already_done(id):
-                c = str(done[id][0]) if done[id][
-                    0] != EMPTY else u"."
+                c = str(done[id][0]) if done[id][0] != EMPTY else "."
             else:
-                c = u"?"
-            print(c) # u"%s " % c #, end=u"")#, file=output)
-        print() # end=u"\n")#, file=output)
+                c = "?"
+            print("%s " % c, end="", file=output)
+        print(end="\n", file=output)
 
 
 OPEN = 0
@@ -385,12 +376,12 @@ IMPOSSIBLE = -1
 
 
 def solved(pos, output, verbose=False):
-    hexc = pos.hexc
+    hex = pos.hex
     tiles = pos.tiles[:]
     done = pos.done
     exact = True
     all_done = True
-    for i in range(hexc.count):
+    for i in range(hex.count):
         if len(done[i]) == 0:
             return IMPOSSIBLE
         elif done.already_done(i):
@@ -401,7 +392,7 @@ def solved(pos, output, verbose=False):
             vmax = 0
             vmin = 0
             if num != EMPTY:
-                cells_around = hexc.get_by_id(i).links
+                cells_around = hex.get_by_id(i).links
                 for nid in cells_around:
                     if done.already_done(nid):
                         if done[nid][0] != EMPTY:
@@ -424,7 +415,7 @@ def solved(pos, output, verbose=False):
     return SOLVED
 
 
-def solve_step(prev, strategy, order, output, first):
+def solve_step(prev, strategy, order, output, first=False):
     if first:
         pos = prev.clone()
         while constraint_pass(pos):
@@ -448,14 +439,14 @@ def solve_step(prev, strategy, order, output, first):
             if cur_status != OPEN:
                 ret = cur_status
             else:
-                ret = SOLVED # cheating solve_step(new_pos, strategy, order, output, False)
+                ret = solve_step(new_pos, strategy, order, output)
             if ret == SOLVED:
                 return SOLVED
     return IMPOSSIBLE
 
 
 def check_valid(pos):
-    hexc = pos.hexc
+    hex = pos.hex
     tiles = pos.tiles
     # fill missing entries in tiles
     tot = 0
@@ -465,25 +456,25 @@ def check_valid(pos):
         else:
             tiles[i] = 0
     # check total
-    if tot != hexc.count:
-        raise Exception()
-    #"Invalid input. Expected %d tiles, got %d." % (hexc.count, tot))
+    if tot != hex.count:
+        raise Exception(
+            "Invalid input. Expected %d tiles, got %d." % (hex.count, tot))
 
 
 def solve(pos, strategy, order, output):
     check_valid(pos)
-    return solve_step(pos, strategy, order, output, True)
+    return solve_step(pos, strategy, order, output, first=True)
 
 
-# TODO Write an 'iterator' to go over all x,y positionsZ
+# TODO Write an 'iterator' to go over all x,y positions
 
 def read_file(file):
-    lines = [line.strip() for line in file.splitlines()] # line.strip("\r\n")
+    lines = [line.strip("\r\n") for line in file.splitlines()]
     size = int(lines[0])
-    hexc = Hexc(size) # hex
+    hex = Hex(size)
     linei = 1
     tiles = 8 * [0]
-    done = Done(hexc.count)
+    done = Done(hex.count)
     for y in range(size):
         line = lines[linei][size - y - 1:]
         p = 0
@@ -499,7 +490,7 @@ def read_file(file):
             if tile[0] == "+":
                 # print("Adding locked tile: %d at pos %d, %d, id=%d" %
                 #      (inctile, x, y, hex.get_by_pos((x, y)).id))
-                done.set_done(hexc.get_by_pos((x, y)).id, inctile)
+                done.set_done(hex.get_by_pos((x, y)).id, inctile)
 
         linei += 1
     for y in range(1, size):
@@ -518,11 +509,11 @@ def read_file(file):
             if tile[0] == "+":
                 # print("Adding locked tile: %d at pos %d, %d, id=%d" %
                 #      (inctile, x, ry, hex.get_by_pos((x, ry)).id))
-                done.set_done(hexc.get_by_pos((x, ry)).id, inctile)
+                done.set_done(hex.get_by_pos((x, ry)).id, inctile)
         linei += 1
-    hexc.link_nodes()
+    hex.link_nodes()
     done.filter_tiles(tiles)
-    return Pos(hexc, tiles, done)
+    return Pos(hex, tiles, done)
 
 
 def solve_file(file, strategy, order, output):
@@ -631,26 +622,26 @@ def main(loops, level):
     board, solution = LEVELS[level]
     order = DESCENDING
     strategy = Done.FIRST_STRATEGY
-    stream = None # StringIO()
+    stream = io.StringIO()
 
     board = board.strip()
     expected = solution.rstrip()
 
     range_it = range(loops)
-    # t0 = perf.perf_counter()
+    t0 = pyperf.perf_counter()
 
     for _ in range_it:
-        # stream = StringIO()
+        stream = io.StringIO()
         solve_file(board, strategy, order, stream)
-        # output = stream.getvalue()
-        # stream = None
+        output = stream.getvalue()
+        stream = None
 
-    dt = 0 # perf.perf_counter() - t0
+    dt = pyperf.perf_counter() - t0
 
-    output = '\n'#.join(line.rstrip() for line in output.splitlines())
+    output = '\n'.join(line.rstrip() for line in output.splitlines())
     if output != expected:
-        raise AssertionError() #"got a wrong answer:\n%s\nexpected: %s"
-    #% (output, expected))
+        raise AssertionError("got a wrong answer:\n%s\nexpected: %s"
+                             % (output, expected))
 
     return dt
 
@@ -659,46 +650,17 @@ def add_cmdline_args(cmd, args):
     cmd.extend(("--level", str(args.level)))
 
 
-#if __name__ == "__main__":
-    # kw = {'add_cmdline_args': add_cmdline_args}
-    # if perf.python_has_jit():
-    #     # PyPy needs to compute more warmup values to warmup its JIT
-    #     kw['warmups'] = 15
-    # runner = perf.Runner(**kw)
-    # levels = sorted(LEVELS)
-    # runner.argparser.add_argument("--level", type=int,
-    #                               choices=levels,
-    #                               default=DEFAULT_LEVEL,
-    #                               help="Hexiom board level (default: %s)"
-    #                                    % DEFAULT_LEVEL)
+if __name__ == "__main__":
+    runner = pyperf.Runner(add_cmdline_args=add_cmdline_args)
+    levels = sorted(LEVELS)
+    runner.argparser.add_argument("--level", type=int,
+                                  choices=levels,
+                                  default=DEFAULT_LEVEL,
+                                  help="Hexiom board level (default: %s)"
+                                       % DEFAULT_LEVEL)
 
-    # args = runner.parse_args()
-    # runner.metadata['description'] = "Solver of Hexiom board game"
-    # runner.metadata['hexiom_level'] = args.level
+    args = runner.parse_args()
+    runner.metadata['description'] = "Solver of Hexiom board game"
+    runner.metadata['hexiom_level'] = args.level
 
-    # runner.bench_time_func('hexiom', main, args.level)
-def test_types():
-    import mopsa
-
-    main(10, 36)
-    mopsa.ignore_exception(IndexError)
-    mopsa.ignore_exception(KeyError)
-    mopsa.ignore_exception(ValueError)
-    mopsa.assert_exception_exists(AssertionError)
-    mopsa.ignore_exception(AssertionError)
-    mopsa.assert_exception_exists(Exception)
-    mopsa.ignore_exception(Exception)
-    mopsa.assert_safe()
-
-
-def test_values():
-    import mopsa
-
-    main(10, 36)
-    mopsa.ignore_exception(KeyError)
-    mopsa.ignore_exception(ValueError)
-    mopsa.assert_exception_exists(AssertionError)
-    mopsa.ignore_exception(AssertionError)
-    mopsa.assert_exception_exists(Exception)
-    mopsa.ignore_exception(Exception)
-    mopsa.assert_safe()
+    runner.bench_time_func('hexiom', main, args.level)

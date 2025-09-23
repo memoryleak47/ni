@@ -1,11 +1,7 @@
-# Taken from https://gitlab.com/mopsa/benchmarks/pyperformance-benchmarks
-
 from array import array
 import math
-import mopsa
 
-# import perf
-# from six.moves import xrange
+import pyperf
 
 
 class Array2D(object):
@@ -28,7 +24,7 @@ class Array2D(object):
 
     def __setitem__(self, x_y, val):
         (x, y) = x_y
-        self.data[self._idx(x, y)] = int(val) # cheating: wasn't int
+        self.data[self._idx(x, y)] = val
 
     def setup(self, data):
         for y in range(self.height):
@@ -37,11 +33,9 @@ class Array2D(object):
         return self
 
     def indexes(self):
-        return [(x, y) for y in range(self.height) for x in range(self.width)]
-        # cheating
-        # for y in range(self.height):
-        #     for x in range(self.width):
-        #         yield x, y
+        for y in range(self.height):
+            for x in range(self.width):
+                yield x, y
 
     def copy_data_from(self, other):
         self.data[:] = other.data[:]
@@ -53,8 +47,6 @@ class Random(object):
     m1 = (ONE << (MDIG - 2)) + ((ONE << (MDIG - 2)) - ONE)
     m2 = ONE << MDIG // 2
     dm1 = 1.0 / float(m1)
-    mopsa.ignore_exception(ZeroDivisionError)
-    mopsa.ignore_exception(OverflowError)
 
     def __init__(self, seed):
         self.initialize(seed)
@@ -77,10 +69,9 @@ class Random(object):
         self.m = array('d', [0]) * 17
         for iloop in range(17):
             jseed = j0 * k0
-            # cheating / ~> //
-            j1 = (jseed // self.m2 + j0 * k1 + j1 * k0) % (self.m2 / 2)
+            j1 = (jseed / self.m2 + j0 * k1 + j1 * k0) % (self.m2 / 2)
             j0 = jseed % self.m2
-            self.m[iloop] = int(j0 + self.m2 * j1)
+            self.m[iloop] = j0 + self.m2 * j1
         self.i = 4
         self.j = 16
 
@@ -111,8 +102,6 @@ class Random(object):
     def RandomMatrix(self, a):
         for x, y in a.indexes():
             a[x, y] = self.nextDouble()
-        import mopsa
-        mopsa.ignore_exception(TypeError)
         return a
 
     def RandomVector(self, n):
@@ -121,7 +110,7 @@ class Random(object):
 
 def copy_vector(vec):
     # Copy a vector created by Random.RandomVector()
-    vec2 = array('d', [vec[0]])
+    vec2 = array('d')
     vec2[:] = vec[:]
     return vec2
 
@@ -163,27 +152,27 @@ def SOR_execute(omega, G, cycles, Array):
 
 def bench_SOR(loops, n, cycles, Array):
     range_it = range(loops)
-    t0 = 0 #perf.perf_counter()
+    t0 = pyperf.perf_counter()
 
     for _ in range_it:
         G = Array(n, n)
         SOR_execute(1.25, G, cycles, Array)
 
-    return 0 #perf.perf_counter() - t0
+    return pyperf.perf_counter() - t0
 
 
 def SparseCompRow_matmult(M, y, val, row, col, x, num_iterations):
     range_it = range(num_iterations)
-    #t0 = perf.perf_counter()
+    t0 = pyperf.perf_counter()
 
     for _ in range_it:
         for r in range(M):
-            sa = 0#.0
+            sa = 0.0
             for i in range(row[r], row[r + 1]):
                 sa += x[col[i]] * val[i]
             y[r] = sa
 
-    return 0 #perf.perf_counter() - t0
+    return pyperf.perf_counter() - t0
 
 
 def bench_SparseMatMult(cycles, N, nz):
@@ -222,14 +211,13 @@ def MonteCarlo(Num_samples):
 
 def bench_MonteCarlo(loops, Num_samples):
     range_it = range(loops)
-    # t0 = perf.perf_counter()
+    t0 = pyperf.perf_counter()
 
     for _ in range_it:
         MonteCarlo(Num_samples)
 
-    return 0# perf.perf_counter() - t0
+    return pyperf.perf_counter() - t0
 
-class FactorException(Exception): pass
 
 def LU_factor(A, pivot):
     M, N = A.height, A.width
@@ -245,7 +233,7 @@ def LU_factor(A, pivot):
         pivot[j] = jp
 
         if A[jp][j] == 0:
-            raise FactorException("factorization failed because of zero pivot")
+            raise Exception("factorization failed because of zero pivot")
 
         if jp != j:
             A[j], A[jp] = A[jp], A[j]
@@ -272,14 +260,13 @@ def bench_LU(cycles, N):
     lu = ArrayList(N, N)
     pivot = array('i', [0]) * N
     range_it = range(cycles)
-    # t0 = perf.perf_counter()
+    t0 = pyperf.perf_counter()
 
     for _ in range_it:
         LU(lu, A, pivot)
 
-    return 0# perf.perf_counter() - t0
+    return pyperf.perf_counter() - t0
 
-class LogException(Exception): pass
 
 def int_log2(n):
     k = 1
@@ -288,7 +275,7 @@ def int_log2(n):
         k *= 2
         log += 1
     if n != 1 << log:
-        raise LogException("FFT: Data length is not a power of 2: %s" % n)
+        raise Exception("FFT: Data length is not a power of 2: %s" % n)
     return log
 
 
@@ -385,7 +372,7 @@ def bench_FFT(loops, N, cycles):
     twoN = 2 * N
     init_vec = Random(7).RandomVector(twoN)
     range_it = range(loops)
-    t0 = 0 #perf.perf_counter()
+    t0 = pyperf.perf_counter()
 
     for _ in range_it:
         x = copy_vector(init_vec)
@@ -393,7 +380,7 @@ def bench_FFT(loops, N, cycles):
             FFT_transform(twoN, x)
             FFT_inverse(twoN, x)
 
-    return 0 #perf.perf_counter() - t0
+    return pyperf.perf_counter() - t0
 
 
 def add_cmdline_args(cmd, args):
@@ -401,53 +388,28 @@ def add_cmdline_args(cmd, args):
         cmd.append(args.benchmark)
 
 
-# BENCHMARKS = {
-#     # function name => arguments
-#     'sor': (bench_SOR, 100, 10, Array2D),
-#     'sparse_mat_mult': (bench_SparseMatMult, 1000, 50 * 1000),
-#     'monte_carlo': (bench_MonteCarlo, 100 * 1000,),
-#     'lu': (bench_LU, 100,),
-#     'fft': (bench_FFT, 1024, 50),
-# }
+BENCHMARKS = {
+    # function name => arguments
+    'sor': (bench_SOR, 100, 10, Array2D),
+    'sparse_mat_mult': (bench_SparseMatMult, 1000, 50 * 1000),
+    'monte_carlo': (bench_MonteCarlo, 100 * 1000,),
+    'lu': (bench_LU, 100,),
+    'fft': (bench_FFT, 1024, 50),
+}
 
 
-# if __name__ == "__main__":
-    # runner = perf.Runner(add_cmdline_args=add_cmdline_args)
-    # runner.argparser.add_argument("benchmark", nargs='?',
-    #                               choices=sorted(BENCHMARKS))
+if __name__ == "__main__":
+    runner = pyperf.Runner(add_cmdline_args=add_cmdline_args)
+    runner.argparser.add_argument("benchmark", nargs='?',
+                                  choices=sorted(BENCHMARKS))
 
-    # args = runner.parse_args()
-    # if args.benchmark:
-    #     benchmarks = (args.benchmark,)
-    # else:
-    #     benchmarks = sorted(BENCHMARKS)
+    args = runner.parse_args()
+    if args.benchmark:
+        benchmarks = (args.benchmark,)
+    else:
+        benchmarks = sorted(BENCHMARKS)
 
-def test_types():
-    bench_SOR(10, 100,10,Array2D)
-    bench_SparseMatMult(10, 1000, 50*1000)
-    bench_MonteCarlo(10, 100*1000)
-    bench_LU(10, 100)
-    bench_FFT(10, 1024,50)
-    import mopsa
-    mopsa.ignore_exception(ZeroDivisionError)
-    mopsa.ignore_exception(FactorException)
-    mopsa.ignore_exception(LogException)
-    mopsa.ignore_exception(ValueError)
-    mopsa.ignore_exception(IndexError)
-    mopsa.ignore_exception(OverflowError)
-    mopsa.assert_safe()
-
-def test_values():
-    bench_SOR(10, 100,10,Array2D)
-    bench_SparseMatMult(10, 1000, 50*1000)
-    bench_MonteCarlo(10, 100*1000)
-    bench_LU(10, 100)
-    bench_FFT(10, 1024,50)
-    import mopsa
-    mopsa.ignore_exception(ZeroDivisionError)
-    mopsa.ignore_exception(FactorException)
-    mopsa.ignore_exception(ValueError)
-    mopsa.ignore_exception(LogException)
-    mopsa.ignore_exception(IndexError)
-    mopsa.ignore_exception(OverflowError)
-    mopsa.assert_safe()
+    for bench in benchmarks:
+        name = 'scimark_%s' % bench
+        args = BENCHMARKS[bench]
+        runner.bench_time_func(name, *args)

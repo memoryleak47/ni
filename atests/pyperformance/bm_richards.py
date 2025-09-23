@@ -1,5 +1,3 @@
-# Taken from https://gitlab.com/mopsa/benchmarks/pyperformance-benchmarks
-
 """
 based on a Java version:
  Based on original version written in BCPL by Dr Martin Richards
@@ -11,12 +9,8 @@ based on a Java version:
  Outer loop added by Alex Jacoby
 """
 
-# from __future__ import print_function
+import pyperf
 
-# import perf
-# from six.moves import xrange
-
-import mopsa
 
 # Task IDs
 I_IDLE = 1
@@ -213,7 +207,6 @@ class Task(TaskState):
         if self.isWaitingWithPacket():
             msg = self.input
             self.input = msg.link
-            mopsa.ignore_exception(AttributeError)
             if self.input is None:
                 self.running()
             else:
@@ -234,7 +227,6 @@ class Task(TaskState):
 
     def release(self, i):
         t = self.findtcb(i)
-        mopsa.ignore_exception(Exception)
         t.task_holding = False
         if t.priority > self.priority:
             return t
@@ -423,21 +415,9 @@ class Richards(object):
         return True
 
 
-#if __name__ == "__main__":
-    # runner = perf.Runner()
-    # runner.metadata['description'] = "The Richards benchmark"
-def test_types():
-    richard = Richards()
-    richard.run(10) #runner.bench_func('richards', richard.run, 1)
-    mopsa.ignore_exception(Exception)
-    mopsa.ignore_exception(IndexError)
-    mopsa.ignore_exception(ValueError)
-    mopsa.assert_safe()
+if __name__ == "__main__":
+    runner = pyperf.Runner()
+    runner.metadata['description'] = "The Richards benchmark"
 
-
-def test_values():
     richard = Richards()
-    richard.run(10) #runner.bench_func('richards', richard.run, 1)
-    mopsa.ignore_exception(Exception)
-    mopsa.ignore_exception(ValueError)
-    mopsa.assert_safe()
+    runner.bench_func('richards', richard.run, 1)

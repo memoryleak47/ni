@@ -1,5 +1,3 @@
-# Taken from https://gitlab.com/mopsa/benchmarks/pyperformance-benchmarks
-
 """
 This file contains definitions for a simple raytracer.
 Copyright Callum and Tony Garnock-Jones, 2008.
@@ -10,12 +8,10 @@ http://www.opensource.org/licenses/mit-license.php
 From http://www.lshift.net/blog/2008/10/29/toy-raytracer-in-python
 """
 
-import mopsa
 import array
 import math
-import io
-# import perf
-# from six.moves import xrange
+
+import pyperf
 
 
 DEFAULT_WIDTH = 100
@@ -50,9 +46,7 @@ class Vector(object):
         return Vector(self.x - other.x, self.y - other.y, self.z - other.z)
 
     def scale(self, factor):
-        v =  Vector(factor * self.x, factor * self.y, factor * self.z)
-        mopsa.ignore_exception(TypeError)
-        return v
+        return Vector(factor * self.x, factor * self.y, factor * self.z)
 
     def dot(self, other):
         other.mustBeVector()
@@ -95,10 +89,8 @@ Vector.RIGHT = Vector(1, 0, 0)
 Vector.UP = Vector(0, 1, 0)
 Vector.OUT = Vector(0, 0, 1)
 
-if mopsa.random_bool():
-    assert Vector.RIGHT.reflectThrough(Vector.UP) == Vector.RIGHT
-    assert Vector(-1, -1, 0).reflectThrough(Vector.UP) == Vector(-1, 1, 0)
-    mopsa.ignore_exception(AssertionError)
+assert Vector.RIGHT.reflectThrough(Vector.UP) == Vector.RIGHT
+assert Vector(-1, -1, 0).reflectThrough(Vector.UP) == Vector(-1, 1, 0)
 
 
 class Point(object):
@@ -210,13 +202,12 @@ class Canvas(object):
         self.bytes[i] = max(0, min(255, int(r * 255)))
         self.bytes[i + 1] = max(0, min(255, int(g * 255)))
         self.bytes[i + 2] = max(0, min(255, int(b * 255)))
-        mopsa.ignore_exception(TypeError)
 
     def write_ppm(self, filename):
         header = 'P6 %d %d 255\n' % (self.width, self.height)
-        with io.open(filename) as fp: # cheatin gwith open(filename, "wb") as fp:
+        with open(filename, "wb") as fp:
             fp.write(header.encode('ascii'))
-            fp.write(self.bytes.tostring())
+            fp.write(self.bytes.tobytes())
 
 
 def firstIntersection(intersections):
@@ -226,7 +217,6 @@ def firstIntersection(intersections):
         if candidateT is not None and candidateT > -EPSILON:
             if result is None or candidateT < result[1]:
                 result = i
-            mopsa.ignore_exception(TypeError)
     return result
 
 
@@ -271,9 +261,7 @@ class Scene(object):
                 ycomp = vpUp.scale(y * pixelHeight - halfHeight)
                 ray = Ray(eye.point, eye.vector + xcomp + ycomp)
                 colour = self.rayColour(ray)
-                # cheating
-                r, g, b = colour
-                canvas.plot(x, y, r, g, b) #*colour)
+                canvas.plot(x, y, *colour)
 
     def rayColour(self, ray):
         if self.recursionDepth > 3:
@@ -288,7 +276,7 @@ class Scene(object):
             else:
                 (o, t, s) = i
                 p = ray.pointAtTime(t)
-                return i # cheating rec return s.colourAt(self, ray, p, o.normalAt(p))
+                return s.colourAt(self, ray, p, o.normalAt(p))
         finally:
             self.recursionDepth = self.recursionDepth - 1
 
@@ -314,16 +302,11 @@ def addColours(a, scale, b):
 
 
 class SimpleSurface(object):
-    # cheating this terrible code
-    # def __init__(self, **kwargs):
-    #     self.baseColour = kwargs.get('baseColour', (1, 1, 1))
-    #     self.specularCoefficient = kwargs.get('specularCoefficient', 0.2)
-    #     self.lambertCoefficient = kwargs.get('lambertCoefficient', 0.6)
-    #     self.ambientCoefficient = 1.0 - self.specularCoefficient - self.lambertCoefficient
-    def __init__(self, baseColour=(1,1,1), specularCoefficient=0.2, lambertCoefficient=0.6):
-        self.baseColour = baseColour
-        self.specularCoefficient = specularCoefficient
-        self.lambertCoefficient = lambertCoefficient
+
+    def __init__(self, **kwargs):
+        self.baseColour = kwargs.get('baseColour', (1, 1, 1))
+        self.specularCoefficient = kwargs.get('specularCoefficient', 0.2)
+        self.lambertCoefficient = kwargs.get('lambertCoefficient', 0.6)
         self.ambientCoefficient = 1.0 - self.specularCoefficient - self.lambertCoefficient
 
     def baseColourAt(self, p):
@@ -354,26 +337,18 @@ class SimpleSurface(object):
 
 
 class CheckerboardSurface(SimpleSurface):
-    # cheating again :(
-    # def __init__(self, **kwargs):
-    #     SimpleSurface.__init__(self, **kwargs)
-    #     self.otherColour = kwargs.get('otherColour', (0, 0, 0))
-    #     self.checkSize = kwargs.get('checkSize', 1)
-    def __init__(self, baseColour=(1,1,1), specularCoefficient=0.2, lambertCoefficient=0.6, otherColour=(0, 0, 0), checkSize=1):
-        self.baseColour = baseColour
-        self.specularCoefficient = specularCoefficient
-        self.lambertCoefficient = lambertCoefficient
-        self.ambientCoefficient = 1.0 - self.specularCoefficient - self.lambertCoefficient
-        self.otherColour = otherColour
-        self.checkSize =1
+
+    def __init__(self, **kwargs):
+        SimpleSurface.__init__(self, **kwargs)
+        self.otherColour = kwargs.get('otherColour', (0, 0, 0))
+        self.checkSize = kwargs.get('checkSize', 1)
 
     def baseColourAt(self, p):
         v = p - Point.ZERO
         v.scale(1.0 / self.checkSize)
-        if (int(abs(v.x) + 0.5) +
-            int(abs(v.y) + 0.5) +
-            int(abs(v.z) + 0.5)) \
-           % 2:
+        if ((int(abs(v.x) + 0.5)
+             + int(abs(v.y) + 0.5)
+             + int(abs(v.z) + 0.5)) % 2):
             return self.otherColour
         else:
             return self.baseColour
@@ -381,7 +356,7 @@ class CheckerboardSurface(SimpleSurface):
 
 def bench_raytrace(loops, width, height, filename):
     range_it = range(loops)
-    t0 = 0 #perf.perf_counter()
+    t0 = pyperf.perf_counter()
 
     for i in range_it:
         canvas = Canvas(width, height)
@@ -398,11 +373,10 @@ def bench_raytrace(loops, width, height, filename):
                     CheckerboardSurface())
         s.render(canvas)
 
-    dt = 0 #perf.perf_counter() - t0
+    dt = pyperf.perf_counter() - t0
 
     if filename:
         canvas.write_ppm(filename)
-        mopsa.ignore_exception(UnboundLocalError)
     return dt
 
 
@@ -413,36 +387,23 @@ def add_cmdline_args(cmd, args):
         cmd.extend(("--filename", args.filename))
 
 
-    # runner = perf.Runner(add_cmdline_args=add_cmdline_args)
-    # cmd = runner.argparser
-    # cmd.add_argument("--width",
-    #                  type=int, default=DEFAULT_WIDTH,
-    #                  help="Image width (default: %s)" % DEFAULT_WIDTH)
-    # cmd.add_argument("--height",
-    #                  type=int, default=DEFAULT_HEIGHT,
-    #                  help="Image height (default: %s)" % DEFAULT_HEIGHT)
-    # cmd.add_argument("--filename", metavar="FILENAME.PPM",
-    #                  help="Output filename of the PPM picture")
+if __name__ == "__main__":
+    runner = pyperf.Runner(add_cmdline_args=add_cmdline_args)
+    cmd = runner.argparser
+    cmd.add_argument("--width",
+                     type=int, default=DEFAULT_WIDTH,
+                     help="Image width (default: %s)" % DEFAULT_WIDTH)
+    cmd.add_argument("--height",
+                     type=int, default=DEFAULT_HEIGHT,
+                     help="Image height (default: %s)" % DEFAULT_HEIGHT)
+    cmd.add_argument("--filename", metavar="FILENAME.PPM",
+                     help="Output filename of the PPM picture")
 
-    # args = runner.parse_args()
-    # runner.metadata['description'] = "Simple raytracer"
-    # runner.metadata['raytrace_width'] = args.width
-    # runner.metadata['raytrace_height'] = args.height
+    args = runner.parse_args()
+    runner.metadata['description'] = "Simple raytracer"
+    runner.metadata['raytrace_width'] = args.width
+    runner.metadata['raytrace_height'] = args.height
 
-    # runner.bench_time_func('raytrace', bench_raytrace,
-    #                        args.width, args.height,
-    #                        args.filename)
-def test_types():
-    bench_raytrace(10, DEFAULT_WIDTH, DEFAULT_HEIGHT, "FILENAME.ppm")
-    mopsa.ignore_exception(ZeroDivisionError)
-    mopsa.ignore_exception(OverflowError)
-    mopsa.ignore_exception(ValueError)
-    mopsa.assert_safe()
-
-
-def test_values():
-    bench_raytrace(10, DEFAULT_WIDTH, DEFAULT_HEIGHT, "FILENAME.ppm")
-    mopsa.ignore_exception(ZeroDivisionError)
-    mopsa.ignore_exception(OverflowError)
-    mopsa.ignore_exception(ValueError)
-    mopsa.assert_safe()
+    runner.bench_time_func('raytrace', bench_raytrace,
+                           args.width, args.height,
+                           args.filename)

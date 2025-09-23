@@ -1,13 +1,10 @@
-# Taken from https://gitlab.com/mopsa/benchmarks/pyperformance-benchmarks
-
 """
 Go board game
 """
 import math
 import random
-import mopsa
 
-# import perf
+import pyperf
 
 
 SIZE = 9
@@ -88,8 +85,7 @@ class Square:
             if neighbour.color != EMPTY and neighbour.removestamp != TIMESTAMP:
                 neighbour_ref = neighbour.find(update)
                 if neighbour_ref.pos == reference.pos:
-                    # neighbour.remove(reference, update) cheating
-                    pass
+                    neighbour.remove(reference, update)
                 else:
                     if update:
                         neighbour_ref.ledges += 1
@@ -97,7 +93,7 @@ class Square:
     def find(self, update=False):
         reference = self.reference
         if reference.pos != self.pos:
-            # reference = reference.find(update) cheating
+            reference = reference.find(update)
             if update:
                 self.reference = reference
         return reference
@@ -227,9 +223,7 @@ class Board:
                     opps += 1
                 neighbour_ref.timestamp = TIMESTAMP
                 neighbour_ref.temp_ledges = neighbour_ref.ledges
-            # cheating
-            if mopsa.random_bool():
-                neighbour_ref.temp_ledges -= 1
+            neighbour_ref.temp_ledges -= 1
             if neighbour_ref.temp_ledges == 0:
                 if neighcolor == self.color:
                     weak_neighs += 1
@@ -396,7 +390,7 @@ class UCTNode:
         if not parentvisits:
             return winrate
         nodevisits = self.wins + self.losses
-        return winrate + math.sqrt((math.log(float(parentvisits), math.e)) / (5 * nodevisits)) # cheating: no explicit float cast, optional math.e in 2nd argument
+        return winrate + math.sqrt((math.log(parentvisits)) / (5 * nodevisits))
 
     def best_child(self):
         maxscore = -1
@@ -420,7 +414,7 @@ class UCTNode:
 
 # def user_move(board):
 #     while True:
-#         text = six.moves.input('?').strip()
+#         text = input('?').strip()
 #         if text == 'p':
 #             return PASS
 #         if text == 'q':
@@ -457,19 +451,7 @@ def versus_cpu():
     return computer_move(board)
 
 
-def test_types():
-    versus_cpu()
-    mopsa.ignore_exception(ZeroDivisionError)
-    mopsa.ignore_exception(IndexError)
-    mopsa.ignore_exception(OverflowError)
-    mopsa.ignore_exception(AttributeError)
-    mopsa.assert_safe()
-
-
-def test_values():
-    versus_cpu()
-    mopsa.ignore_exception(ZeroDivisionError)
-    mopsa.ignore_exception(IndexError)
-    mopsa.ignore_exception(OverflowError)
-    mopsa.ignore_exception(AttributeError)
-    mopsa.assert_safe()
+if __name__ == "__main__":
+    runner = pyperf.Runner()
+    runner.metadata['description'] = "Test the performance of the Go benchmark"
+    runner.bench_func('go', versus_cpu)
