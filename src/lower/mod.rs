@@ -336,6 +336,11 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
                 false => format!("@.singletons.false"),
             }
         },
+        ASTExpr::BinOp(op@(ASTBinOpKind::And | ASTBinOpKind::Or), l, r) => {
+            let l = lower_expr(l, ctxt);
+            let r = lower_expr(r, ctxt);
+            todo!("handle and / or")
+        },
         ASTExpr::BinOp(kind, l, r) => {
             let l = lower_expr(l, ctxt);
             let r = lower_expr(r, ctxt);
@@ -403,6 +408,8 @@ pub fn op_attrs(op: ASTBinOpKind) -> &'static str {
         ASTBinOpKind::MinusEq => "__isub__",
         ASTBinOpKind::MulEq => "__imul__",
         ASTBinOpKind::DivEq => "__idiv__",
+
+        ASTBinOpKind::And | ASTBinOpKind::Or => unreachable!(),
     }
 }
 

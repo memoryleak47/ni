@@ -70,5 +70,7 @@ pub enum ASTBinOpKind {
     MinusEq, // -=
     MulEq, // *=
     DivEq, // /=
+
+    And, Or
 }
 

@@ -167,6 +167,8 @@ pub fn tokenize(s: &str) -> Vec<Token> {
                         "try" => Token::Try,
                         "except" => Token::Except,
                         "raise" => Token::Raise,
+                        "and" => Token::BinOp(ASTBinOpKind::And),
+                        "or" => Token::BinOp(ASTBinOpKind::Or),
                         _ => Token::Ident(s),
                     });
                     state = TokenizerState::InLine;
