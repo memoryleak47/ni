@@ -342,8 +342,34 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
         },
         ASTExpr::BinOp(op@(ASTBinOpKind::And | ASTBinOpKind::Or), l, r) => {
             let l = lower_expr(l, ctxt);
-            let r = lower_expr(r, ctxt);
-            todo!("handle and / or")
+
+            let suc = ctxt.alloc_blk();
+            let snd = ctxt.alloc_blk();
+
+            let arg = ctxt.alloc_irlocal("arg");
+            ctxt.push(format!("{arg} = {{}}"));
+            ctxt.push(format!("{arg}.elem = {l}"));
+
+            let jmptab = Symbol::new_fresh("jmptab");
+            ctxt.push(format!("%{jmptab} = {{}}"));
+
+            if let ASTBinOpKind::And = op {
+                ctxt.push(format!("%{jmptab}[{l}.payload] = {suc}"));
+                ctxt.push(format!("%{jmptab}[True] = {snd}"));
+            } else {
+                ctxt.push(format!("%{jmptab}[{l}.payload] = {snd}"));
+                ctxt.push(format!("%{jmptab}[True] = {suc}"));
+            }
+
+            ctxt.push(format!("jmp %{jmptab}[{l}.payload]"));
+
+            ctxt.focus_blk(snd);
+                let r = lower_expr(r, ctxt);
+                ctxt.push(format!("{arg}.elem = {r}"));
+                ctxt.push(format!("jmp {suc}"));
+
+            ctxt.focus_blk(suc);
+                format!("{arg}.elem")
         },
         ASTExpr::BinOp(kind, l, r) => {
             let l = lower_expr(l, ctxt);
