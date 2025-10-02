@@ -1,0 +1,16 @@
+# instances of this type typically have a "start", "end", "step"
+
+proc init_slice {
+    # setup slice class
+    %slice = {};
+    %slice.type = @.singletons.type;
+    %slice.dict = {};
+    %slice.mro = {};
+    %slice.mro[0] = %slice;
+    %slice.mro[1] = @.singletons.object;
+
+    @.globals["slice"] = %slice;
+    @.singletons.slice = %slice;
+
+    jmp init_loop;
+}

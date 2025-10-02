@@ -16,8 +16,9 @@ main proc init {
     @.arg[10] = init_fn_input;
     @.arg[11] = init_fn_assert;
     @.arg[12] = init_base_exception;
+    @.arg[13] = init_slice;
 
-    @.arg[12] = init_frame;
+    @.arg[14] = init_frame;
 
     @.arg.i = 0;
 
