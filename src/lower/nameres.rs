@@ -54,8 +54,11 @@ fn iter(ast: &AST, nrt: &mut NameResTable, current_fn_ptr: *const ASTStatement) 
 
                 iter(body, nrt, stmt as _);
             },
-            ASTStatement::If(_, body) | ASTStatement::While(_, body) => {
+            ASTStatement::If(_, body, else_) | ASTStatement::While(_, body, else_) => {
                 iter(body, nrt, current_fn_ptr);
+                if let Some(else_) = else_ {
+                    iter(else_, nrt, current_fn_ptr);
+                }
             }
             ASTStatement::For(v, _, body) => {
                 let k = (current_fn_ptr, v.to_string());

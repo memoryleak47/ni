@@ -68,7 +68,9 @@ fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
                 let real_stmt = ASTStatement::Expr(ASTExpr::FnCall(e_setattr, vec![(**v).clone(), rhs.clone()]));
                 lower_body(&[real_stmt], ctxt);
             },
-            ASTStatement::If(cond, then) => {
+            ASTStatement::If(cond, then, else_) => {
+                assert!(else_.is_none(), "TODO: handle else");
+
                 let cond = lower_expr(cond, ctxt);
                 let n = Symbol::new_fresh("ifcond".to_string());
                 let then_pid = ctxt.alloc_blk();
@@ -84,7 +86,9 @@ fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
 
                 ctxt.focus_blk(post_pid);
             },
-            ASTStatement::While(cond, body) => {
+            ASTStatement::While(cond, body, else_) => {
+                assert!(else_.is_none(), "TODO: handle else");
+
                 let pre_pid = ctxt.alloc_blk();
                 let body_pid = ctxt.alloc_blk();
                 let post_pid = ctxt.alloc_blk();
@@ -255,7 +259,7 @@ fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
                 ));
                 let bod = vec![
                     ASTStatement::Assign(ASTExpr::Var(hv.to_string()), expr),
-                    ASTStatement::While(ASTExpr::Bool(true), body),
+                    ASTStatement::While(ASTExpr::Bool(true), body, None),
                 ];
                 let except = Except {
                     ty: None,

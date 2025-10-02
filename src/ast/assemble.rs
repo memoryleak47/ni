@@ -200,7 +200,11 @@ fn assemble_branch_stmt(toks: &[Token]) -> Result<(ASTStatement, &[Token]), Stri
     let toks = &toks[1..];
     let (expr, toks) = assemble_expr(toks)?;
     let (body, toks) = assemble_indented_ast(toks)?;
-    Ok((f(expr, body), toks))
+
+    let [Token::Else, toks@..] = toks else { return Ok((f(expr, body, None), toks)) };
+    let (else_body, toks) = assemble_indented_ast(toks)?;
+
+    Ok((f(expr, body, Some(else_body)), toks))
 }
 
 fn assemble_for_stmt(toks: &[Token]) -> Result<(ASTStatement, &[Token]), String> {
