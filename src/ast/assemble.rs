@@ -50,6 +50,14 @@ fn assemble_general_list<T>(sub: impl Assembler<T>, l: Token, r: Token) -> impl 
 }
 
 fn assemble_expr(toks: &[Token]) -> Result<(ASTExpr, &[Token]), String> {
+    match toks.get(0) {
+        Some(Token::BinOp(ASTBinOpKind::Minus)) => {
+            return assemble_expr(&toks[1..]).map(|(expr, toks)| {
+                (ASTExpr::UnOp(ASTUnOpKind::Neg, Box::new(expr)), toks)
+            });
+        },
+        _ => {},
+    }
     let (mut expr, mut toks) = assemble_atomic_expr(toks)?;
     loop {
         match toks.get(0) {

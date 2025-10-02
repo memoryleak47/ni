@@ -56,8 +56,14 @@ pub enum ASTExpr {
     None,
     FnCall(Box<ASTExpr>, Vec<ASTExpr>),
     BinOp(ASTBinOpKind, Box<ASTExpr>, Box<ASTExpr>),
+    UnOp(ASTUnOpKind, Box<ASTExpr>),
     Attribute(Box<ASTExpr>, String),
     Slice(Box<(/*a*/ Option<ASTExpr>, /*b*/ Option<ASTExpr>, /*c*/ Option<ASTExpr>)>), // [a:b:c]
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum ASTUnOpKind {
+    Neg, // -X
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

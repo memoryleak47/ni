@@ -383,7 +383,10 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
             format!("%{t}")
         },
         ASTExpr::Slice(b) => {
-            todo!()
+            todo!("lower slice")
+        },
+        ASTExpr::UnOp(ASTUnOpKind::Neg, expr) => {
+            todo!("lower unop")
         },
     };
     let irl = ctxt.alloc_irlocal("expr_val");
