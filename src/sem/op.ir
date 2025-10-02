@@ -1,25 +1,57 @@
 # @.frame.arg.{lhs: Object, rhs: Object, l_op: StringObject, suc: ProcId}
 # returns @.ret :: Object | Undef
-proc py_op {
+proc py_binop {
     %arg = @.arg;
-    @.frame.irlocals.py_op_arg = %arg;
+    @.frame.irlocals.py_binop_arg = %arg;
 
     @.arg = {};
     @.arg.obj = %arg.lhs;
     @.arg.attr = %arg.l_op.payload;
-    @.arg.suc = py_op_2;
+    @.arg.suc = py_binop_2;
 
     jmp py_type_attrlookup;
 }
 
-proc py_op_2 {
+proc py_binop_2 {
     # %op_fn :: MethodObject | Undef
     %op_fn = @.ret; # we will crash later, if %op_fn is Undef.
-    %arg = @.frame.irlocals.py_op_arg;
+    %arg = @.frame.irlocals.py_binop_arg;
 
     %farg = {};
     %farg[0] = %arg.lhs;
     %farg[1] = %arg.rhs;
+
+    @.arg = {};
+    @.arg.f = %op_fn.payload;
+    @.arg.suc = %arg.suc;
+    @.arg.farg = %farg;
+
+    jmp call_fn;
+}
+
+############# Unary Operators ################
+
+# @.frame.arg.{obj: Object, l_op: StringObject, suc: ProcId}
+# returns @.ret :: Object | Undef
+proc py_unop {
+    %arg = @.arg;
+    @.frame.irlocals.py_unop_arg = %arg;
+
+    @.arg = {};
+    @.arg.obj = %arg.obj;
+    @.arg.attr = %arg.l_op.payload;
+    @.arg.suc = py_unop_2;
+
+    jmp py_type_attrlookup;
+}
+
+proc py_unop_2 {
+    # %op_fn :: MethodObject | Undef
+    %op_fn = @.ret; # we will crash later, if %op_fn is Undef.
+    %arg = @.frame.irlocals.py_unop_arg;
+
+    %farg = {};
+    %farg[0] = %arg.obj;
 
     @.arg = {};
     @.arg.f = %op_fn.payload;

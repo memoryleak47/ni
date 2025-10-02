@@ -389,7 +389,27 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
             ctxt.push(format!("%{arg}.l_op.payload = \"{l_op}\""));
             ctxt.push(format!("@.arg = %{arg}"));
 
-            ctxt.push(format!("jmp py_op"));
+            ctxt.push(format!("jmp py_binop"));
+
+            ctxt.focus_blk(suc);
+                format!("@.ret")
+        },
+        ASTExpr::UnOp(ASTUnOpKind::Neg, e) => {
+            let e = lower_expr(e, ctxt);
+
+            let suc = ctxt.alloc_blk();
+            let arg = Symbol::new_fresh("arg");
+            ctxt.push(format!("%{arg} = {{}}"));
+            ctxt.push(format!("%{arg}.suc = {suc}"));
+
+            ctxt.push(format!("%{arg}.obj = {e}"));
+
+            ctxt.push(format!("%{arg}.l_op = {{}}"));
+            ctxt.push(format!("%{arg}.l_op.obj = @.singletons.str"));
+            ctxt.push(format!("%{arg}.l_op.payload = \"__neg__\""));
+            ctxt.push(format!("@.arg = %{arg}"));
+
+            ctxt.push(format!("jmp py_unop"));
 
             ctxt.focus_blk(suc);
                 format!("@.ret")
@@ -432,9 +452,6 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
             }
 
             format!("%{t}")
-        },
-        ASTExpr::UnOp(ASTUnOpKind::Neg, expr) => {
-            todo!("lower unop")
         },
     };
     let irl = ctxt.alloc_irlocal("expr_val");

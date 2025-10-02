@@ -62,6 +62,11 @@ proc init_int {
     %pow_fn.payload = fn_payload_pow;
     %int.dict["__pow__"] = %pow_fn;
 
+    %neg_fn = {};
+    %neg_fn.type = @.singletons.function;
+    %neg_fn.payload = fn_payload_neg;
+    %int.dict["__neg__"] = %neg_fn;
+
     jmp init_loop;
 }
 
@@ -137,3 +142,10 @@ proc fn_payload_ge {
     jmp pop_stack;
 }
 
+# @.arg{0}
+proc fn_payload_neg {
+    @.ret = {};
+    @.ret.payload = 0 - @.arg[0].payload;
+    @.ret.type = @.arg[0].type;
+    jmp pop_stack;
+}
