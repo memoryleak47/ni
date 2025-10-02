@@ -13,6 +13,11 @@ proc init_object {
     %eq_fn.payload = fn_std_eq;
     @.singletons.object.dict["__eq__"] = %eq_fn;
 
+    %ne_fn = {};
+    %ne_fn.type = @.singletons.function;
+    %ne_fn.payload = fn_std_ne;
+    @.singletons.object.dict["__ne__"] = %ne_fn;
+
     # primitivity checks.
     @.singletons.primitive[@.singletons.str] = Yes;
     @.singletons.primitive[@.singletons.int] = Yes;
@@ -58,3 +63,33 @@ proc std_eq_nonprim {
     jmp pop_stack;
 }
 
+######## disequality ########
+# disequality defaults to being the opposite of equality.
+
+# @.arg{0, 1}
+proc fn_std_ne {
+    %arg = @.arg;
+
+    %eq = {};
+    %eq.payload = "__eq__";
+    %eq.type = @.singletons.str;
+
+    @.arg = {};
+    @.arg.lhs = %arg[0];
+    @.arg.rhs = %arg[1];
+    @.arg.l_op = %eq;
+    @.arg.suc = fn_std_ne_2;
+
+    jmp py_binop;
+}
+
+proc fn_std_ne_2 {
+    %a = {};
+
+    %a[@.ret] = @.singletons.false;
+    %a[@.singletons.false] = @.singletons.true;
+
+    @.ret = %a[@.ret];
+
+    jmp pop_stack;
+}

@@ -52,11 +52,6 @@ proc init_int {
     %ge_fn.payload = fn_payload_ge;
     %int.dict["__ge__"] = %ge_fn;
 
-    %ne_fn = {};
-    %ne_fn.type = @.singletons.function;
-    %ne_fn.payload = fn_payload_ne;
-    %int.dict["__ne__"] = %ne_fn;
-
     %pow_fn = {};
     %pow_fn.type = @.singletons.function;
     %pow_fn.payload = fn_payload_pow;
