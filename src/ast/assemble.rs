@@ -69,10 +69,50 @@ fn assemble_expr(toks: &[Token]) -> Result<(ASTExpr, &[Token]), String> {
                 toks = toks2;
             },
             Some(Token::LBracket) => {
-                let (idx, toks2) = assemble_expr(&toks[1..])?;
-                let [Token::RBracket, ..] = &toks2[..] else { return Err("missing RBracket".to_string()) };
-                expr = ASTExpr::BinOp(ASTBinOpKind::Subscript, Box::new(expr), Box::new(idx));
-                toks = &toks2[1..];
+                if let Ok((idx, [Token::RBracket, toks2@..])) = assemble_expr(&toks[1..]) {
+                    expr = ASTExpr::BinOp(ASTBinOpKind::Subscript, Box::new(expr), Box::new(idx));
+                    toks = toks2;
+                } else { // parse a slice
+                    toks = &toks[1..];
+                    let mut a: Option<ASTExpr> = None;
+                    let mut b: Option<ASTExpr> = None;
+                    let mut c: Option<ASTExpr> = None;
+
+                    // parsing "a".
+                    if let Ok((aa, toks2)) = assemble_expr(&toks) {
+                        a = Some(aa);
+                        toks = toks2;
+                    }
+                    let [Token::Colon, toks2@..] = toks else { return Err(String::new()) };
+                    toks = toks2;
+
+                    // parsing "b"
+                    if let Ok((bb, toks2)) = assemble_expr(&toks) {
+                        b = Some(bb);
+                        toks = toks2;
+                    }
+
+                    if let [Token::Colon, toks2@..] = toks {
+                        toks = toks2;
+                    } else if let [Token::RBracket, toks2@..] = toks {
+                        let slice = ASTExpr::Slice(Box::new((a, b, c)));
+                        expr = ASTExpr::BinOp(ASTBinOpKind::Subscript, Box::new(expr), Box::new(slice));
+                        toks = toks2;
+                        continue;
+                    } else { return Err(String::new()) }
+
+                    // parsing "c"
+                    if let Ok((cc, toks2)) = assemble_expr(&toks) {
+                        c = Some(cc);
+                        toks = toks2;
+                    }
+
+                    let [Token::RBracket, toks2@..] = toks else { return Err(String::new()) };
+
+                    let slice = ASTExpr::Slice(Box::new((a, b, c)));
+                    expr = ASTExpr::BinOp(ASTBinOpKind::Subscript, Box::new(expr), Box::new(slice));
+                    toks = toks2;
+                }
             },
             _ => return Ok((expr, toks)),
         }
