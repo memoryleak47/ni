@@ -57,6 +57,7 @@ pub enum ASTExpr {
     FnCall(Box<ASTExpr>, Vec<ASTExpr>),
     BinOp(ASTBinOpKind, Box<ASTExpr>, Box<ASTExpr>),
     Attribute(Box<ASTExpr>, String),
+    Slice(Box<(/*a*/ Option<ASTExpr>, /*b*/ Option<ASTExpr>, /*c*/ Option<ASTExpr>)>), // [a:b:c]
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
