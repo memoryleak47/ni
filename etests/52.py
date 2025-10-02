@@ -3,10 +3,19 @@ class A:
         print(type(a) == slice)
 
 a = A()
-x = a[2]
+
+x = a[3]
+
 x = a[:]
 x = a[3:]
 x = a[:3]
 x = a[3:3]
+
+x = a[::]
+x = a[3::]
+x = a[:3:]
+x = a[::3]
 x = a[3:3:]
+x = a[:3:3]
+x = a[3::3]
 x = a[3:3:3]
