@@ -5,7 +5,9 @@ http://benchmarksgame.alioth.debian.org/
 Contributed by Sokolov Yura, modified by Tupteq.
 """
 
-import pyperf
+# <changed>
+# import pyperf
+# </changed>
 
 
 DEFAULT_ARG = 9
@@ -48,7 +50,13 @@ def fannkuch(n):
             return max_flips
 
 
-if __name__ == "__main__":
-    runner = pyperf.Runner()
-    arg = DEFAULT_ARG
-    runner.bench_func('fannkuch', fannkuch, arg)
+# <changed>
+
+print(fannkuch(DEFAULT_ARG))
+
+# if __name__ == "__main__":
+#    runner = pyperf.Runner()
+#    arg = DEFAULT_ARG
+#    runner.bench_func('fannkuch', fannkuch, arg)
+
+# </changed>
