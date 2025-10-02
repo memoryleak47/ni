@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./pyperformance_analysis_tests.sh fannkuch
+cargo r --release pyperformance_atests/bm_fannkuch.py
