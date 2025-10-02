@@ -87,10 +87,9 @@ fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
                 ctxt.focus_blk(post_pid);
             },
             ASTStatement::While(cond, body, else_) => {
-                assert!(else_.is_none(), "TODO: handle else");
-
                 let pre_pid = ctxt.alloc_blk();
                 let body_pid = ctxt.alloc_blk();
+                let else_pid = ctxt.alloc_blk();
                 let post_pid = ctxt.alloc_blk();
 
                 ctxt.fl_mut().loop_stack.push((post_pid, pre_pid));
@@ -102,12 +101,18 @@ fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
                     let n = Symbol::new_fresh("whilecond".to_string());
                     ctxt.push(format!("%{n} = {{}}"));
                     ctxt.push(format!("%{n}[True] = {body_pid}"));
-                    ctxt.push(format!("%{n}[False] = {post_pid}"));
+                    ctxt.push(format!("%{n}[False] = {else_pid}"));
                     ctxt.push(format!("jmp %{n}[{cond}.payload]"));
 
                 ctxt.focus_blk(body_pid);
                     lower_body(body, ctxt);
                     ctxt.push(format!("jmp {pre_pid}"));
+
+                ctxt.focus_blk(else_pid);
+                    if let Some(else_) = else_ {
+                        lower_body(else_, ctxt);
+                    }
+                    ctxt.push(format!("jmp {post_pid}"));
 
                 ctxt.focus_blk(post_pid);
 
