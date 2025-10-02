@@ -397,7 +397,7 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
         ASTExpr::None => format!("@.singletons.none"),
         ASTExpr::List(elems) => {
             let len = elems.len();
-            let t = Symbol::new_fresh("listbox".to_string());
+            let t = Symbol::new_fresh("listbox");
             ctxt.push(format!("%{t} = {{}}"));
             ctxt.push(format!("%{t}.type = @.singletons.list"));
             ctxt.push(format!("%{t}.dict = {{}}"));
@@ -413,7 +413,25 @@ fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
             format!("%{t}")
         },
         ASTExpr::Slice(b) => {
-            todo!("lower slice")
+            let (a, b, c) = &**b;
+            let a = a.as_ref().map(|a| lower_expr(a, ctxt));
+            let b = b.as_ref().map(|b| lower_expr(b, ctxt));
+            let c = c.as_ref().map(|c| lower_expr(c, ctxt));
+
+            let t = Symbol::new_fresh("slicebox");
+            ctxt.push(format!("%{t} = {{}}"));
+            ctxt.push(format!("%{t}.type = @.singletons.slice"));
+            if let Some(a) = a {
+                ctxt.push(format!("%{t}.start = {a}"));
+            }
+            if let Some(b) = b {
+                ctxt.push(format!("%{t}.end = {b}"));
+            }
+            if let Some(c) = c {
+                ctxt.push(format!("%{t}.step = {c}"));
+            }
+
+            format!("%{t}")
         },
         ASTExpr::UnOp(ASTUnOpKind::Neg, expr) => {
             todo!("lower unop")
