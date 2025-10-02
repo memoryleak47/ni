@@ -65,5 +65,10 @@ pub enum ASTBinOpKind {
     Lt, Le, Gt, Ge,
     IsEqual, IsNotEqual,
     Subscript,
+
+    PlusEq, // +=
+    MinusEq, // -=
+    MulEq, // *=
+    DivEq, // /=
 }
 

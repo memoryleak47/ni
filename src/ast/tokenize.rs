@@ -92,6 +92,11 @@ pub fn tokenize(s: &str) -> Vec<Token> {
                 }
             }
             TokenizerState::InLine => match &chars[i..] {
+                ['+', '=', ..] => { tokens.push(Token::BinOp(ASTBinOpKind::PlusEq)); i += 2; }
+                ['-', '=', ..] => { tokens.push(Token::BinOp(ASTBinOpKind::MinusEq)); i += 2; }
+                ['*', '=', ..] => { tokens.push(Token::BinOp(ASTBinOpKind::MulEq)); i += 2; }
+                ['/', '=', ..] => { tokens.push(Token::BinOp(ASTBinOpKind::DivEq)); i += 2; }
+
                 ['+', ..] => { tokens.push(Token::BinOp(ASTBinOpKind::Plus)); i += 1; }
                 ['-', ..] => { tokens.push(Token::BinOp(ASTBinOpKind::Minus)); i += 1; }
                 ['*', '*', ..] => { tokens.push(Token::BinOp(ASTBinOpKind::Pow)); i += 2; }
