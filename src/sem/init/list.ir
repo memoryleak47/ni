@@ -64,16 +64,50 @@ proc fn_list_append {
     jmp pop_stack_none;
 }
 
+#### Constructor ####
+
 proc fn_list_init {
-    %self = @.arg[0];
     %iterable = @.arg[1];
 
+    %tab = {};
+    %tab[%iterable] = fn_list_init_args;
+    %tab[Undef] = fn_list_init_noargs;
+
+    jmp %tab[%iterable];
+}
+
+proc fn_list_init_noargs {
+    %self = @.arg[0];
     %self.payload = {};
+
     %self.length = {};
     %self.length.payload = 0;
     %self.length.type = @.singletons.int;
 
-    # TODO
-
     jmp pop_stack_none;
+}
+
+proc fn_list_init_args {
+    %h_parent = @.handler;
+    @.handler = {};
+    @.handler.parent = %h_parent;
+    @.handler.frame = @.frame;
+
+    jmp fn_list_init_1;
+}
+
+# Call "__next__" on the iterable and go to fn_list_init_2.
+proc fn_list_init_1 {
+    panic "fn_list_init_1 TODO";
+}
+
+# Put the output of "__next__" into the list, and repeat
+proc fn_list_init_2 {
+
+    jmp fn_list_init_1;
+}
+
+# We received StopIteration, hence it's time to return the list
+proc fn_list_init_final {
+    panic "TODO";
 }
