@@ -56,11 +56,33 @@ proc range_iterator__next__ {
 }
 
 proc range__init__ {
+    %tab = {};
+    %tab[@.arg[2]] = range_init_2;
+    %tab[Undef] = range_init_3;
+
+    jmp %tab[@.arg[2]];
+}
+
+# range with two args
+proc range_init_2 {
     %self = @.arg[0];
-    %start = @.arg[1];
-    %stop = @.arg[2];
-    %self.dict["start"] = %start;
-    %self.dict["stop"] = %stop;
+
+    %self.dict["start"] = @.arg[1];
+    %self.dict["stop"] = @.arg[2];
+
+    jmp pop_stack;
+}
+
+# range with one arg
+proc range_init_3 {
+    %self = @.arg[0];
+
+    %zero = {};
+    %zero.type = @.singletons.int;
+    %zero.payload = 0;
+
+    %self.dict["start"] = %zero;
+    %self.dict["stop"] = @.arg[1];
 
     jmp pop_stack;
 }
