@@ -20,6 +20,13 @@ proc init_list {
     %append_fn.payload = fn_list_append;
     @.singletons.list.dict["append"] = %append_fn;
 
+    %init_fn = {};
+    %init_fn.type = @.singletons.function;
+    %init_fn.payload = fn_list_init;
+    @.singletons.list.dict["__init__"] = %init_fn;
+
+    @.globals["list"] = @.singletons.list;
+
     jmp init_loop;
 }
 
@@ -57,3 +64,16 @@ proc fn_list_append {
     jmp pop_stack_none;
 }
 
+proc fn_list_init {
+    %self = @.arg[0];
+    %iterable = @.arg[1];
+
+    %self.payload = {};
+    %self.length = {};
+    %self.length.payload = 0;
+    %self.length.type = @.singletons.int;
+
+    # TODO
+
+    jmp pop_stack_none;
+}
