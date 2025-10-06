@@ -8,10 +8,11 @@ pub fn analyze(ir: IR) -> bool {
 
 fn build_analysis(ir: IR) -> AnalysisState {
     let main_pid = ir.main_pid;
+    let main_hist = Hist(vec![main_pid]);
     let mut analysis = AnalysisState {
         ir,
         states: Map::new(),
-        queue: vec![main_pid],
+        queue: vec![main_hist.clone()],
     };
 
     let st = ProcState {
@@ -20,7 +21,7 @@ fn build_analysis(ir: IR) -> AnalysisState {
         pid: main_pid,
         nodes: Map::new(),
     };
-    analysis.states.insert(main_pid, st);
+    analysis.states.insert(main_hist, st);
 
     while let Some(s) = analysis.queue.pop() {
         analysis.step(s);
@@ -31,7 +32,8 @@ fn build_analysis(ir: IR) -> AnalysisState {
 
 fn check_analysis_safe(analysis: &AnalysisState) -> bool {
     for (s, _) in &analysis.states {
-        for stmt in analysis.ir.procs[s].stmts.iter() {
+        let pid = s.head();
+        for stmt in analysis.ir.procs[&pid].stmts.iter() {
             if matches!(stmt, Statement::Fail) { return false; }
         }
     }

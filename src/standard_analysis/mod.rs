@@ -16,10 +16,15 @@ pub use table::*;
 
 mod fmt;
 
+const HIST_LEN: usize = 5;
+
+#[derive(Clone, Hash, PartialEq, Eq, Debug)]
+pub struct Hist(Vec<Symbol>);
+
 #[derive(Debug)]
 pub struct AnalysisState {
-    pub states: Map<Symbol, ProcState>,
-    pub queue: Vec<Symbol>,
+    pub states: Map<Hist, ProcState>,
+    pub queue: Vec<Hist>,
     pub ir: IR,
 }
 
@@ -35,19 +40,32 @@ pub struct ProcState {
 }
 
 impl AnalysisState {
-    pub fn add(&mut self, st: ProcState) {
-        let pid = st.pid;
-        match self.states.entry(pid) {
+    pub fn add(&mut self, hist: Hist, st: ProcState) {
+        match self.states.entry(hist.clone()) {
             indexmap::map::Entry::Vacant(e) => {
                 e.insert(st);
-                if !self.queue.contains(&pid) { self.queue.push(pid); }
+                if !self.queue.contains(&hist) { self.queue.push(hist); }
             }
             indexmap::map::Entry::Occupied(mut e) => {
                 let s = e.get_mut();
                 let changed = s.merge(&st);
-                if changed && !self.queue.contains(&pid) { self.queue.push(pid); }
+                if changed && !self.queue.contains(&hist) { self.queue.push(hist); }
             },
         }
+    }
+}
+
+impl Hist {
+    pub fn step(&mut self, next: Symbol) {
+        self.0.retain(|x| *x != next);
+        if self.0.len() == HIST_LEN {
+            self.0.remove(0);
+        }
+        self.0.push(next);
+    }
+
+    pub fn head(&self) -> Symbol {
+        *self.0.last().unwrap()
     }
 }
 
