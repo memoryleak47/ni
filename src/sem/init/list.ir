@@ -67,16 +67,6 @@ proc fn_list_append {
 #### Constructor ####
 
 proc fn_list_init {
-    %iterable = @.arg[1];
-
-    %tab = {};
-    %tab[%iterable] = fn_list_init_args;
-    %tab[Undef] = fn_list_init_noargs;
-
-    jmp %tab[%iterable];
-}
-
-proc fn_list_init_noargs {
     %self = @.arg[0];
     %self.payload = {};
 
@@ -84,30 +74,70 @@ proc fn_list_init_noargs {
     %self.length.payload = 0;
     %self.length.type = @.singletons.int;
 
-    jmp pop_stack_none;
+    %iterable = @.arg[1];
+
+    %tab = {};
+    %tab[%iterable] = fn_list_init_args;
+    %tab[Undef] = pop_stack_none;
+
+    jmp %tab[%iterable];
 }
 
 proc fn_list_init_args {
     %h_parent = @.handler;
     @.handler = {};
     @.handler.parent = %h_parent;
+    @.handler.pid = pop_stack_none;
     @.handler.frame = @.frame;
 
+    @.frame.irlocals.self = @.arg[0];
+    @.frame.irlocals.iterable = @.arg[1];
+
+    @.arg = {};
+    @.arg.obj = @.frame.irlocals.iterable;
+    @.arg.attr = "__iter__";
+    @.arg.suc = fn_list_init_args2;
+
+    jmp py_attrlookup;
+}
+
+proc fn_list_init_args2 {
+    @.arg = {};
+    @.arg.f = @.ret;
+    @.arg.suc = fn_list_init_args3;
+    @.arg.args = {};
+
+    jmp py_call;
+}
+
+proc fn_list_init_args3 {
+    @.arg = {};
+    @.arg.obj = @.ret;
+    @.arg.attr = "__next__";
+    @.arg.suc = fn_list_init_args4;
+
+    jmp py_attrlookup;
+}
+
+proc fn_list_init_args4 {
+    @.frame.irlocals.next = @.ret;
     jmp fn_list_init_1;
 }
 
 # Call "__next__" on the iterable and go to fn_list_init_2.
 proc fn_list_init_1 {
-    panic "fn_list_init_1 TODO";
+    @.arg = {};
+    @.arg.f = @.frame.irlocals.next;
+    @.arg.suc = fn_list_init_2;
+    @.arg.args = {};
+
+    jmp py_call;
 }
 
 # Put the output of "__next__" into the list, and repeat
 proc fn_list_init_2 {
-
+    %i = @.frame.irlocals.self.length.payload;
+    @.frame.irlocals.self.payload[%i] = @.ret;
+    @.frame.irlocals.self.length.payload = %i + 1;
     jmp fn_list_init_1;
-}
-
-# We received StopIteration, hence it's time to return the list
-proc fn_list_init_final {
-    panic "TODO";
 }
