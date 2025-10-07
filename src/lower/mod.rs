@@ -46,6 +46,26 @@ fn lower_ast(ast: &AST) -> String {
     s
 }
 
+fn lower_assign(lhs: &ASTExpr, rhs: &ASTExpr, ctxt: &mut Ctxt) {
+    match lhs {
+        ASTExpr::Var(var) => {
+            let val = lower_expr(rhs, ctxt);
+            lower_var_assign(&*var, val, ctxt)
+        }
+        ASTExpr::Attribute(e, v) => {
+            let e = lower_expr(e, ctxt);
+            let rhs = lower_expr(rhs, ctxt);
+            ctxt.push(format!("{e}.dict[\"{v}\"] = {rhs}"));
+        },
+        ASTExpr::BinOp(ASTBinOpKind::Subscript, e, v) => {
+            let e_setattr = Box::new(ASTExpr::Attribute(e.clone(), "__setitem__".to_string()));
+            let real_stmt = ASTStatement::Expr(ASTExpr::FnCall(e_setattr, vec![(**v).clone(), rhs.clone()]));
+            lower_body(&[real_stmt], ctxt);
+        },
+        e => todo!("Can't have assign with this as a lhs: {e:?}"),
+    }
+}
+
 fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
     for stmt in stmts {
         ctxt.push(format!("# {stmt:?}"));
@@ -54,20 +74,8 @@ fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
             ASTStatement::Expr(e) => {
                 lower_expr(e, ctxt);
             },
-            ASTStatement::Assign(ASTExpr::Var(var), val) => {
-                let val = lower_expr(val, ctxt);
-                lower_var_assign(&*var, val, ctxt)
-            }
-            ASTStatement::Assign(ASTExpr::Attribute(e, v), rhs) => {
-                let e = lower_expr(e, ctxt);
-                let rhs = lower_expr(rhs, ctxt);
-                ctxt.push(format!("{e}.dict[\"{v}\"] = {rhs}"));
-            },
-            ASTStatement::Assign(ASTExpr::BinOp(ASTBinOpKind::Subscript, e, v), rhs) => {
-                let e_setattr = Box::new(ASTExpr::Attribute(e.clone(), "__setitem__".to_string()));
-                let real_stmt = ASTStatement::Expr(ASTExpr::FnCall(e_setattr, vec![(**v).clone(), rhs.clone()]));
-                lower_body(&[real_stmt], ctxt);
-            },
+            ASTStatement::Assign(lhs, rhs) => lower_assign(lhs, rhs, ctxt),
+            ASTStatement::AugAssign(_, _, _) => todo!(),
             ASTStatement::If(cond, then, else_) => {
                 assert!(else_.is_none(), "TODO: handle else");
 
@@ -273,7 +281,6 @@ fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
                 let stmt = ASTStatement::Try(bod, vec![except]);
                 lower_body(&[stmt], ctxt);
             },
-            _ => todo!(),
         }
     }
 }
