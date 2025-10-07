@@ -75,7 +75,7 @@ fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
                 lower_expr(e, ctxt);
             },
             ASTStatement::Assign(lhs, rhs) => lower_assign(lhs, rhs, ctxt),
-            ASTStatement::AugAssign(_, _, _) => todo!(),
+            ASTStatement::AugAssign(lhs, op, rhs) => todo!(),
             ASTStatement::If(cond, then, else_) => {
                 assert!(else_.is_none(), "TODO: handle else");
 
@@ -490,6 +490,25 @@ pub fn op_attrs(op: ASTBinOpKind) -> &'static str {
         ASTBinOpKind::And | ASTBinOpKind::Or => unreachable!(),
     }
 }
+
+pub fn aug_op_attrs(op: ASTAugOpKind) -> &'static str {
+    match op {
+        ASTAugOpKind::PlusEq => "__iadd__",
+        ASTAugOpKind::MinusEq => "__isub__",
+        ASTAugOpKind::MulEq => "__imul__",
+        ASTAugOpKind::DivEq => "__itruediv__",
+    }
+}
+
+pub fn aug_op_attr_fallbacks(op: ASTAugOpKind) -> ASTBinOpKind {
+    match op {
+        ASTAugOpKind::PlusEq => ASTBinOpKind::Plus,
+        ASTAugOpKind::MinusEq => ASTBinOpKind::Minus,
+        ASTAugOpKind::MulEq => ASTBinOpKind::Mul,
+        ASTAugOpKind::DivEq => ASTBinOpKind::Div,
+    }
+}
+
 
 fn find_namespace(v: &str, ctxt: &mut Ctxt) -> String {
     let k = (ctxt.fl().ast_ptr, v.to_string());
