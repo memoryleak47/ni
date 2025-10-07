@@ -31,6 +31,7 @@ pub enum Token {
     Indent,
     Unindent,
     BinOp(ASTBinOpKind),
+    AugOp(ASTAugOpKind),
     Try,
     Except,
     Raise
@@ -93,10 +94,10 @@ pub fn tokenize(s: &str) -> Vec<Token> {
                 }
             }
             TokenizerState::InLine => match &chars[i..] {
-                ['+', '=', ..] => { tokens.push(Token::BinOp(ASTBinOpKind::PlusEq)); i += 2; }
-                ['-', '=', ..] => { tokens.push(Token::BinOp(ASTBinOpKind::MinusEq)); i += 2; }
-                ['*', '=', ..] => { tokens.push(Token::BinOp(ASTBinOpKind::MulEq)); i += 2; }
-                ['/', '=', ..] => { tokens.push(Token::BinOp(ASTBinOpKind::DivEq)); i += 2; }
+                ['+', '=', ..] => { tokens.push(Token::AugOp(ASTAugOpKind::PlusEq)); i += 2; }
+                ['-', '=', ..] => { tokens.push(Token::AugOp(ASTAugOpKind::MinusEq)); i += 2; }
+                ['*', '=', ..] => { tokens.push(Token::AugOp(ASTAugOpKind::MulEq)); i += 2; }
+                ['/', '=', ..] => { tokens.push(Token::AugOp(ASTAugOpKind::DivEq)); i += 2; }
 
                 ['+', ..] => { tokens.push(Token::BinOp(ASTBinOpKind::Plus)); i += 1; }
                 ['-', ..] => { tokens.push(Token::BinOp(ASTBinOpKind::Minus)); i += 1; }

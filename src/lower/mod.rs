@@ -480,11 +480,6 @@ pub fn op_attrs(op: ASTBinOpKind) -> &'static str {
         ASTBinOpKind::Pow => "__pow__",
         ASTBinOpKind::Subscript => "__getitem__",
 
-        ASTBinOpKind::PlusEq => "__iadd__",
-        ASTBinOpKind::MinusEq => "__isub__",
-        ASTBinOpKind::MulEq => "__imul__",
-        ASTBinOpKind::DivEq => "__idiv__",
-
         ASTBinOpKind::And | ASTBinOpKind::Or => unreachable!(),
     }
 }

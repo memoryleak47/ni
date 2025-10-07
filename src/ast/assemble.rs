@@ -273,11 +273,18 @@ fn assemble_class_stmt(toks: &[Token]) -> Result<(ASTStatement, &[Token]), Strin
 
 fn assemble_expr_stmt(toks: &[Token]) -> Result<(ASTStatement, &[Token]), String> {
     let (expr, toks) = assemble_expr(toks)?;
-    if let Some(Token::Equals) = toks.get(0) {
-        let (rhs, toks) = assemble_expr(&toks[1..])?;
-        Ok((ASTStatement::Assign(expr, rhs), toks))
-    } else {
-        Ok((ASTStatement::Expr(expr), toks))
+    match toks.get(0) {
+        Some(Token::Equals) => {
+            let (rhs, toks) = assemble_expr(&toks[1..])?;
+            // TODO this is not actually an expr statement!
+            Ok((ASTStatement::Assign(expr, rhs), toks))
+        },
+        Some(Token::AugOp(op)) => {
+            let (rhs, toks) = assemble_expr(&toks[1..])?;
+            // TODO this is not actually an expr statement!
+            Ok((ASTStatement::AugAssign(expr, *op, rhs), toks))
+        },
+        _ => Ok((ASTStatement::Expr(expr), toks)),
     }
 }
 

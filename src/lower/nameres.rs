@@ -25,13 +25,13 @@ pub fn nameres(ast: &AST) -> NameResTable {
 fn iter(ast: &AST, nrt: &mut NameResTable, current_fn_ptr: *const ASTStatement) {
     for stmt in ast {
         match stmt {
-            ASTStatement::Assign(ASTExpr::Var(v), _) => {
+            ASTStatement::Assign(ASTExpr::Var(v), _) | ASTStatement::AugAssign(ASTExpr::Var(v), _, _) => {
                 let k = (current_fn_ptr, v.to_string());
                 if !nrt.contains_key(&k) {
                     nrt.insert(k, VarPlace::Local);
                 }
             }
-            ASTStatement::Assign(..) => {}, // correct?
+            ASTStatement::Assign(..) | ASTStatement::AugAssign(..) => {}, // correct?
             ASTStatement::Def(name, args, body) => {
                 let k = (current_fn_ptr, name.to_string());
                 if !nrt.contains_key(&k) {

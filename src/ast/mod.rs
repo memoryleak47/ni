@@ -11,6 +11,7 @@ pub type AST = Vec<ASTStatement>;
 #[derive(Debug, Clone)]
 pub enum ASTStatement {
     Assign(ASTExpr, ASTExpr),
+    AugAssign(ASTExpr, ASTAugOpKind, ASTExpr), // https://docs.python.org/3/reference/simple_stmts.html#grammar-token-python-grammar-augmented_assignment_stmt
     Def(
         /*fn name*/ String,
         /*args*/ Vec<String>,
@@ -73,11 +74,15 @@ pub enum ASTBinOpKind {
     IsEqual, IsNotEqual,
     Subscript,
 
+    And, Or
+}
+
+// TODO add rest:
+// "+=" | "-=" | "*=" | "@=" | "/=" | "//=" | "%=" | "**=" | ">>=" | "<<=" | "&=" | "^=" | "|="
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum ASTAugOpKind {
     PlusEq, // +=
     MinusEq, // -=
     MulEq, // *=
     DivEq, // /=
-
-    And, Or
 }
-
