@@ -41,7 +41,11 @@ pub fn pexpr_load(e: &PlaceExpr, ctxt: &mut Ctxt) -> Lowered {
             ctxt.focus_blk(suc);
                 format!("@.ret")
         },
-        PlaceExpr::Subscript(e, i) => todo!(),
+        PlaceExpr::Subscript(e, i) => {
+            let e = e.to_string();
+            let i = i.to_string();
+            lower_binop(ASTBinOpKind::Subscript, e, i, ctxt)
+        },
     }
 }
 

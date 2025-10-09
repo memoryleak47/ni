@@ -81,25 +81,7 @@ pub fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> Lowered {
         ASTExpr::BinOp(kind, l, r) => {
             let l = lower_expr(l, ctxt);
             let r = lower_expr(r, ctxt);
-
-            let l_op = op_attrs(*kind);
-            let suc = ctxt.alloc_blk();
-            let arg = Symbol::new_fresh("arg");
-            ctxt.push(format!("%{arg} = {{}}"));
-            ctxt.push(format!("%{arg}.suc = {suc}"));
-
-            ctxt.push(format!("%{arg}.lhs = {l}"));
-            ctxt.push(format!("%{arg}.rhs = {r}"));
-
-            ctxt.push(format!("%{arg}.l_op = {{}}"));
-            ctxt.push(format!("%{arg}.l_op.obj = @.singletons.str"));
-            ctxt.push(format!("%{arg}.l_op.payload = \"{l_op}\""));
-            ctxt.push(format!("@.arg = %{arg}"));
-
-            ctxt.push(format!("jmp py_binop"));
-
-            ctxt.focus_blk(suc);
-                format!("@.ret")
+            lower_binop(*kind, l, r, ctxt)
         },
         ASTExpr::UnOp(ASTUnOpKind::Neg, e) => {
             let e = lower_expr(e, ctxt);
@@ -166,6 +148,26 @@ pub fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> Lowered {
     format!("{irl}")
 }
 
+pub fn lower_binop(kind: ASTBinOpKind, l: Lowered, r: Lowered, ctxt: &mut Ctxt) -> Lowered {
+    let l_op = op_attrs(kind);
+    let suc = ctxt.alloc_blk();
+    let arg = Symbol::new_fresh("arg");
+    ctxt.push(format!("%{arg} = {{}}"));
+    ctxt.push(format!("%{arg}.suc = {suc}"));
+
+    ctxt.push(format!("%{arg}.lhs = {l}"));
+    ctxt.push(format!("%{arg}.rhs = {r}"));
+
+    ctxt.push(format!("%{arg}.l_op = {{}}"));
+    ctxt.push(format!("%{arg}.l_op.obj = @.singletons.str"));
+    ctxt.push(format!("%{arg}.l_op.payload = \"{l_op}\""));
+    ctxt.push(format!("@.arg = %{arg}"));
+
+    ctxt.push(format!("jmp py_binop"));
+
+    ctxt.focus_blk(suc);
+        format!("@.ret")
+}
 
 pub fn op_attrs(op: ASTBinOpKind) -> &'static str {
     match op {
