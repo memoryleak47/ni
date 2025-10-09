@@ -25,6 +25,11 @@ proc init_list {
     %pop_fn.payload = fn_list_pop;
     @.singletons.list.dict["pop"] = %pop_fn;
 
+    %insert_fn = {};
+    %insert_fn.type = @.singletons.function;
+    %insert_fn.payload = fn_list_insert;
+    @.singletons.list.dict["insert"] = %insert_fn;
+
     %init_fn = {};
     %init_fn.type = @.singletons.function;
     %init_fn.payload = fn_list_init;
@@ -85,6 +90,26 @@ proc fn_list_pop {
     %list.payload[%i] = Undef;
 
     jmp pop_stack;
+}
+
+proc fn_list_insert {
+    # TODO raise IndexError if out of bounds (probably?)
+
+    %list = @.arg[0];
+    %i = @.arg[1].payload;
+    %v = @.arg[2];
+
+    %intbox = {};
+    %intbox.type = @.singletons.int;
+    %intbox.payload = %list.length.payload + 1;
+    %list.length = %intbox;
+
+    %list.payload[%i] = %v;
+    %list.length = %intbox;
+
+    # TODO move other elements back
+
+    jmp pop_stack_none;
 }
 
 #### Constructor ####
