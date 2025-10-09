@@ -17,7 +17,10 @@ pub fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
                 let lhs = lower_pexpr(lhs, ctxt);
                 let lhs_v = pexpr_load(&lhs, ctxt);
                 let rhs_v = lower_expr(rhs, ctxt);
-                let out = todo!("op(lhs_v, rhs_v)");
+
+                let op = aug_op_attr_fallbacks(*op);
+                let out = lower_binop(op, lhs_v, rhs_v, ctxt);
+
                 pexpr_store(&lhs, out, ctxt);
             },
             ASTStatement::If(cond, then, else_) => {
