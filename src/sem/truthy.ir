@@ -1,0 +1,11 @@
+# @.arg.{suc_true: ProcId, suc_false: ProcId, obj: Object}
+proc branch_truthy {
+    %tab = {};
+
+    %tab[@.arg.obj] = @.arg.suc_true;
+
+    %tab[@.singletons.false] = @.arg.suc_false;
+    %tab[@.singletons.none] = @.arg.suc_false;
+
+    jmp %tab[@.arg.obj];
+}

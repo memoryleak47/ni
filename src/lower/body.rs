@@ -24,20 +24,25 @@ pub fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
 
                 pexpr_store(&lhs, out, ctxt);
             },
-            ASTStatement::If(cond, then, else_) => {
-                assert!(else_.is_none(), "TODO: handle else");
-
+            ASTStatement::If(cond, then, else_blk) => {
                 let cond = lower_expr(cond, ctxt);
-                let n = Symbol::new_fresh("ifcond".to_string());
                 let then_pid = ctxt.alloc_blk();
+                let else_pid = ctxt.alloc_blk();
                 let post_pid = ctxt.alloc_blk();
-                ctxt.push(format!("%{n} = {{}}"));
-                ctxt.push(format!("%{n}[True] = {then_pid}"));
-                ctxt.push(format!("%{n}[False] = {post_pid}"));
-                ctxt.push(format!("jmp %{n}[{cond}.payload]"));
+                ctxt.push(format!("@.arg = {{}}"));
+                ctxt.push(format!("@.arg.suc_true = {then_pid}"));
+                ctxt.push(format!("@.arg.suc_false = {else_pid}"));
+                ctxt.push(format!("@.arg.obj = {cond}"));
+                ctxt.push(format!("jmp branch_truthy"));
 
                 ctxt.focus_blk(then_pid);
                     lower_body(then, ctxt);
+                    ctxt.push(format!("jmp {post_pid}"));
+
+                ctxt.focus_blk(else_pid);
+                    if let Some(else_blk) = else_blk {
+                        lower_body(else_blk, ctxt);
+                    }
                     ctxt.push(format!("jmp {post_pid}"));
 
                 ctxt.focus_blk(post_pid);

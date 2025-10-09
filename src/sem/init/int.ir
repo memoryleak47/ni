@@ -107,33 +107,37 @@ proc fn_payload_mod {
 
 # @.arg{0, 1}
 proc fn_payload_lt {
-    @.ret = {};
-    @.ret.payload = @.arg[0].payload < @.arg[1].payload;
-    @.ret.type = @.singletons.bool;
+    %tab = {};
+    %tab[True] = @.singletons.true;
+    %tab[False] = @.singletons.false;
+    @.ret = %tab[@.arg[0].payload < @.arg[1].payload];
     jmp pop_stack;
 }
 
 # @.arg{0, 1}
 proc fn_payload_le {
-    @.ret = {};
-    @.ret.payload = @.arg[0].payload <= @.arg[1].payload;
-    @.ret.type = @.singletons.bool;
+    %tab = {};
+    %tab[True] = @.singletons.true;
+    %tab[False] = @.singletons.false;
+    @.ret = %tab[@.arg[0].payload <= @.arg[1].payload];
     jmp pop_stack;
 }
 
 # @.arg{0, 1}
 proc fn_payload_gt {
-    @.ret = {};
-    @.ret.payload = @.arg[0].payload > @.arg[1].payload;
-    @.ret.type = @.singletons.bool;
+    %tab = {};
+    %tab[True] = @.singletons.true;
+    %tab[False] = @.singletons.false;
+    @.ret = %tab[@.arg[0].payload > @.arg[1].payload];
     jmp pop_stack;
 }
 
 # @.arg{0, 1}
 proc fn_payload_ge {
-    @.ret = {};
-    @.ret.payload = @.arg[0].payload >= @.arg[1].payload;
-    @.ret.type = @.singletons.bool;
+    %tab = {};
+    %tab[True] = @.singletons.true;
+    %tab[False] = @.singletons.false;
+    @.ret = %tab[@.arg[0].payload >= @.arg[1].payload];
     jmp pop_stack;
 }
 
