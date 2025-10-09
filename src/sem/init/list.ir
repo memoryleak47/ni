@@ -20,6 +20,11 @@ proc init_list {
     %append_fn.payload = fn_list_append;
     @.singletons.list.dict["append"] = %append_fn;
 
+    %pop_fn = {};
+    %pop_fn.type = @.singletons.function;
+    %pop_fn.payload = fn_list_pop;
+    @.singletons.list.dict["pop"] = %pop_fn;
+
     %init_fn = {};
     %init_fn.type = @.singletons.function;
     %init_fn.payload = fn_list_init;
@@ -62,6 +67,24 @@ proc fn_list_append {
     %list.payload[%old_len] = %v;
 
     jmp pop_stack_none;
+}
+
+proc fn_list_pop {
+    # TODO raise IndexError if list is empty.
+
+    %list = @.arg[0];
+
+    %i = %list.length.payload - 1;
+
+    %intbox = {};
+    %intbox.type = @.singletons.int;
+    %intbox.payload = %i;
+    %list.length = %intbox;
+
+    @.ret = %list.payload[%i];
+    %list.payload[%i] = Undef;
+
+    jmp pop_stack;
 }
 
 #### Constructor ####
