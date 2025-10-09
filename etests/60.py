@@ -30,3 +30,7 @@ if A():
     print("ok")
 else:
     print("no")
+
+while 1:
+    print("a")
+    break

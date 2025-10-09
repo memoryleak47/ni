@@ -59,11 +59,11 @@ pub fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
 
                 ctxt.focus_blk(pre_pid);
                     let cond = lower_expr(cond, ctxt);
-                    let n = Symbol::new_fresh("whilecond".to_string());
-                    ctxt.push(format!("%{n} = {{}}"));
-                    ctxt.push(format!("%{n}[True] = {body_pid}"));
-                    ctxt.push(format!("%{n}[False] = {else_pid}"));
-                    ctxt.push(format!("jmp %{n}[{cond}.payload]"));
+                    ctxt.push(format!("@.arg = {{}}"));
+                    ctxt.push(format!("@.arg.suc_true = {body_pid}"));
+                    ctxt.push(format!("@.arg.suc_false = {else_pid}"));
+                    ctxt.push(format!("@.arg.obj = {cond}"));
+                    ctxt.push(format!("jmp branch_truthy"));
 
                 ctxt.focus_blk(body_pid);
                     lower_body(body, ctxt);
