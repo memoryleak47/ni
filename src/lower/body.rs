@@ -18,6 +18,7 @@ pub fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
                 let lhs_v = pexpr_load(&lhs, ctxt);
                 let rhs_v = lower_expr(rhs, ctxt);
 
+                // TODO try `__iadd__` etc. first.
                 let op = aug_op_attr_fallbacks(*op);
                 let out = lower_binop(op, lhs_v, rhs_v, ctxt);
 
