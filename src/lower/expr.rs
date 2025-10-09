@@ -1,6 +1,6 @@
 use crate::lower::*;
 
-pub fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
+pub fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> Lowered {
     let out = match e {
         ASTExpr::FnCall(f, args) => {
             let f = lower_expr(f, ctxt);
@@ -21,24 +21,9 @@ pub fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> String {
 
             format!("@.ret")
         },
-        ASTExpr::Var(v) => {
-            let ns = find_namespace(v, ctxt);
-            format!("{ns}[\"{v}\"]")
-        },
-        ASTExpr::Attribute(e, a) => {
-            let e = lower_expr(e, ctxt);
-
-            let suc = ctxt.alloc_blk();
-            let arg = Symbol::new_fresh("arg");
-            ctxt.push(format!("%{arg} = {{}}"));
-            ctxt.push(format!("%{arg}.obj = {e}"));
-            ctxt.push(format!("%{arg}.attr = \"{a}\""));
-            ctxt.push(format!("%{arg}.suc = {suc}"));
-            ctxt.push(format!("@.arg = %{arg}"));
-            ctxt.push(format!("jmp py_attrlookup"));
-
-            ctxt.focus_blk(suc);
-                format!("@.ret")
+        ASTExpr::Var(..) | ASTExpr::Attribute(..) | ASTExpr::BinOp(ASTBinOpKind::Subscript, ..) => {
+            let e = lower_pexpr(e, ctxt);
+            pexpr_load(&e, ctxt)
         },
         ASTExpr::Str(s) => {
             let t = Symbol::new_fresh("strbox".to_string());

@@ -12,7 +12,9 @@ use expr::*;
 mod body;
 use body::*;
 
-pub fn lower(ast: &AST) -> String {
+type Lowered = String;
+
+pub fn lower(ast: &AST) -> Lowered {
     let mut s = String::from("#\n");
     s.extend(lower_ast(ast).chars());
     s.extend(include_str!(concat!(env!("OUT_DIR"), "/concat.ir")).chars());
@@ -20,7 +22,7 @@ pub fn lower(ast: &AST) -> String {
     s
 }
 
-fn lower_ast(ast: &AST) -> String {
+fn lower_ast(ast: &AST) -> Lowered {
     let nameres_tab = nameres(ast);
     let userstart = Symbol::new("userstart".to_string());
     let mut ctxt = Ctxt {

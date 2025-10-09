@@ -8,8 +8,18 @@ pub fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
             ASTStatement::Expr(e) => {
                 lower_expr(e, ctxt);
             },
-            ASTStatement::Assign(lhs, rhs) => lower_assign(lhs, rhs, ctxt),
-            ASTStatement::AugAssign(lhs, op, rhs) => todo!(),
+            ASTStatement::Assign(lhs, rhs) => {
+                let lhs = lower_pexpr(lhs, ctxt);
+                let rhs = lower_expr(rhs, ctxt);
+                pexpr_store(&lhs, rhs, ctxt);
+            },
+            ASTStatement::AugAssign(lhs, op, rhs) => {
+                let lhs = lower_pexpr(lhs, ctxt);
+                let lhs_v = pexpr_load(&lhs, ctxt);
+                let rhs_v = lower_expr(rhs, ctxt);
+                let out = todo!("op(lhs_v, rhs_v)");
+                pexpr_store(&lhs, out, ctxt);
+            },
             ASTStatement::If(cond, then, else_) => {
                 assert!(else_.is_none(), "TODO: handle else");
 
@@ -219,33 +229,77 @@ pub fn lower_body(stmts: &[ASTStatement], ctxt: &mut Ctxt) {
     }
 }
 
-fn lower_assign(lhs: &ASTExpr, rhs: &ASTExpr, ctxt: &mut Ctxt) {
-    match lhs {
-        ASTExpr::Var(var) => {
-            let val = lower_expr(rhs, ctxt);
-            lower_var_assign(&*var, val, ctxt)
-        }
+pub enum PlaceExpr {
+    Subscript(Lowered, Lowered), // lhs[i]
+    Attr(Lowered, String), // lhs.attr
+    Var(String), // v
+}
+
+pub fn lower_pexpr(e: &ASTExpr, ctxt: &mut Ctxt) -> PlaceExpr {
+    match e {
+        ASTExpr::Var(v) => PlaceExpr::Var(v.clone()),
         ASTExpr::Attribute(e, v) => {
             let e = lower_expr(e, ctxt);
-            let rhs = lower_expr(rhs, ctxt);
-            ctxt.push(format!("{e}.dict[\"{v}\"] = {rhs}"));
+            PlaceExpr::Attr(e, v.to_string())
         },
-        ASTExpr::BinOp(ASTBinOpKind::Subscript, e, v) => {
-            let e_setattr = Box::new(ASTExpr::Attribute(e.clone(), "__setitem__".to_string()));
-            let real_stmt = ASTStatement::Expr(ASTExpr::FnCall(e_setattr, vec![(**v).clone(), rhs.clone()]));
-            lower_body(&[real_stmt], ctxt);
+        ASTExpr::BinOp(ASTBinOpKind::Subscript, e, i) => {
+            let e = lower_expr(e, ctxt);
+            let i = lower_expr(i, ctxt);
+            PlaceExpr::Subscript(e, i)
         },
-        e => todo!("Can't have assign with this as a lhs: {e:?}"),
+        _ => panic!("Not a PlaceExpr: {e:?}"),
     }
 }
 
+pub fn pexpr_load(e: &PlaceExpr, ctxt: &mut Ctxt) -> Lowered {
+    match e {
+        PlaceExpr::Var(var) => {
+            let ns = find_namespace(var, ctxt);
+            format!("{ns}[\"{var}\"]")
+        },
+        PlaceExpr::Attr(e, a) => {
+            let suc = ctxt.alloc_blk();
+            let arg = Symbol::new_fresh("arg");
+            ctxt.push(format!("%{arg} = {{}}"));
+            ctxt.push(format!("%{arg}.obj = {e}"));
+            ctxt.push(format!("%{arg}.attr = \"{a}\""));
+            ctxt.push(format!("%{arg}.suc = {suc}"));
+            ctxt.push(format!("@.arg = %{arg}"));
+            ctxt.push(format!("jmp py_attrlookup"));
+
+            ctxt.focus_blk(suc);
+                format!("@.ret")
+        },
+        PlaceExpr::Subscript(e, i) => todo!(),
+    }
+}
+
+pub fn pexpr_store(e: &PlaceExpr, val: Lowered, ctxt: &mut Ctxt) {
+    match e {
+        PlaceExpr::Var(var) => {
+            let ns = find_namespace(var, ctxt);
+            ctxt.push(format!("{ns}[\"{var}\"] = {val}"));
+        },
+        PlaceExpr::Attr(e, v) => {
+            ctxt.push(format!("{e}.dict[\"{v}\"] = {val}"));
+        },
+        PlaceExpr::Subscript(e, i) => {
+            todo!()
+/*
+            let e_setattr = Box::new(ASTExpr::Attribute(e.clone(), "__setitem__".to_string()));
+            let real_stmt = ASTStatement::Expr(ASTExpr::FnCall(e_setattr, vec![(**v).clone(), rhs.clone()]));
+            lower_body(&[real_stmt], ctxt);
+*/
+        },
+    }
+}
 
 fn lower_var_assign(var: &str, val: String, ctxt: &mut Ctxt) {
     let ns = find_namespace(var, ctxt);
     ctxt.push(format!("{ns}[\"{var}\"] = {val}"));
 }
 
-pub fn find_namespace(v: &str, ctxt: &mut Ctxt) -> String {
+pub fn find_namespace(v: &str, ctxt: &mut Ctxt) -> Lowered {
     let k = (ctxt.fl().ast_ptr, v.to_string());
     match ctxt.nameres_tab.get(&k) {
         Some(VarPlace::Local) => format!("@.frame.pylocals"),

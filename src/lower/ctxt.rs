@@ -1,4 +1,4 @@
-use crate::*;
+use crate::lower::*;
 
 pub(in crate::lower) struct Ctxt {
     pub stack: Vec<FnCtxt>,
@@ -51,7 +51,7 @@ impl Ctxt {
         self.stack.last_mut().unwrap().current_pid = pid;
     }
 
-    pub fn alloc_irlocal(&mut self, name: impl Into<String>) -> String {
+    pub fn alloc_irlocal(&mut self, name: impl Into<String>) -> Lowered {
         let sym = Symbol::new_fresh(name.into());
         format!("@.frame.irlocals.{sym}")
     }
