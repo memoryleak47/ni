@@ -154,7 +154,9 @@ pub fn lower_fn_call(f: Lowered, args: Vec<Lowered>, ctxt: &mut Ctxt) -> Lowered
 
     ctxt.focus_blk(suc);
 
-    format!("@.ret")
+    let out = ctxt.alloc_irlocal("lower_fn_out");
+    ctxt.push(format!("{out} = @.ret"));
+    format!("{out}")
 }
 
 
@@ -176,7 +178,9 @@ pub fn lower_binop(kind: ASTBinOpKind, l: Lowered, r: Lowered, ctxt: &mut Ctxt) 
     ctxt.push(format!("jmp py_binop"));
 
     ctxt.focus_blk(suc);
-        format!("@.ret")
+        let out = ctxt.alloc_irlocal("lower_binop");
+        ctxt.push(format!("{out} = @.ret"));
+        format!("{out}")
 }
 
 pub fn op_attrs(op: ASTBinOpKind) -> &'static str {
