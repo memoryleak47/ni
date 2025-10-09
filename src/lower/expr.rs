@@ -4,22 +4,13 @@ pub fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> Lowered {
     let out = match e {
         ASTExpr::FnCall(f, args) => {
             let f = lower_expr(f, ctxt);
-            let suc = ctxt.alloc_blk();
-            let arg = ctxt.alloc_irlocal("arg");
-            ctxt.push(format!("{arg} = {{}}"));
-            ctxt.push(format!("{arg}.f = {f}"));
-            ctxt.push(format!("{arg}.suc = {suc}"));
-            ctxt.push(format!("{arg}.args = {{}}"));
-            for (i, a) in args.iter().enumerate() {
-                let a = lower_expr(a, ctxt);
-                ctxt.push(format!("{arg}.args[{i}] = {a}"));
+
+            let mut args2 = Vec::new();
+            for a in args.iter() {
+                args2.push(lower_expr(a, ctxt));
             }
-            ctxt.push(format!("@.arg = {arg}"));
-            ctxt.push(format!("jmp py_call"));
 
-            ctxt.focus_blk(suc);
-
-            format!("@.ret")
+            lower_fn_call(f, args2, ctxt)
         },
         ASTExpr::Var(..) | ASTExpr::Attribute(..) | ASTExpr::BinOp(ASTBinOpKind::Subscript, ..) => {
             let e = lower_pexpr(e, ctxt);
@@ -147,6 +138,25 @@ pub fn lower_expr(e: &ASTExpr, ctxt: &mut Ctxt) -> Lowered {
     ctxt.push(format!("{irl} = {out}"));
     format!("{irl}")
 }
+
+pub fn lower_fn_call(f: Lowered, args: Vec<Lowered>, ctxt: &mut Ctxt) -> Lowered {
+    let suc = ctxt.alloc_blk();
+    let arg = ctxt.alloc_irlocal("arg");
+    ctxt.push(format!("{arg} = {{}}"));
+    ctxt.push(format!("{arg}.f = {f}"));
+    ctxt.push(format!("{arg}.suc = {suc}"));
+    ctxt.push(format!("{arg}.args = {{}}"));
+    for (i, a) in args.iter().enumerate() {
+        ctxt.push(format!("{arg}.args[{i}] = {a}"));
+    }
+    ctxt.push(format!("@.arg = {arg}"));
+    ctxt.push(format!("jmp py_call"));
+
+    ctxt.focus_blk(suc);
+
+    format!("@.ret")
+}
+
 
 pub fn lower_binop(kind: ASTBinOpKind, l: Lowered, r: Lowered, ctxt: &mut Ctxt) -> Lowered {
     let l_op = op_attrs(kind);

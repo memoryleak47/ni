@@ -1,5 +1,6 @@
 use crate::lower::*;
 
+#[derive(Clone)]
 pub enum PlaceExpr {
     Subscript(Lowered, Lowered), // lhs[i]
     Attr(Lowered, String), // lhs.attr
@@ -58,12 +59,10 @@ pub fn pexpr_store(e: &PlaceExpr, val: Lowered, ctxt: &mut Ctxt) {
             ctxt.push(format!("{e}.dict[\"{v}\"] = {val}"));
         },
         PlaceExpr::Subscript(e, i) => {
-            todo!()
-/*
-            let e_setattr = Box::new(ASTExpr::Attribute(e.clone(), "__setitem__".to_string()));
-            let real_stmt = ASTStatement::Expr(ASTExpr::FnCall(e_setattr, vec![(**v).clone(), rhs.clone()]));
-            lower_body(&[real_stmt], ctxt);
-*/
+            let e = e.to_string();
+            let i = i.to_string();
+            let f = pexpr_load(&PlaceExpr::Attr(e, String::from("__setitem__")), ctxt);
+            lower_fn_call(f, vec![i, val], ctxt);
         },
     }
 }
