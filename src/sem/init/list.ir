@@ -104,12 +104,27 @@ proc fn_list_insert {
     %intbox.payload = %list.length.payload + 1;
     %list.length = %intbox;
 
+    @.frame.irlocals.i = %i + 1;
+    @.frame.irlocals.l = %list.payload;
+    @.frame.irlocals.v = %list.payload[%i];
     %list.payload[%i] = %v;
-    %list.length = %intbox;
 
-    # TODO move other elements back
+    jmp fn_list_insert_2;
+}
 
-    jmp pop_stack_none;
+proc fn_list_insert_2 {
+    %tab = {};
+    %tab[@.frame.irlocals.v] = fn_list_insert_3;
+    %tab[Undef] = pop_stack_none;
+    jmp %tab[@.frame.irlocals.v];
+}
+
+proc fn_list_insert_3 {
+    %v = @.frame.irlocals.l[@.frame.irlocals.i];
+    @.frame.irlocals.l[@.frame.irlocals.i] = @.frame.irlocals.v;
+    @.frame.irlocals.i = @.frame.irlocals.i + 1;
+    @.frame.irlocals.v = %v;
+    jmp fn_list_insert_2;
 }
 
 #### Constructor ####
