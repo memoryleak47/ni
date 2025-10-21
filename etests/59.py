@@ -14,3 +14,8 @@ l.insert(2, 0)
 print(l[0])
 print(l[1])
 print(l[2])
+
+x = l.pop(0)
+print(x)
+print(l[0])
+print(l[1])

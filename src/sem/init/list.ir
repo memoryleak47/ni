@@ -74,23 +74,49 @@ proc fn_list_append {
     jmp pop_stack_none;
 }
 
+#### POP
+
 proc fn_list_pop {
-    # TODO raise IndexError if list is empty.
+    # TODO raise IndexError if out of bounds/empty
 
     %list = @.arg[0];
 
-    %i = %list.length.payload - 1;
+    # buffer containing "length-1"
+    %l1 = {};
+    %l1.payload = %list.length.payload - 1;
+
+    %t = {};
+    %t[@.arg[1]] = @.arg[1]; # we want to remove the index specified as argument
+    %t[Undef] = %l1;         # or length-1 if no argument is given.
+
+    # %i is the index we want to remove.
+    %i = %t[@.arg[1]].payload;
 
     %intbox = {};
     %intbox.type = @.singletons.int;
-    %intbox.payload = %i;
+    %intbox.payload = %list.length.payload - 1;
     %list.length = %intbox;
 
+    @.frame.irlocals.i = %i;
+    @.frame.irlocals.l = %list.payload;
     @.ret = %list.payload[%i];
-    %list.payload[%i] = Undef;
 
-    jmp pop_stack;
+    jmp fn_list_pop_2;
 }
+
+proc fn_list_pop_2 {
+    %v = @.frame.irlocals.l[@.frame.irlocals.i];
+    @.frame.irlocals.l[@.frame.irlocals.i] = @.frame.irlocals.l[@.frame.irlocals.i+1];
+    %new_v = @.frame.irlocals.l[@.frame.irlocals.i];
+    @.frame.irlocals.i = @.frame.irlocals.i + 1;
+
+    %t = {};
+    %t[%new_v] = fn_list_pop_2;
+    %t[Undef] = pop_stack; # if new_v is empty
+    jmp %t[%new_v];
+}
+
+#### INSERT
 
 proc fn_list_insert {
     # TODO raise IndexError if out of bounds (probably?)
