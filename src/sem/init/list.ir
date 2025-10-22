@@ -47,9 +47,26 @@ proc match_slice {
     %slice = @.arg.slice;
     %list = @.arg.list;
 
-    %start = %slice.start.payload;
-    %end = %slice.end.payload;
-    %step = %slice.step.payload;
+    %t = {};
+
+    # step defaults to 1
+    %t[%slice.step] = %slice.step;
+    %t[Undef] = {};
+    %t[Undef].payload = 1;
+    %step = %t[%slice.step].payload;
+
+    # start defaults to 0
+    %t[%slice.start] = %slice.start;
+    %t[Undef] = {};
+    %t[Undef].payload = 0;
+    %start = %t[%slice.start].payload;
+
+    # end defaults to list.len
+    %t[%slice.end] = %slice.end;
+    %t[Undef] = %list.length;
+    %end = %t[%slice.end].payload;
+
+    # TODO start & end have wrong defaults for step < 0.
 
     %out = {};
     %out.start = %start;
