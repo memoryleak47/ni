@@ -125,7 +125,7 @@ proc fn_list_getitem_slice_3 {
     %t = {};
     %t[True] = fn_list_getitem_slice_4;
     %t[False] = pop_stack;
-    jmp %t[@.frame.irlocals.i < @.frame.irlocals.length];
+    jmp %t[@.frame.irlocals.i <= @.frame.irlocals.length];
 }
 
 proc fn_list_getitem_slice_4 {
