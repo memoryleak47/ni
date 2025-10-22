@@ -40,30 +40,6 @@ proc init_list {
     jmp init_loop;
 }
 
-#### GETITEM
-
-proc fn_list_getitem {
-    %list = @.arg[0].payload;
-    %idx = @.arg[1];
-
-    %t = {};
-    %t[%idx.type] = do_fail;
-    %t[@.singletons.int] = fn_list_getitem_int;
-    %t[@.singletons.slice] = fn_list_getitem_slice;
-
-    jmp %t[%idx.type];
-}
-
-proc fn_list_getitem_int {
-    %list = @.arg[0].payload;
-    %idx = @.arg[1].payload;
-
-    @.ret = %list[%idx];
-
-    jmp pop_stack;
-}
-
-
 # @.arg.{list, slice, suc}
 # returns {.start=int, .step=int, .length=int }
 # slices like [10:20:-1] will result in length=0
@@ -90,6 +66,31 @@ proc match_slice {
 
     jmp @.arg.suc;
 }
+
+#### GETITEM
+
+
+proc fn_list_getitem {
+    %list = @.arg[0].payload;
+    %idx = @.arg[1];
+
+    %t = {};
+    %t[%idx.type] = do_fail;
+    %t[@.singletons.int] = fn_list_getitem_int;
+    %t[@.singletons.slice] = fn_list_getitem_slice;
+
+    jmp %t[%idx.type];
+}
+
+proc fn_list_getitem_int {
+    %list = @.arg[0].payload;
+    %idx = @.arg[1].payload;
+
+    @.ret = %list[%idx];
+
+    jmp pop_stack;
+}
+
 
 proc fn_list_getitem_slice {
     %list = @.arg[0];
@@ -138,9 +139,20 @@ proc fn_list_getitem_slice_4 {
     jmp fn_list_getitem_slice_3;
 }
 
-####
+#### SETITEM
 
 proc fn_list_setitem {
+    %idx = @.arg[1];
+
+    %t = {};
+    %t[%idx.type] = do_fail;
+    %t[@.singletons.int] = fn_list_setitem_int;
+    %t[@.singletons.slice] = fn_list_setitem_slice;
+
+    jmp %t[%idx.type];
+}
+
+proc fn_list_setitem_int {
     %list = @.arg[0].payload;
     %idx = @.arg[1].payload;
     %v = @.arg[2];
@@ -149,6 +161,16 @@ proc fn_list_setitem {
 
     jmp pop_stack_none;
 }
+
+proc fn_list_setitem_slice {
+    %list = @.arg[0].payload;
+    %idx = @.arg[1].payload;
+    %v = @.arg[2];
+
+    panic "TODO";
+}
+
+####
 
 proc fn_list_append {
     %list = @.arg[0];
