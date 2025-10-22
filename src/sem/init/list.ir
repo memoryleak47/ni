@@ -40,7 +40,21 @@ proc init_list {
     jmp init_loop;
 }
 
+#### GETITEM
+
 proc fn_list_getitem {
+    %list = @.arg[0].payload;
+    %idx = @.arg[1];
+
+    %t = {};
+    %t[%idx.type] = do_fail;
+    %t[@.singletons.int] = fn_list_getitem_int;
+    %t[@.singletons.slice] = fn_list_getitem_slice;
+
+    jmp %t[%idx.type];
+}
+
+proc fn_list_getitem_int {
     %list = @.arg[0].payload;
     %idx = @.arg[1].payload;
 
@@ -48,6 +62,17 @@ proc fn_list_getitem {
 
     jmp pop_stack;
 }
+
+proc fn_list_getitem_slice {
+    %list = @.arg[0];
+    %idx = @.arg[1];
+
+    @.ret = %list; # TODO
+
+    jmp pop_stack;
+}
+
+####
 
 proc fn_list_setitem {
     %list = @.arg[0].payload;
