@@ -55,15 +55,21 @@ proc match_slice {
     %t[Undef].payload = 1;
     %step = %t[%slice.step].payload;
 
-    # start defaults to 0
+    %r = {};
+    %r[True] = 1;
+    %r[False] = 0;
+    %pos = %r[%step >= 0];
+
+    # start defaults to 0 or 'len-1'
     %t[%slice.start] = %slice.start;
     %t[Undef] = {};
-    %t[Undef].payload = 0;
+    %t[Undef].payload = (1-%pos) * (%list.length.payload - 1);
     %start = %t[%slice.start].payload;
 
-    # end defaults to list.len
+    # end defaults to list.len or -1
     %t[%slice.end] = %slice.end;
-    %t[Undef] = %list.length;
+    %t[Undef] = {};
+    %t[Undef].payload = %pos * %list.length.payload - (1-%pos);
     %end = %t[%slice.end].payload;
 
     # TODO start & end have wrong defaults for step < 0.
