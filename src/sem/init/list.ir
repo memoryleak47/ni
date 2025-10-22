@@ -35,6 +35,11 @@ proc init_list {
     %init_fn.payload = fn_list_init;
     @.singletons.list.dict["__init__"] = %init_fn;
 
+    %len_fn = {};
+    %len_fn.type = @.singletons.function;
+    %len_fn.payload = fn_list_len;
+    @.singletons.list.dict["__len__"] = %len_fn;
+
     @.globals["list"] = @.singletons.list;
 
     jmp init_loop;
@@ -405,4 +410,9 @@ proc fn_list_init_2 {
     @.frame.irlocals.self.payload[%i] = @.ret;
     @.frame.irlocals.self.length.payload = %i + 1;
     jmp fn_list_init_1;
+}
+
+proc fn_list_len {
+    @.ret = @.arg[0].length;
+    jmp pop_stack;
 }
