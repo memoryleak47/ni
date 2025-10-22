@@ -163,11 +163,46 @@ proc fn_list_setitem_int {
 }
 
 proc fn_list_setitem_slice {
-    %list = @.arg[0].payload;
-    %idx = @.arg[1].payload;
-    %v = @.arg[2];
+    %list = @.arg[0];
+    %slice = @.arg[1];
+    @.frame.irlocals.inlist = @.arg[2];
 
-    panic "TODO";
+    @.arg = {};
+    @.arg.list = %list;
+    @.arg.slice = %slice;
+    @.arg.suc = fn_list_setitem_slice_2;
+
+    jmp match_slice;
+}
+
+proc fn_list_setitem_slice_2 {
+    @.frame.irlocals.start = @.ret.start;
+    @.frame.irlocals.length = @.ret.length;
+    @.frame.irlocals.step = @.ret.step;
+    @.frame.irlocals.outlist = @.ret.list;
+
+    # TODO check that 'len(inlist) == length'
+
+    @.frame.irlocals.i = 0;
+
+    jmp fn_list_setitem_slice_3;
+}
+
+proc fn_list_setitem_slice_3 {
+    %t = {};
+    %t[True] = fn_list_setitem_slice_4;
+    %t[False] = pop_stack_none;
+    jmp %t[@.frame.irlocals.i < @.frame.irlocals.length];
+}
+
+proc fn_list_setitem_slice_4 {
+    %i = @.frame.irlocals.i;
+    %ii = @.frame.irlocals.start + (%i * @.frame.irlocals.step);
+    %tmp = @.frame.irlocals.inlist.payload[%ii];
+    @.frame.irlocals.outlist.payload[%i] = %tmp;
+    @.frame.irlocals.i = %i + 1;
+
+    jmp fn_list_setitem_slice_3;
 }
 
 ####
