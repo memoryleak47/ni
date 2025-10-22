@@ -214,14 +214,14 @@ proc fn_list_setitem_slice_3 {
     %t = {};
     %t[True] = fn_list_setitem_slice_4;
     %t[False] = pop_stack_none;
-    jmp %t[@.frame.irlocals.i < @.frame.irlocals.length];
+    jmp %t[@.frame.irlocals.i <= @.frame.irlocals.length];
 }
 
 proc fn_list_setitem_slice_4 {
     %i = @.frame.irlocals.i;
     %ii = @.frame.irlocals.start + (%i * @.frame.irlocals.step);
-    %tmp = @.frame.irlocals.inlist.payload[%ii];
-    @.frame.irlocals.outlist.payload[%i] = %tmp;
+    %tmp = @.frame.irlocals.inlist.payload[%i];
+    @.frame.irlocals.outlist.payload[%ii] = %tmp;
     @.frame.irlocals.i = %i + 1;
 
     jmp fn_list_setitem_slice_3;
