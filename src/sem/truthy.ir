@@ -2,10 +2,26 @@
 proc branch_truthy {
     %tab = {};
 
-    %tab[@.arg.obj] = @.arg.suc_true;
+    %tab[@.arg.obj] = branch_truthy_2;
 
     %tab[@.singletons.false] = @.arg.suc_false;
     %tab[@.singletons.none] = @.arg.suc_false;
 
     jmp %tab[@.arg.obj];
+}
+
+proc branch_truthy_2 {
+    %def = {};
+    %def.payload = 1;
+
+    %tab = {};
+    %tab[@.arg.obj.type] = %def;
+    %tab[@.singletons.int] = @.arg.obj;
+    %pay = %tab[@.arg.obj.type].payload;
+
+    %t = {};
+    %t[%pay] = @.arg.suc_true;
+    %t[0] = @.arg.suc_false;
+
+    jmp %t[%pay];
 }
