@@ -112,7 +112,12 @@ proc fn_list_getitem_slice_2 {
 
     %outlist = {};
     %outlist.type = @.singletons.list;
-    %outlist.length = @.frame.irlocals.length;
+
+    %intbox = {};
+    %intbox.payload = @.frame.irlocals.length;
+    %intbox.type = @.singletons.int;
+
+    %outlist.length = %intbox;
     %outlist.payload = {};
     @.frame.irlocals.outlist = %outlist;
     @.frame.irlocals.i = 0;
