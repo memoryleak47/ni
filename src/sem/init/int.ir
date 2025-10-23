@@ -1,5 +1,6 @@
 proc init_int {
     %int = @.singletons.int;
+    @.globals["int"] = %int;
     %int.type = @.singletons.type;
     %int.dict = {};
 
