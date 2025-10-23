@@ -86,10 +86,7 @@ proc match_slice {
     %out.length = ((%end - %start) / %step) + %r[((%end - %start) % %step) > 0];
     %out.list = %list;
 
-    %t = {};
-    %t[True] = %out.length;
-    %t[False] = 0;
-    %out.length = %t[%out.length >= 0];
+    %out.length = %r[%out.length >= 0] * %out.length;
 
     @.ret = %out;
 
