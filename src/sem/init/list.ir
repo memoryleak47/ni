@@ -158,7 +158,7 @@ proc fn_list_getitem_slice_3 {
     %t = {};
     %t[True] = fn_list_getitem_slice_4;
     %t[False] = pop_stack;
-    jmp %t[@.frame.irlocals.i <= @.frame.irlocals.length];
+    jmp %t[@.frame.irlocals.i < @.frame.irlocals.length];
 }
 
 proc fn_list_getitem_slice_4 {
@@ -224,7 +224,7 @@ proc fn_list_setitem_slice_3 {
     %t = {};
     %t[True] = fn_list_setitem_slice_4;
     %t[False] = pop_stack_none;
-    jmp %t[@.frame.irlocals.i <= @.frame.irlocals.length];
+    jmp %t[@.frame.irlocals.i < @.frame.irlocals.length];
 }
 
 proc fn_list_setitem_slice_4 {
