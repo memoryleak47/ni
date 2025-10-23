@@ -81,7 +81,9 @@ proc match_slice {
     %out = {};
     %out.start = %start;
     %out.step = %step;
-    %out.length = (%end - %start) / %step;
+
+    # round up division!
+    %out.length = ((%end - %start) / %step) + %r[((%end - %start) % %step) > 0];
     %out.list = %list;
 
     %t = {};
